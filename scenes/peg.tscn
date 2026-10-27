@@ -1,0 +1,60 @@
+[gd_scene format=4 uid="uid://co382rtnvh6g6"]
+
+[ext_resource type="Script" uid="uid://de0xrrq1vdynd" path="res://scripts/peg.gd" id="1_wjvk1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rieu1"]
+resource_name = "M_Pegs"
+cull_mode = 2
+albedo_color = Color(0.9063318, 0.9063318, 0.9063318, 1)
+roughness = 0.5
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_biomn"]
+_surfaces = [{
+"aabb": AABB(-0.025, -0.025000008, -0.3, 0.05, 0.050000012, 0.3),
+"format": 34896613377,
+"index_count": 132,
+"index_data": PackedByteArray("AAAHAAIAAAANAAcADgACAAcADQAOAAcADwAAAAIADwANAAAADwACAAgAAgAQAAgADgAQAAIACQAPAAgACQAIABAAEQAPAAkAEQAJABAAEQAQAAYACgARAAYAEAASAAYACgAGABIAEwARAAoAEwAPABEAEwAKABIAEAAUABIAEAAOABQAEwASAAEAEgAUAAEAAwATAAEAAwABABQAFQAPABMADwAVAA0AFgATAAMAFgADABQAFQATABYADQAFAA4ADQAVAAUABQAEAA4ABQAVAAQAFwAOAAQAFAAOABcAFQAXAAQAFgAUAAwAFAAXAAwAFQAWAAsAFQALABcACwAWAAwACwAMABcA"),
+"lods": [0.009541732, PackedByteArray("AAAHAAIAAAACAAgAAgAGAAgABwAGAAIACQAAAAgACQAIAAYAAAAFAAcACgAAAAkACgAJAAYAAAALAAUACwAAAAoABQAEAAcABQALAAQADAAHAAQABgAHAAwACwAMAAQACgAGAAEABgAMAAEACwAKAAMACwADAAwAAwAKAAEAAwABAAwA"), 0.048891924, PackedByteArray("AAAEAAIAAAAFAAQABAAGAAIAAAACAAYABQABAAQABgAEAAEABQAAAAMAAwAAAAYABQADAAEAAwAGAAEA"), 0.08793687, PackedByteArray("AAABAAIAAAACAAEAAwAAAAEAAAADAAEA")],
+"name": "M_Pegs",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 24,
+"vertex_data": PackedByteArray("/3///wAAAAD/PyYR//8AAP9//v///wAA/38AAAAAAAD///9///8AANju/78AAAAAAAD/f///AAD/v9ju//8AAP8/2O7//wAAJhH/vwAAAAAmEf8/AAAAANju/z8AAAAA/78mEf//AAD/v9juAAAAANju/7///wAA/z/Y7gAAAAAmEf+///8AAAAA/38AAAAAJhH/P///AAD/PyYRAAAAAP9/AAD//wAA////fwAAAAD/vyYRAAAAANju/z///wAA")
+}]
+blend_shape_mode = 0
+
+[sub_resource type="ArrayMesh" id="ArrayMesh_j4267"]
+resource_name = "plinko_kit_Cylinder"
+_surfaces = [{
+"aabb": AABB(-0.025, -0.025000008, -0.3, 0.05, 0.050000012, 0.3),
+"attribute_data": PackedByteArray("////f6pqAAD//wAA/3//fwAA/38AAAAA/78AAFTV/3//PwAAcH3/v48C/7//P46CRyE09TT1R6H/v46C/79v/anqAACqqv9/VJUAAFVV/3+qKv9/VRUAAEchyoq3XsqKt1409TT1t97KirfeyopHoanq/39U1QAA/7//f6qqAABUlf9//38AAKpq/39VVQAA/z//f6oqAABVFf9/NHVHocoKR6E0dbfe/z9v/coKt95HocqKt97Kim/9/7+Ogv+/R6E09bfeNPU="),
+"format": 34896613399,
+"index_count": 132,
+"index_data": PackedByteArray("AAAQAAIAAAAcABAAHAAdABAAHAAHAB0ABwAGAB0ABwAeAAYAHgAfAAYAHgARAB8AEQASAB8AEQAgABIAIAAhABIAIAADACEAAwABACEAAwAiAAEAIgAjAAEAIgATACMAEwAIACMAEwAkAAgAJAAlAAgAJAAUACUAFAAVACUAFAAmABUAJgAFABUAJgAEAAUAJwALABcAJwAoAAsACwAoABYAKQAnAAkAKgAnACkAKAAnACoAKgApABgAKAAqACsAKwAqAAwAKAArAAoALAAtAA4ALAAuAC0ALQAuAA0ALwAsABsAMAAsAC8ALgAsADAAMAAvABoALgAwADEAMQAwAA8ALgAxABkA"),
+"lods": [0.009541732, PackedByteArray("AAAQAAIAAAAHABAABwAGABAABwARAAYAEQASAAYAEQADABIAAwABABIAAwATAAEAEwAIAAEAEwAUAAgAFAAVAAgAFAAEABUABAAFABUACwAKABYAFwAKAAsACgAXABgAGAAXAAkACgAYAAwADgAZAA0AGQAOABoAGgAOABsAGQAaAA8A"), 0.048891924, PackedByteArray("AAAGAAIAAAAHAAYABwABAAYABwADAAEAAwAIAAEAAwAEAAgABAAFAAgACQAKAAsACgAJAAwADQAOAA8A"), 0.08793687, PackedByteArray("AAABAAIAAAADAAEAAwAEAAEABAAFAAEA")],
+"material": SubResource("StandardMaterial3D_rieu1"),
+"name": "M_Pegs",
+"primitive": 3,
+"uv_scale": Vector4(0, 0, 0, 0),
+"vertex_count": 50,
+"vertex_data": PackedByteArray("/3///wAAD/3/PyYR//+iqP9//v///5T5/38AAAAA/9z/f///AAAP/f9//v///5T5////f///GcfY7v+/AADo7gAA/3///xnH////f////6IAAP9/////ov9//v////+i/z8mEf//lKPY7v+/AAAEFP9///8AAP8i/38AAAAA/yL/v9ju//+j7Nju/z8AAO7h/78mEf//oqgmEf8/AADu4SYR/78AAOju/z/Y7v//o+z/P9ju//+Uo/+/2O7//5Sj/78mEf//lKPY7v8/AAAEFCYR/z8AAAQUJhH/vwAABBT/v9juAAAy99ju/7///4rZ////fwAApOfY7v8///8gtv+/JhEAAETe/38AAP///6L/PyYRAABE3iYR/z///yC2AAD/fwAApOcmEf+///+K2f8/2O4AADL32O7/v///4KMmEf+////go9ju/z///+Cj/38AAP///6ImEf8////go/8/2O4AAHEf/7/Y7gAAcR////9/AAAAAAAA/38AAAAA/z8mEQAAcR//vyYRAABxHzGH2tLsOoKS2thmAwAA/38krTIHZYMjp5gemB7jPk4kZmGYnv9/AAD/f///////f1ozSKTU1kZ3////fwAA/38VJfAJHyh/RYISE0WAOh+osFvivg92FaW221qzpMy2W0gkpEy4CNVWKim4iEb3KakpSt8TCSKmExI0EjQJGhotqRgKXAAA/3/1I6mY5FIJmuxLErRZbAiiIGwoylGuoD+gv6zRXkBSLgAA/3+tUV7A0ffdmyHk0nfJ1/9//v/KV90bLIgtCCFk")
+}]
+blend_shape_mode = 0
+shadow_mesh = SubResource("ArrayMesh_biomn")
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_72j8r"]
+height = 0.3
+radius = 0.02
+
+[node name="Peg" type="Node3D" unique_id=12897870]
+script = ExtResource("1_wjvk1")
+
+[node name="Peg_Base" type="MeshInstance3D" parent="." unique_id=97221363]
+transform = Transform3D(0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("ArrayMesh_j4267")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="Peg_Base" unique_id=974228276]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Peg_Base/StaticBody3D" unique_id=1136568762]
+transform = Transform3D(1.9106859e-15, 4.371139e-08, 1.0000002, 1.0000002, -4.371139e-08, 0, 4.37114e-08, 1, -4.37114e-08, 0, 0, -0.15476596)
+shape = SubResource("CylinderShape3D_72j8r")

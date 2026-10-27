@@ -1,0 +1,262 @@
+[gd_scene format=3 uid="uid://cmx6nlfdepqkt"]
+
+[ext_resource type="Script" uid="uid://smmc3aovjttf" path="res://scripts/options.gd" id="1_85aq5"]
+[ext_resource type="Texture2D" uid="uid://4sdawtbd5yp4" path="res://assets/images/fondodia.webp" id="2_aea3w"]
+[ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="3_gyu1t"]
+[ext_resource type="Texture2D" uid="uid://b6vectgoji2i8" path="res://assets/images/ui/panel_options.webp" id="4_g5hix"]
+[ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="5_rftt1"]
+[ext_resource type="Texture2D" uid="uid://dm6ypisvmk6gk" path="res://assets/images/ui/icon_music.webp" id="6_0un6s"]
+[ext_resource type="Texture2D" uid="uid://co6vuafvrnhyr" path="res://assets/images/ui/icon_check_off.webp" id="7_kywri"]
+[ext_resource type="Texture2D" uid="uid://cfuwaypycktpp" path="res://assets/images/ui/icon_sound.webp" id="8_apvty"]
+[ext_resource type="Texture2D" uid="uid://c0hwcw2eq8gcw" path="res://assets/images/ui/button_home.webp" id="9_vhp3b"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qa6uu"]
+shader = ExtResource("3_gyu1t")
+shader_parameter/nivel_desenfoque = 2.5
+shader_parameter/oscurecer = Color(0, 0, 0, 0.3)
+
+[node name="Options" type="Control" unique_id=1771879543]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_85aq5")
+metadata/_edit_horizontal_guides_ = [1284.0, 0.0]
+metadata/_edit_vertical_guides_ = [1.0, 721.0]
+
+[node name="Fondo" type="TextureRect" parent="." unique_id=417303627]
+layout_mode = 0
+offset_left = -220.0
+offset_top = -2.0
+offset_right = 573.0
+offset_bottom = 1022.0
+scale = Vector2(1.4634976, 1.4634976)
+texture = ExtResource("2_aea3w")
+
+[node name="FondoDesenfoque" type="ColorRect" parent="Fondo" unique_id=1996656753]
+material = SubResource("ShaderMaterial_qa6uu")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -2.3348694
+offset_top = 0.77826405
+offset_right = -2.3348389
+offset_bottom = 0.77819824
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Frente" type="TextureRect" parent="." unique_id=1397862568]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -226.20067
+offset_top = -541.2892
+offset_right = 226.79932
+offset_bottom = 354.71082
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_g5hix")
+
+[node name="Titulo" type="Label" parent="Frente" unique_id=1494166110]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.5
+offset_top = -172.0
+offset_right = 80.5
+offset_bottom = -118.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("5_rftt1")
+theme_override_font_sizes/font_size = 40
+text = "Options"
+horizontal_alignment = 1
+
+[node name="Music" type="Control" parent="Frente" unique_id=1423257363]
+anchors_preset = 0
+offset_left = 80.0
+offset_top = 365.0
+offset_right = 120.0
+offset_bottom = 405.0
+
+[node name="Icon" type="TextureRect" parent="Frente/Music" unique_id=1343085903]
+layout_mode = 0
+offset_left = 58.999985
+offset_right = 170.99998
+offset_bottom = 139.0
+scale = Vector2(0.56, 0.56)
+texture = ExtResource("6_0un6s")
+
+[node name="Button" type="TextureButton" parent="Frente/Music" unique_id=508480405]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 134.0
+offset_top = -19.0
+offset_right = 276.0
+offset_bottom = 121.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.56, 0.56)
+texture_normal = ExtResource("7_kywri")
+
+[node name="SoundEffects" type="Control" parent="Frente" unique_id=1519256309]
+anchors_preset = 0
+offset_left = 80.0
+offset_top = 454.0
+offset_right = 120.0
+offset_bottom = 494.0
+
+[node name="Icon" type="TextureRect" parent="Frente/SoundEffects" unique_id=280545193]
+layout_mode = 0
+offset_left = 58.999985
+offset_right = 196.99998
+offset_bottom = 139.0
+scale = Vector2(0.56, 0.56)
+texture = ExtResource("8_apvty")
+
+[node name="Button" type="TextureButton" parent="Frente/SoundEffects" unique_id=1004183015]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 134.0
+offset_top = -19.0
+offset_right = 276.0
+offset_bottom = 121.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.56, 0.56)
+texture_normal = ExtResource("7_kywri")
+
+[node name="Idioma" type="Control" parent="Frente" unique_id=1399017683]
+anchors_preset = 0
+offset_left = 112.0
+offset_top = 555.0
+offset_right = 152.0
+offset_bottom = 595.0
+
+[node name="Castellano" type="Control" parent="Frente/Idioma" unique_id=1848769739]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Label" type="Label" parent="Frente/Idioma/Castellano" unique_id=2046306866]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("5_rftt1")
+theme_override_font_sizes/font_size = 32
+text = "Castellano"
+
+[node name="Button" type="TextureButton" parent="Frente/Idioma/Castellano" unique_id=1615243837]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 162.0
+offset_top = -28.0
+offset_right = 304.0
+offset_bottom = 112.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.44000125, 0.44000125)
+texture_normal = ExtResource("7_kywri")
+
+[node name="English" type="Control" parent="Frente/Idioma" unique_id=661470815]
+anchors_preset = 0
+offset_top = 65.0
+offset_right = 40.0
+offset_bottom = 105.0
+
+[node name="Label" type="Label" parent="Frente/Idioma/English" unique_id=1946914409]
+layout_mode = 0
+offset_left = 48.0
+offset_right = 170.0
+offset_bottom = 43.0
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("5_rftt1")
+theme_override_font_sizes/font_size = 32
+text = "English"
+
+[node name="Button" type="TextureButton" parent="Frente/Idioma/English" unique_id=1605283495]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 162.0
+offset_top = -28.0
+offset_right = 304.0
+offset_bottom = 112.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.44000125, 0.44000125)
+texture_normal = ExtResource("7_kywri")
+
+[node name="Portugues" type="Control" parent="Frente/Idioma" unique_id=2093017625]
+anchors_preset = 0
+offset_top = 130.0
+offset_right = 40.0
+offset_bottom = 170.0
+
+[node name="Label" type="Label" parent="Frente/Idioma/Portugues" unique_id=966144532]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("5_rftt1")
+theme_override_font_sizes/font_size = 32
+text = "Português"
+
+[node name="Button" type="TextureButton" parent="Frente/Idioma/Portugues" unique_id=2073825482]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 162.0
+offset_top = -28.0
+offset_right = 304.0
+offset_bottom = 112.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.44000125, 0.44000125)
+texture_normal = ExtResource("7_kywri")
+
+[node name="BotonHome" type="TextureButton" parent="Frente" unique_id=1031772652]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -61.5
+offset_top = 459.0
+offset_right = 61.5
+offset_bottom = 581.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("9_vhp3b")
+
+[connection signal="pressed" from="Frente/BotonHome" to="." method="_on_boton_options_pressed"]

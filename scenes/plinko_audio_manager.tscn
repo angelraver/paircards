@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://2tqs8i44pxnp"]
+
+[ext_resource type="Script" uid="uid://b02heoybhf0ad" path="res://scripts/plinko_audio_manager.gd" id="1_am"]
+[ext_resource type="AudioStream" uid="uid://hkoaglvkav2x" path="res://assets/sounds/pik1.wav" id="2_pik1"]
+[ext_resource type="AudioStream" uid="uid://dlqx5f1u6dycv" path="res://assets/sounds/pik2.wav" id="3_pik2"]
+[ext_resource type="AudioStream" uid="uid://bfgp68uilkfey" path="res://assets/sounds/points.wav" id="4_points"]
+
+[node name="AudioJuego" type="Node" unique_id=892347511]
+script = ExtResource("1_am")
+
+[node name="Pik1" type="AudioStreamPlayer" parent="." unique_id=412847193]
+stream = ExtResource("2_pik1")
+
+[node name="Pik2" type="AudioStreamPlayer" parent="." unique_id=749283641]
+stream = ExtResource("3_pik2")
+
+[node name="Points" type="AudioStreamPlayer" parent="." unique_id=749283642]
+stream = ExtResource("4_points")

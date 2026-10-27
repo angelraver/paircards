@@ -1,0 +1,141 @@
+[gd_scene format=3 uid="uid://epau5a222r3y"]
+
+[ext_resource type="Script" uid="uid://dpau5a111q2x" path="res://scripts/panel_pausa.gd" id="1_pausa"]
+[ext_resource type="Texture2D" uid="uid://csflkthd8j6v" path="res://assets/images/ui/pause.webp" id="2_pausa"]
+[ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="3_pausa"]
+[ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="4_pausa"]
+[ext_resource type="Texture2D" uid="uid://dm6ypisvmk6gk" path="res://assets/images/ui/icon_music.webp" id="5_pausa"]
+[ext_resource type="Texture2D" uid="uid://cfuwaypycktpp" path="res://assets/images/ui/icon_sound.webp" id="6_pausa"]
+[ext_resource type="Texture2D" uid="uid://co6vuafvrnhyr" path="res://assets/images/ui/icon_check_off.webp" id="7_pausa"]
+[ext_resource type="Texture2D" uid="uid://c0hwcw2eq8gcw" path="res://assets/images/ui/button_home.webp" id="8_pausa"]
+[ext_resource type="Texture2D" uid="uid://dtfxh5v7h3tyb" path="res://assets/images/ui/button_pause.webp" id="9_pausa"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pausa"]
+shader = ExtResource("3_pausa")
+shader_parameter/nivel_desenfoque = 2.5
+shader_parameter/oscurecer = Color(0, 0, 0, 0.5)
+
+[node name="PanelPausa" type="Control" unique_id=918273001]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pausa")
+
+[node name="FondoOscuro" type="ColorRect" parent="." unique_id=918273002]
+material = SubResource("ShaderMaterial_pausa")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FondoPanel" type="TextureRect" parent="." unique_id=918273003]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -312.0
+offset_right = 250.0
+offset_bottom = 312.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_pausa")
+expand_mode = 3
+stretch_mode = 5
+
+[node name="Titulo" type="Label" parent="FondoPanel" unique_id=918273004]
+layout_mode = 0
+offset_left = 52.0
+offset_top = 158.0
+offset_right = 452.0
+offset_bottom = 238.0
+theme_override_colors/font_color = Color(0.9999998, 0.9079618, 0.767842, 1)
+theme_override_fonts/font = ExtResource("4_pausa")
+theme_override_font_sizes/font_size = 60
+text = "Pausa"
+horizontal_alignment = 1
+
+[node name="Music" type="Control" parent="FondoPanel" unique_id=918273005]
+anchors_preset = 0
+offset_left = 142.0
+offset_top = 271.0
+offset_right = 182.0
+offset_bottom = 311.0
+
+[node name="Icon" type="TextureRect" parent="FondoPanel/Music" unique_id=918273006]
+layout_mode = 0
+offset_right = 112.0
+offset_bottom = 139.0
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("5_pausa")
+
+[node name="Button" type="TextureButton" parent="FondoPanel/Music" unique_id=918273007]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 110.0
+offset_top = -10.0
+offset_right = 252.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.55, 0.55)
+texture_normal = ExtResource("7_pausa")
+
+[node name="SoundEffects" type="Control" parent="FondoPanel" unique_id=918273008]
+anchors_preset = 0
+offset_left = 142.0
+offset_top = 372.0
+offset_right = 182.0
+offset_bottom = 412.0
+
+[node name="Icon" type="TextureRect" parent="FondoPanel/SoundEffects" unique_id=918273009]
+layout_mode = 0
+offset_right = 138.0
+offset_bottom = 137.0
+scale = Vector2(0.55, 0.55)
+texture = ExtResource("6_pausa")
+
+[node name="Button" type="TextureButton" parent="FondoPanel/SoundEffects" unique_id=918273010]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 110.0
+offset_top = -10.0
+offset_right = 252.0
+offset_bottom = 130.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.55, 0.55)
+texture_normal = ExtResource("7_pausa")
+
+[node name="BotonHome" type="TextureButton" parent="FondoPanel" unique_id=918273011]
+layout_mode = 0
+offset_left = 90.0
+offset_top = 596.0
+offset_right = 213.0
+offset_bottom = 718.0
+texture_normal = ExtResource("8_pausa")
+stretch_mode = 5
+
+[node name="BotonPausa" type="TextureButton" parent="FondoPanel" unique_id=918273012]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 596.0
+offset_right = 410.0
+offset_bottom = 706.0
+texture_normal = ExtResource("9_pausa")
+stretch_mode = 5

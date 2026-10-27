@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bmk2vbp0o6g7x"]
+
+[ext_resource type="Script" uid="uid://d0xqc4p804phb" path="res://scripts/inappupdate.gd" id="1_5ec5d"]
+
+[node name="InAppUpdate" type="Node" unique_id=2081236462]
+script = ExtResource("1_5ec5d")

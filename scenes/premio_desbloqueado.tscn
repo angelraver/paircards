@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://d5px7euex7n2"]
+
+[ext_resource type="Script" uid="uid://sih04qfkaejs" path="res://scripts/premio_desbloqueado.gd" id="1_5x0u0"]
+[ext_resource type="Texture2D" uid="uid://b7ru85h4dqni5" path="res://assets/images/ui/panel_prize.webp" id="1_tmdpf"]
+[ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="3_sialf"]
+
+[node name="PremioDesbloqueado" type="Control" unique_id=1099836888]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_5x0u0")
+
+[node name="FondoOscuro" type="ColorRect" parent="." unique_id=404107818]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="PanelPremio" type="TextureRect" parent="." unique_id=623185044]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -256.0
+offset_top = -293.5
+offset_right = 256.0
+offset_bottom = 293.5
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_tmdpf")
+
+[node name="ImagenJuguete" type="TextureRect" parent="PanelPremio" unique_id=918158251]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Titulo" type="Label" parent="PanelPremio" unique_id=1322095568]
+layout_mode = 0
+offset_left = 79.0
+offset_top = 482.5
+offset_right = 435.0
+offset_bottom = 525.5
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_sialf")
+theme_override_font_sizes/font_size = 24
+text = "Nuevo Premio"
+horizontal_alignment = 1
+
+[node name="Nombre" type="Label" parent="PanelPremio" unique_id=1084154215]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 515.5
+offset_right = 442.0
+offset_bottom = 558.5
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_sialf")
+theme_override_font_sizes/font_size = 32
+text = "Nombre"
+horizontal_alignment = 1
+
+[node name="BotonPantalla" type="Button" parent="." unique_id=1633949010]
+modulate = Color(1, 1, 1, 0.003921569)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Titulo" type="Label" parent="BotonPantalla" unique_id=895743856]
+layout_mode = 0
+offset_left = 79.0
+offset_top = 482.5
+offset_right = 435.0
+offset_bottom = 525.5
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_sialf")
+theme_override_font_sizes/font_size = 32
+text = "Nuevo Premio"
+horizontal_alignment = 1

@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://neu1avqif3tr"]
+
+[ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="1_1c4c3"]
+
+[node name="PuntosFlotantes" type="Control" unique_id=1359377036]
+layout_mode = 3
+anchors_preset = 0
+
+[node name="Label" type="Label" parent="." unique_id=943595716]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_1c4c3")
+theme_override_font_sizes/font_size = 80
+text = "+100"
+horizontal_alignment = 1
+vertical_alignment = 1

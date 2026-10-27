@@ -1,0 +1,157 @@
+[gd_scene format=3 uid="uid://23765m633c5y"]
+
+[ext_resource type="Texture2D" uid="uid://bhsqjojjtfssj" path="res://assets/images/ui/shelve.webp" id="1_oc1f1"]
+[ext_resource type="Script" uid="uid://damqt1w8i6kv0" path="res://scripts/premios.gd" id="1_q8nb1"]
+[ext_resource type="Texture2D" uid="uid://c0hwcw2eq8gcw" path="res://assets/images/ui/button_home.webp" id="2_662ax"]
+
+[node name="Premios" type="Control" unique_id=1024065414]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_q8nb1")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=116903416]
+limit_left = 0
+limit_top = 0
+limit_right = 926
+limit_bottom = 1790
+
+[node name="ScrollContainer" type="ScrollContainer" parent="." unique_id=1242760816]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 3
+
+[node name="ContenidoEstanteria" type="Control" parent="ScrollContainer" unique_id=2087379828]
+custom_minimum_size = Vector2(1852, 3580)
+layout_mode = 2
+
+[node name="FondoEstanteria" type="TextureRect" parent="ScrollContainer/ContenidoEstanteria" unique_id=31399679]
+custom_minimum_size = Vector2(926, 1790)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_oc1f1")
+
+[node name="GridPremios" type="GridContainer" parent="ScrollContainer/ContenidoEstanteria" unique_id=523474722]
+layout_mode = 0
+offset_left = 239.00006
+offset_top = 572.0
+offset_right = 671.00006
+offset_bottom = 1472.0
+scale = Vector2(3.1999984, 2.9826684)
+mouse_filter = 2
+theme_override_constants/h_separation = 36
+theme_override_constants/v_separation = 36
+columns = 3
+
+[node name="ColorRect4" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=839841565]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect5" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1758673845]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect6" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=395205505]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect7" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1142890736]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect8" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=340749460]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect9" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=186245385]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect10" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1622358964]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect11" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1858262879]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect12" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1999082519]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect13" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=965783797]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect14" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1420955680]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect15" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1278931062]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect16" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=663200321]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect17" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=2123769557]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect18" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1950922819]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect3" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=1660462949]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect2" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=730308114]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ColorRect" type="ColorRect" parent="ScrollContainer/ContenidoEstanteria/GridPremios" unique_id=542565124]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BotonHome" type="TextureButton" parent="." unique_id=382509913]
+layout_mode = 0
+offset_left = 291.0
+offset_top = 1104.0
+offset_right = 414.0
+offset_bottom = 1226.0
+texture_normal = ExtResource("2_662ax")
+
+[connection signal="ready" from="." to="." method="_on_ready"]
+[connection signal="pressed" from="BotonHome" to="." method="_on_boton_home_pressed"]

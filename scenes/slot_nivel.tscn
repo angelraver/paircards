@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://ov0lifr7f0e5"]
+
+[ext_resource type="Texture2D" uid="uid://c3rjnhgi4wkls" path="res://assets/images/ui/button_gen.webp" id="1_eq4ny"]
+[ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="2_mxd4b"]
+[ext_resource type="Texture2D" uid="uid://d2xvabdkvcgoo" path="res://assets/images/ui/ribbon_tiny_yellow.webp" id="3_4u2d8"]
+[ext_resource type="Texture2D" uid="uid://305b58j4ctx4" path="res://assets/images/ui/ribbon_tiny_red.webp" id="4_xu7t2"]
+[ext_resource type="Texture2D" uid="uid://c25d1rgpqubof" path="res://assets/images/ui/ribbon_tiny_blue.webp" id="5_wflnh"]
+[ext_resource type="Script" uid="uid://bqnck5q1ji4bv" path="res://scripts/slot_nivel.gd" id="6_mxd4b"]
+
+[node name="SlotNivel" type="Control" unique_id=1697595032]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("6_mxd4b")
+
+[node name="BotonNivel" type="TextureButton" parent="." unique_id=356528276]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+texture_normal = ExtResource("1_eq4ny")
+
+[node name="LabelNumero" type="Label" parent="BotonNivel" unique_id=229136288]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -21.0
+offset_top = -46.5
+offset_right = 21.0
+offset_bottom = 32.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_mxd4b")
+theme_override_font_sizes/font_size = 70
+text = "41"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ContenedorRibbons" type="Control" parent="." unique_id=878931851]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RibbonAmarilla" type="TextureRect" parent="ContenedorRibbons" unique_id=693906318]
+layout_mode = 0
+offset_left = -34.000004
+offset_top = 127.00001
+offset_right = 5.999996
+offset_bottom = 181.0
+scale = Vector2(1.433, 1.433)
+texture = ExtResource("3_4u2d8")
+
+[node name="RibbonRoja" type="TextureRect" parent="ContenedorRibbons" unique_id=1869277024]
+layout_mode = 0
+offset_left = 34.0
+offset_top = 127.999985
+offset_right = 74.0
+offset_bottom = 181.99998
+scale = Vector2(1.4334514, 1.4334514)
+texture = ExtResource("4_xu7t2")
+
+[node name="RibbonAzul" type="TextureRect" parent="ContenedorRibbons" unique_id=1568880880]
+layout_mode = 0
+offset_left = 101.00001
+offset_top = 127.00003
+offset_right = 141.0
+offset_bottom = 181.00003
+scale = Vector2(1.433, 1.433)
+texture = ExtResource("5_wflnh")

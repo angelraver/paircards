@@ -1,0 +1,20 @@
+{
+  "1": { "es": "Primeras Caídas", "en": "First Drops", "pt": "Primeiras Quedas" },
+  "2": { "es": "El Reloj de Arena", "en": "The Hourglass", "pt": "A Ampulheta" },
+  "3": { "es": "Cascada Zig-Zag", "en": "Zig-Zag Cascade", "pt": "Cascata em Zigue-Zague" },
+  "4": { "es": "El Embudo Central", "en": "The Central Funnel", "pt": "O Funil Central" },
+  "5": { "es": "Doble Diamante", "en": "Double Diamond", "pt": "Diamante Duplo" },
+  "6": { "es": "Laberinto de Rampas", "en": "Ramp Labyrinth", "pt": "Labirinto de Rampas" },
+  "7": { "es": "Pirámide Invertida", "en": "Inverted Pyramid", "pt": "Pirâmide Invertida" },
+  "8": { "es": "Doble Rampa Cruzada", "en": "Double Crossed Ramp", "pt": "Rampa Dupla Cruzada" },
+  "9": { "es": "Las xumnas", "en": "The Columns", "pt": "As Colunas" },
+  "10": { "es": "El Filtro Central", "en": "The Central Filter", "pt": "O Filtro Central" },
+  "11": { "es": "Onda Expansiva", "en": "Expansive Wave", "pt": "Onda Expansiva" },
+  "12": { "es": "Malla Escalonada", "en": "Stepped Mesh", "pt": "Malha Escalonada" },
+  "13": { "es": "Embudos Gemelos", "en": "Twin Funnels", "pt": "Funis Gêmeos" },
+  "14": { "es": "La Pared Central", "en": "The Central Wall", "pt": "A Parede Central" },
+  "15": { "es": "Cascada Asimétrica", "en": "Asymmetric Cascade", "pt": "Cascata Assimétrica" },
+  "16": { "es": "La Gran X", "en": "The Great X", "pt": "O Grande X" },
+  "17": { "es": "Fortaleza Infernal", "en": "Infernal Fortress", "pt": "Fortaleza Infernal" },
+  "18": { "es": "El Desafío Maestro", "en": "The Master Challenge", "pt": "O Desafio Mestre" }
+}

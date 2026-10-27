@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://bcd1ofetag504"]
+
+[ext_resource type="Script" uid="uid://c0x8sp71taj7u" path="res://scripts/title.gd" id="1_2xeeo"]
+[ext_resource type="Texture2D" uid="uid://4sdawtbd5yp4" path="res://assets/images/fondodia.webp" id="2_4e4sy"]
+[ext_resource type="Script" uid="uid://fc21akfhascg" path="res://scripts/carousel_menu.gd" id="2_carousel"]
+[ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="3_2xeeo"]
+[ext_resource type="Texture2D" uid="uid://b1ydv2fydkff8" path="res://assets/images/logo.webp" id="4_4e4sy"]
+[ext_resource type="Texture2D" uid="uid://dn6ainl72ncm3" path="res://assets/images/ui/button_prizes.webp" id="6_ljifs"]
+[ext_resource type="Texture2D" uid="uid://davnew6qw8y5b" path="res://assets/images/ui/button_options.webp" id="7_uj4fn"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tydxx"]
+shader = ExtResource("3_2xeeo")
+shader_parameter/nivel_desenfoque = 2.5
+shader_parameter/oscurecer = Color(0, 0, 0, 0.3)
+
+[node name="Title" type="Control" unique_id=2096106481]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2xeeo")
+
+[node name="Fondo" type="TextureRect" parent="." unique_id=1944187969]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_4e4sy")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="FondoDesenfoque" type="ColorRect" parent="Fondo" unique_id=641397611]
+material = SubResource("ShaderMaterial_tydxx")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Logo" type="TextureRect" parent="." unique_id=891912092]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 166.0
+offset_bottom = 610.0
+grow_horizontal = 2
+texture = ExtResource("4_4e4sy")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="CarouselMenu" type="Control" parent="." unique_id=133689711]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 270.0
+offset_bottom = -180.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_carousel")
+
+[node name="Prizes" type="TextureButton" parent="." unique_id=1654253781]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -307.0
+offset_top = -275.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+pivot_offset = Vector2(65, 65)
+tooltip_text = "Premios"
+texture_normal = ExtResource("6_ljifs")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Options" type="TextureButton" parent="." unique_id=935073818]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -267.0
+offset_right = 299.0
+offset_bottom = -20.0
+grow_vertical = 0
+pivot_offset = Vector2(65, 65)
+tooltip_text = "Opciones"
+texture_normal = ExtResource("7_uj4fn")
+ignore_texture_size = true
+stretch_mode = 5
+
+[connection signal="pressed" from="Prizes" to="." method="_on_boton_prizes_pressed"]
+[connection signal="pressed" from="Options" to="." method="_on_boton_options_pressed"]

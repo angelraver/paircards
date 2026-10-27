@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://vht4nu1hd71f"]
+
+[ext_resource type="Script" uid="uid://ct3fiqfc6va0x" path="res://scripts/ui_timer.gd" id="1_utewh"]
+[ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="2_vd6yh"]
+
+[node name="Timer" type="Control" unique_id=269459003]
+layout_mode = 3
+mouse_filter = 2
+script = ExtResource("1_utewh")
+
+[node name="Label" type="Label" parent="." unique_id=1720039585]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("2_vd6yh")
+theme_override_font_sizes/font_size = 90
+text = "30.0"

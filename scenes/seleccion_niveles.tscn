@@ -1,0 +1,189 @@
+[gd_scene format=3 uid="uid://blfnudq81val2"]
+
+[ext_resource type="Script" uid="uid://8ysg2u5cf3sj" path="res://scripts/seleccion_niveles.gd" id="1_p1kcx"]
+[ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="2_4r2yw"]
+[ext_resource type="Texture2D" uid="uid://4sdawtbd5yp4" path="res://assets/images/fondodia.webp" id="3_p1kcx"]
+[ext_resource type="Texture2D" uid="uid://bb0kb4v54b148" path="res://assets/images/ui/panel_levels.webp" id="4_p1kcx"]
+[ext_resource type="PackedScene" uid="uid://ov0lifr7f0e5" path="res://scenes/slot_nivel.tscn" id="5_4cylx"]
+[ext_resource type="Texture2D" uid="uid://c0hwcw2eq8gcw" path="res://assets/images/ui/button_home.webp" id="6_a2uob"]
+[ext_resource type="Texture2D" uid="uid://dhh7a4ftnhf6o" path="res://assets/images/ui/button_arrow.webp" id="7_6oqdd"]
+[ext_resource type="FontFile" uid="uid://b3nlbqd0gqnvc" path="res://assets/fonts/evereast.ttf" id="8_4f7dg"]
+[ext_resource type="Texture2D" uid="uid://b1ydv2fydkff8" path="res://assets/images/logo.webp" id="9_b48cm"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w7a4w"]
+shader = ExtResource("2_4r2yw")
+shader_parameter/nivel_desenfoque = 2.5
+shader_parameter/oscurecer = Color(0, 0, 0, 0.3)
+
+[node name="SeleccionNiveles" type="Control" unique_id=1770219720]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_p1kcx")
+metadata/_edit_vertical_guides_ = [722.0]
+metadata/_edit_horizontal_guides_ = [1282.0]
+
+[node name="Fondo" type="TextureRect" parent="." unique_id=324759105]
+texture_repeat = 1
+layout_mode = 0
+offset_left = -400.0
+offset_right = 393.0
+offset_bottom = 1024.0
+scale = Vector2(2, 2)
+texture = ExtResource("3_p1kcx")
+
+[node name="FondoDesenfoque" type="ColorRect" parent="Fondo" unique_id=718747323]
+material = SubResource("ShaderMaterial_w7a4w")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Frente" type="TextureRect" parent="." unique_id=355580354]
+layout_mode = 1
+offset_left = 48.999996
+offset_top = 443.00003
+offset_right = 849.0
+offset_bottom = 1451.0
+scale = Vector2(0.8000003, 0.8000003)
+texture = ExtResource("4_p1kcx")
+
+[node name="Slots" type="Control" parent="Frente" unique_id=562965391]
+anchors_preset = 0
+offset_top = -443.07892
+offset_right = 40.0
+offset_bottom = -403.07892
+
+[node name="Slot1" parent="Frente/Slots" unique_id=1697595032 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 151.0
+offset_top = 799.0789
+offset_right = 151.0
+offset_bottom = 799.0789
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot2" parent="Frente/Slots" unique_id=386087263 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 359.0
+offset_top = 799.079
+offset_right = 359.0
+offset_bottom = 799.079
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot3" parent="Frente/Slots" unique_id=838692978 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 566.0
+offset_top = 799.0789
+offset_right = 566.0
+offset_bottom = 799.0789
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot4" parent="Frente/Slots" unique_id=950445678 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 151.0
+offset_top = 977.0789
+offset_right = 151.0
+offset_bottom = 977.0789
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot5" parent="Frente/Slots" unique_id=1327938511 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 359.0
+offset_top = 977.0789
+offset_right = 359.0
+offset_bottom = 977.0789
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot6" parent="Frente/Slots" unique_id=1387922390 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 566.0
+offset_top = 977.0789
+offset_right = 566.0
+offset_bottom = 977.0789
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot7" parent="Frente/Slots" unique_id=1315857702 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 151.0
+offset_top = 1153.0789
+offset_right = 151.0
+offset_bottom = 1153.0789
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot8" parent="Frente/Slots" unique_id=1639650279 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 359.0
+offset_top = 1153.0789
+offset_right = 359.0
+offset_bottom = 1153.0789
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="Slot9" parent="Frente/Slots" unique_id=683899519 instance=ExtResource("5_4cylx")]
+layout_mode = 0
+offset_left = 566.0
+offset_top = 1153.079
+offset_right = 566.0
+offset_bottom = 1153.079
+scale = Vector2(0.63999754, 0.63999754)
+
+[node name="BotonHome" type="TextureButton" parent="Frente" unique_id=344918832]
+layout_mode = 0
+offset_left = 332.594
+offset_top = 867.9333
+offset_right = 455.594
+offset_bottom = 989.9333
+texture_normal = ExtResource("6_a2uob")
+
+[node name="BotonPrev" type="TextureButton" parent="Frente" unique_id=437050340]
+layout_mode = 0
+offset_left = 138.96054
+offset_top = 889.5749
+offset_right = 261.9606
+offset_bottom = 1012.5749
+scale = Vector2(0.5317008, 0.5317008)
+texture_normal = ExtResource("7_6oqdd")
+
+[node name="BotonNext" type="TextureButton" parent="Frente" unique_id=157912576]
+layout_mode = 0
+offset_left = 654.9365
+offset_top = 954.49884
+offset_right = 777.9366
+offset_bottom = 1077.4988
+scale = Vector2(-0.532, -0.532)
+texture_normal = ExtResource("7_6oqdd")
+
+[node name="LevelSelection" type="Label" parent="Frente" unique_id=1711641172]
+custom_minimum_size = Vector2(550, 0)
+custom_maximum_size = Vector2(-1, 150)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -287.75015
+offset_right = 300.0
+offset_bottom = -194.00015
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.0061463, 1)
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("8_4f7dg")
+theme_override_font_sizes/font_size = 44
+text = "Selección de nivel"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Logo" type="TextureRect" parent="." unique_id=95853691]
+layout_mode = 1
+offset_left = 176.0
+offset_top = 71.0
+offset_right = 704.0
+offset_bottom = 586.0
+scale = Vector2(0.71999943, 0.71999943)
+texture = ExtResource("9_b48cm")
+
+[connection signal="pressed" from="Frente/BotonHome" to="." method="_on_boton_home_pressed"]
