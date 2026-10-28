@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="County Fair"
+config/name="Pari Cards"
 run/main_scene="uid://cokb2wqhdfvfb"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="uid://chtg7qgkso4gc"

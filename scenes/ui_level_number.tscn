@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://e2apr11hn7jn"]
+[gd_scene format=3 uid="uid://b08dalc26x27u"]
 
 [ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="1_08eaf"]
 [ext_resource type="Script" uid="uid://cn1wrukygvjy7" path="res://scripts/ui_level_number.gd" id="2_mcgvh"]

@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" uid="uid://c0x8sp71taj7u" path="res://scripts/title.gd" id="1_2xeeo"]
 [ext_resource type="Texture2D" uid="uid://4sdawtbd5yp4" path="res://assets/images/fondodia.webp" id="2_4e4sy"]
-[ext_resource type="Script" uid="uid://fc21akfhascg" path="res://scripts/carousel_menu.gd" id="2_carousel"]
 [ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="3_2xeeo"]
 [ext_resource type="Texture2D" uid="uid://b1ydv2fydkff8" path="res://assets/images/logo.webp" id="4_4e4sy"]
 [ext_resource type="Texture2D" uid="uid://dn6ainl72ncm3" path="res://assets/images/ui/button_prizes.webp" id="6_ljifs"]
 [ext_resource type="Texture2D" uid="uid://davnew6qw8y5b" path="res://assets/images/ui/button_options.webp" id="7_uj4fn"]
+[ext_resource type="Texture2D" uid="uid://yw1nfdd7sldg" path="res://assets/images/plinko_logo.webp" id="9_imagenjuegos"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tydxx"]
 shader = ExtResource("3_2xeeo")
@@ -53,16 +53,21 @@ texture = ExtResource("4_4e4sy")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="CarouselMenu" type="Control" parent="." unique_id=133689711]
+[node name="ImagenJuegos" type="TextureButton" parent="." unique_id=133689711]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 270.0
-offset_bottom = -180.0
+offset_left = 199.0
+offset_top = 596.0
+offset_right = 199.0
+offset_bottom = 146.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("2_carousel")
+scale = Vector2(0.44, 0.47999877)
+texture_normal = ExtResource("9_imagenjuegos")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="Prizes" type="TextureButton" parent="." unique_id=1654253781]
 layout_mode = 1
@@ -99,5 +104,6 @@ texture_normal = ExtResource("7_uj4fn")
 ignore_texture_size = true
 stretch_mode = 5
 
+[connection signal="pressed" from="ImagenJuegos" to="." method="_on_imagen_juegos_pressed"]
 [connection signal="pressed" from="Prizes" to="." method="_on_boton_prizes_pressed"]
 [connection signal="pressed" from="Options" to="." method="_on_boton_options_pressed"]

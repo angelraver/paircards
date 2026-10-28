@@ -21,7 +21,6 @@ class_name ControladorResultados
 
 @export var panel_resultados: PanelResultados
 @export var hud_a_ocultar: Array[CanvasItem]
-@export var ui_puntaje: UIPuntaje
 @export var ui_level_number: UILevelNumber
 
 var _mostrado: bool = false
@@ -35,14 +34,13 @@ func _ready() -> void:
 
 ## Configura el controlador con las dependencias del juego.
 ## [param p_hud] lista de nodos HUD que deben ocultarse al mostrar resultados y restaurarse al reset.
-func configurar(p_panel: PanelResultados, p_hud: Array, p_ui_puntaje: UIPuntaje, p_ui_level: UILevelNumber, p_reiniciar_callback: Callable) -> void:
+func configurar(p_panel: PanelResultados, p_hud: Array, p_ui_level: UILevelNumber, p_reiniciar_callback: Callable) -> void:
 	panel_resultados = p_panel
 	# Conversión tolerante: p_hud puede venir como Array genérico literal [ui_puntaje, ...]
 	hud_a_ocultar.clear()
 	for item in p_hud:
 		if item is CanvasItem:
 			hud_a_ocultar.append(item)
-	ui_puntaje = p_ui_puntaje
 	ui_level_number = p_ui_level
 	_reiniciar_callback = p_reiniciar_callback
 	_mostrado = false
@@ -69,7 +67,7 @@ func al_iniciar_nivel() -> void:
 	reset()
 
 ## Guard + ocultar HUD + mostrar PanelResultados.
-func mostrar(nivel_actual: int, puntaje_nivel: int, puntaje_maximo_nivel: int) -> void:
+func mostrar(nivel_actual: int) -> void:
 	if not panel_resultados:
 		return
 	if _mostrado:
@@ -78,17 +76,8 @@ func mostrar(nivel_actual: int, puntaje_nivel: int, puntaje_maximo_nivel: int) -
 	for n in hud_a_ocultar:
 		if is_instance_valid(n):
 			n.visible = false
-	panel_resultados.mostrar(nivel_actual, puntaje_nivel, puntaje_maximo_nivel)
+	panel_resultados.mostrar(nivel_actual)
 
-func actualizar_puntaje(puntaje: int) -> void:
-	if ui_puntaje:
-		ui_puntaje.establecer_puntaje(puntaje)
-
-## Fija el puntaje máximo del nivel (meta de la cinta azul). Se muestra en el
-## HUD como "/ max" debajo del puntaje actual.
-func actualizar_maximo(puntaje_max: int) -> void:
-	if ui_puntaje:
-		ui_puntaje.establecer_maximo(puntaje_max)
 
 func actualizar_nivel(nivel: int) -> void:
 	if ui_level_number:

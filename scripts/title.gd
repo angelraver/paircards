@@ -1,33 +1,13 @@
 extends Control
 
-const ESCENA_SELECCION_NIVELES = "res://scenes/seleccion_niveles.tscn"
-
-## Orden preferido en el carrusel. Los juegos nuevos que aparezcan en
-## games.json y no estén aquí se agregan al final automáticamente.
-const ORDEN_JUEGOS: Array[String] = [
-	"tincanalley",
-	"whackamole",
-	"plinko",
-	"ringtoss",
-	"duckshoot",
-]
-
-const NOMBRES_JUEGOS: Dictionary = {
-	"tincanalley": "Tin Can Alley",
-	"whackamole": "Whack-a-Mole",
-	"plinko": "Plinko",
-	"ringtoss": "Ring Toss",
-	"duckshoot": "Duck Shoot",
-}
-
 ## Duración de la subida del logo en la intro.
 const DURACION_INTRO_LOGO := 5.0
 ## La intro se muestra solo la primera vez que se ve title en cada ejecución.
 static var _intro_logo_realizada := false
 
-@onready var carousel: CarouselMenu = $CarouselMenu
 @onready var logo: TextureRect = $Logo
 @onready var fondo: TextureRect = $Fondo
+@onready var imagen_juegos: TextureButton = $ImagenJuegos
 @onready var boton_prizes: TextureButton = $Prizes
 @onready var boton_options: TextureButton = $Options
 
@@ -39,12 +19,6 @@ func _ready() -> void:
 	audio_manager.ensure_title_bgm()
 	var era_primera_vez := not _intro_logo_realizada
 	_animar_intro_logo()
-	var games_data := _construir_datos_carrusel()
-	carousel.setup_carousel(games_data)
-	carousel.item_selected.connect(_on_game_selected)
-	if era_primera_vez and carousel:
-		# Giro a alta velocidad que decelera junto con la subida del logo.
-		carousel.spin_intro(DURACION_INTRO_LOGO)
 	if era_primera_vez:
 		_animar_intro_botones()
 
@@ -94,49 +68,13 @@ func _animar_intro_botones() -> void:
 		tween.tween_property(boton, "position:x", destino_x, DURACION_INTRO_LOGO)
 
 
-func _construir_datos_carrusel() -> Array[Dictionary]:
-	var datos: Array[Dictionary] = []
-	var vistos := {}
-
-	var ids_ordenados: Array[String] = []
-	for id in ORDEN_JUEGOS:
-		if game_manager.configuracion_juegos.has(id):
-			ids_ordenados.append(id)
-			vistos[id] = true
-	# A prueba de futuro: juegos agregados a games.json aparecen solos.
-	for id in game_manager.configuracion_juegos.keys():
-		if not vistos.has(id):
-			ids_ordenados.append(id)
-
-	for id in ids_ordenados:
-		var config: Dictionary = game_manager.configuracion_juegos.get(id, {})
-		var ruta_logo := str(config.get("textura_logo", ""))
-		var tex: Texture2D = null
-		if ruta_logo != "" and ResourceLoader.exists(ruta_logo):
-			tex = load(ruta_logo) as Texture2D
-		if tex == null:
-			push_warning("Title: sin logo para juego '%s' (%s)" % [id, ruta_logo])
-			continue
-		datos.append({
-			"id": id,
-			"title": NOMBRES_JUEGOS.get(id, id.capitalize()),
-			"texture": tex,
-		})
-	return datos
-
-
-func _on_game_selected(game_id: String) -> void:
-	_iniciar_juego(game_id)
-
-
-func _iniciar_juego(id_juego: String) -> void:
-	audio_manager.play_ok1()
-
-	# 1. Establecer el minijuego activo en el manager global
-	save_manager.juego_actual_seleccionado = id_juego
-	print(save_manager.juego_actual_seleccionado)
-	# 2. Cambiar a la escena genérica de selección de niveles
-	get_tree().change_scene_to_file(ESCENA_SELECCION_NIVELES)
+func _on_imagen_juegos_pressed() -> void:
+	_press_feedback(
+		$ImagenJuegos,
+		func():
+			save_manager.juego_actual_seleccionado = "plinko"
+			get_tree().change_scene_to_file("res://scenes/seleccion_niveles.tscn")
+	)
 
 
 func _on_boton_prizes_pressed() -> void:

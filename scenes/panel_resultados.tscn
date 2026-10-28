@@ -5,11 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://b1nd223v2oh78" path="res://assets/images/ui/panel_level.webp" id="2_pqqu8"]
 [ext_resource type="Texture2D" uid="uid://cusn3egnh88b4" path="res://assets/images/ui/button_ok.webp" id="3_shjp8"]
 [ext_resource type="Texture2D" uid="uid://dch1821c0hon" path="res://assets/images/ui/button_restart.webp" id="4_3qrhc"]
-[ext_resource type="Texture2D" uid="uid://bp6w0eqerof2p" path="res://assets/images/ui/ribbon_yellow.webp" id="5_sxpki"]
-[ext_resource type="Texture2D" uid="uid://dw0bugccre2nw" path="res://assets/images/ui/ribbon_red.webp" id="6_s5fhk"]
-[ext_resource type="Texture2D" uid="uid://dnt0n21kh0do2" path="res://assets/images/ui/ribbon_blue.webp" id="7_g2gab"]
 [ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="8_at4u4"]
-[ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="9_g8ea4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kyv4s"]
 shader = ExtResource("1_diad0")
@@ -17,7 +13,6 @@ shader_parameter/nivel_desenfoque = 2.5
 shader_parameter/oscurecer = Color(0, 0, 0, 0.3)
 
 [node name="PanelResultados" type="Control" unique_id=696404095]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -72,33 +67,6 @@ offset_bottom = 884.25
 scale = Vector2(0.6, 0.6)
 texture_normal = ExtResource("4_3qrhc")
 
-[node name="RibbonAmarilla" type="TextureRect" parent="FondoPanel" unique_id=809349569]
-layout_mode = 0
-offset_left = 170.25003
-offset_top = 375.0
-offset_right = 329.25003
-offset_bottom = 616.0
-scale = Vector2(0.8510344, 0.8510344)
-texture = ExtResource("5_sxpki")
-
-[node name="RibbonRoja" type="TextureRect" parent="FondoPanel" unique_id=831480948]
-layout_mode = 0
-offset_left = 318.24988
-offset_top = 374.0
-offset_right = 478.24988
-offset_bottom = 615.0
-scale = Vector2(0.87146163, 0.87146163)
-texture = ExtResource("6_s5fhk")
-
-[node name="RibbonAzul" type="TextureRect" parent="FondoPanel" unique_id=1747762257]
-layout_mode = 0
-offset_left = 476.75018
-offset_top = 375.25
-offset_right = 634.7502
-offset_bottom = 616.25
-scale = Vector2(0.87268454, 0.87268454)
-texture = ExtResource("7_g2gab")
-
 [node name="LevelTitle" type="Label" parent="FondoPanel" unique_id=824942999]
 custom_minimum_size = Vector2(550, 0)
 custom_maximum_size = Vector2(-1, 150)
@@ -123,16 +91,3 @@ text = "Nivel 1
 Texto largo para confirmar "
 horizontal_alignment = 1
 autowrap_mode = 2
-
-[node name="LabelPuntajeFinal" type="Label" parent="FondoPanel" unique_id=1881327852]
-layout_mode = 0
-offset_left = 308.872
-offset_top = 613.72986
-offset_right = 477.87204
-offset_bottom = 681.72986
-theme_override_colors/font_color = Color(0.19966345, 0, 0, 1)
-theme_override_fonts/font = ExtResource("9_g8ea4")
-theme_override_font_sizes/font_size = 60
-text = "0 / 0000"
-horizontal_alignment = 1
-vertical_alignment = 1

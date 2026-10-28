@@ -1,7 +1,42 @@
-[gd_scene format=3 uid="uid://c26yeg0pbuvkx"]
+[gd_scene format=3 uid="uid://majceua2o1e1"]
 
 [ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="1_61x5w"]
-[ext_resource type="Script" uid="uid://dmh5kvbpypbd8" path="res://scripts/ui_puntaje.gd" id="2_mbx56"]
+
+[sub_resource type="GDScript" id="GDScript_svf6e"]
+script/source = "extends Control
+
+@export var texto_prefijo: String = \"SCORE\\n\"
+@export var digitos_minimos: int = 4
+
+@onready var label: Label = $Label
+@onready var label_max: Label = $Max
+
+var puntaje_actual: int = 0
+var puntaje_maximo: int = 0
+
+func _ready() -> void:
+	actualizar_ui()
+
+func establecer_puntaje(nuevo_puntaje: int) -> void:
+	puntaje_actual = nuevo_puntaje
+	actualizar_ui()
+
+## Fija el puntaje máximo del nivel (meta de la cinta azul) que se muestra
+## debajo del número como \"/ max\".
+func establecer_maximo(nuevo_maximo: int) -> void:
+	puntaje_maximo = maxi(nuevo_maximo, 0)
+	actualizar_ui()
+
+func actualizar_ui() -> void:
+	if label:
+		# Mantiene el formato con ceros a la izquierda (ej. 0005)
+		label.text = str(puntaje_actual).pad_zeros(digitos_minimos)
+	if label_max:
+		# Meta del nivel: \"/ 1000\" (oculto si el nivel aún no tiene máximo).
+		label_max.visible = puntaje_maximo > 0
+		if puntaje_maximo > 0:
+			label_max.text = \"/ %d\" % puntaje_maximo
+"
 
 [node name="Puntaje" type="Label" unique_id=626633466]
 offset_left = 36.0
@@ -13,7 +48,7 @@ theme_override_fonts/font = ExtResource("1_61x5w")
 theme_override_font_sizes/font_size = 64
 text = "score"
 horizontal_alignment = 1
-script = ExtResource("2_mbx56")
+script = SubResource("GDScript_svf6e")
 
 [node name="Label" type="Label" parent="." unique_id=898559183]
 layout_mode = 0
