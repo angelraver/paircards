@@ -14,6 +14,9 @@ export_credentials.cfg
 # Imported translations (automatically generated from CSV files)
 *.translation
 
+# Godot import metadata (regenerated locally)
+*.import
+
 # Mono-specific ignores
 .mono/
 data_*/
