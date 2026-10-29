@@ -1,9 +1,9 @@
-# Plinko — Skill Guide para Agentes
+# Skill Guide para Agentes
 
 > **Para agentes (Muse, Codex, LLM).** Este README es la skill canónica del proyecto.
-> Si tu tarea es **tocar HUD/pantallas, progresión, audio, localización o el único juego (plinko)**, lee este archivo primero. No hay carpetas `core/` ni `games/`: todo vive en la raíz como un **solo juego íntegro**.
+> Si tu tarea es **tocar HUD/pantallas, progresión, audio, localización o el único juego**, lee este archivo primero. No hay carpetas `core/` ni `games/`: todo vive en la raíz como un **solo juego íntegro**.
 
-Juego único 3D estilo feria/carnival: **Plinko**, construido con **Godot 4.7 — Mobile renderer, portrait 720×1280, Jolt Physics**. Export: **Web + iOS**. Flujo: `title` (hub/carrusel) → `seleccion_niveles` → `main` (plinko).
+Juego único 3D estilo feria/carnival, construido con **Godot 4.7 — Mobile renderer, portrait 720×1280, Jolt Physics**. Export: **Web + iOS**. Flujo: `title` (hub/carrusel) → `seleccion_niveles` → `main`.
 
 ---
 
@@ -27,17 +27,17 @@ Convenciones: código y comentarios en **español**, `snake_case` para funciones
 ## 2) Arquitectura — mapa mental
 
 ```
-┌────────────────────────────── RAÍZ (un solo juego: plinko) ──────────────────────────────┐
-│  title (hub, carrusel) ──► seleccion_niveles (genérica, 9/pág) ──► scenes/main.tscn (plinko) │
-│       │                    ▲                                 │              │              │
-│       ├──► premios         │                          PanelResultados       │              │
-│       └──► options    data/games.json (registry, SOLO plinko)           EfectosUI        │
-│                              ▲  ▲  ▲                                              │              │
-│                              │  │  └─► textos.json + prefijo plinko_           │              │
-│  Autoloads: save_manager · audio_manager · game_manager · EfectosUI (+ InAppUpdate)      │
-│  HUD compartido: UIPuntaje · UITimer · UILevelNumber · PuntosFlotantes                    │
-│  Shaders: desenfoque / chromatic_aberración / crt_effect / logo_dissolver                 │
-└───────────────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────── RAÍZ (un solo juego) ──────────────────────────────┐
+│  title (hub, carrusel) ──► seleccion_niveles (genérica, 9/pág) ──► scenes/main.tscn │
+│       │                    ▲                                 │              │      │
+│       ├──► premios         │                          PanelResultados │              │
+│       └──► options    data/games.json (registry, único juego)      EfectosUI   │
+│                              ▲  ▲  ▲                                              │      │
+│                              │  │  └─► textos.json + prefijo                    │      │
+│  Autoloads: save_manager · audio_manager · game_manager · EfectosUI (+ InAppUpdate) │
+│  HUD compartido: UIPuntaje · UITimer · UILevelNumber · PuntosFlotantes              │
+│  Shaders: desenfoque / chromatic_aberración / crt_effect / logo_dissolver           │
+└───────────────────────────────────────────────────────────────────────────────────┘
                 │              │               │              │               │
          scripts/           scenes/           data/           assets/         shaders/
    (autoloads + controllers)  (todas las pantallas)  (games.json, niveles, textos)  (fonts, images, sounds, models)
@@ -54,7 +54,7 @@ Convenciones: código y comentarios en **español**, `snake_case` para funciones
 | Autoload | Script | Qué expone |
 |---|---|---|
 | `save_manager` | `scripts/save_manager.gd:1` | `juego_actual_seleccionado`, `nivel_actual_seleccionado`, `registrar_puntaje_nivel(nivel,puntaje,max,id_game)`, `obtener_puntaje_nivel`, `es_nivel_desbloqueado(nivel,id_game)`, `contar_ribbons_azules()`, `obtener_total_niveles_game(id)`, `guardar_a_disco()`, etc. |
-| `audio_manager` | `scripts/audio_manager.gd:1` | `music_enabled/sfx_enabled`, `bgm_player`, `play_bgm(stream)`, `play_start/welldone/prize/ok1/pop/fail()`, `ensure_title_bgm()` (`main_theme.ogg`), `ensure_game_bgm(id)` (tema de `assets/sounds/themes/<juego>.ogg`; hoy solo `plinko`). Estado leído de `save_manager`. Click del core: `play_ok1()`. |
+| `audio_manager` | `scripts/audio_manager.gd:1` | `music_enabled/sfx_enabled`, `bgm_player`, `play_bgm(stream)`, `play_start/welldone/prize/ok1/pop/fail()`, `ensure_title_bgm()` (`main_theme.ogg`), `ensure_game_bgm(id)` (tema de `assets/sounds/themes/<id>.ogg`; hoy solo uno). Estado leído de `save_manager`. Click del core: `play_ok1()`. |
 | `game_manager` | `scripts/game_manager.gd:1` | `idioma_actual`, `configuracion_juegos` (cache de `games.json`), `textos_locales`, `cargar_configuracion_juegos()`, `obtener_texto(clave,defecto)` con fallback `es`, `obtener_titulo_nivel(id)` resuelve `prefijo+num`, signal `idioma_cambiado`. |
 | `EfectosUI` | `scripts/efectos_ui.gd:1` | `crear_efecto_puntos(posicion_3d, valor)` — instancia `scenes/puntos_flotantes.tscn`, animación flotante+fade 1.5s. |
 
@@ -75,7 +75,7 @@ Convenciones: código y comentarios en **español**, `snake_case` para funciones
 
 | Escena | Script | Reutilización |
 |---|---|---|
-| `scenes/title.tscn` | `scripts/title.gd` | Hub con carrusel dinámico desde `data/games.json` (hoy solo plinko). Selección → `seleccion_niveles.tscn`. Prizes → `premios.tscn`, Options → `options.tscn`. |
+| `scenes/title.tscn` | `scripts/title.gd` | Hub con carrusel dinámico desde `data/games.json` (un solo juego). Selección → `seleccion_niveles.tscn`. Prizes → `premios.tscn`, Options → `options.tscn`. |
 | `scenes/seleccion_niveles.tscn` | `scripts/seleccion_niveles.gd` | Genérica, data-driven. Lee `games.json`, cuenta niveles, fondo dinámico por hora, pagina 9/pág, tap slot → `main.tscn`. |
 | `scenes/slot_nivel.tscn` | `scripts/slot_nivel.gd` | Slot individual, bloqueado/desbloqueado con ribbons. |
 | `scenes/panel_resultados.tscn` | `scripts/panel_resultados.gd` | Panel fin de nivel. |
@@ -102,23 +102,23 @@ Convenciones: código y comentarios en **español**, `snake_case` para funciones
 - **UI kit** (`assets/images/ui/`): paneles, botones (ok/restart/home/gen/prizes/options/arrow/pause), iconos, ribbons, `shelve.webp`.
 - **Premios** (`assets/images/prizes/`): 18 PNG (`aros`, `dino`, `drum`, `doll`, `roboto`, `duck`, `racer`, `tricep`, `horse`, `bunny`, `plane`, `train`, `rocket`, `robot`, `teddy`, `bluey`, `astro`, `rex`).
 - **Fondos/logos** (`assets/images/`): `fondodia.webp`, `fondotarde.webp`, `fondonoche.webp`, `logo.webp`, `logoaustral.webp`.
-- **Plinko** (`assets/`): `images/floor.webp`, `images/world/fondo_interior.webp`, `images/plinko_logo.webp` (renombrado de `logo.webp` por colisión con el del core), `models/board.glb`, `sounds/pik1.wav`, `pik2.wav`, `points.wav`.
-- **SFX / temas** (`assets/sounds/`): `ok/ok1/ok2/fail/pop/welldone/prize/levelcomplete/…` + `themes/main_theme.ogg` y `themes/plinko.ogg` (se eliminaron los temas de juegos ya inexistentes: tincanalley, whackamole, ringtoss, duckshoot, credits).
+- **Juego** (`assets/`): `images/floor.webp`, `images/world/fondo_interior.webp`, `images/juego_logo.webp`, `models/board.glb`, `sounds/pik1.wav`, `pik2.wav`, `points.wav`.
+- **SFX / temas** (`assets/sounds/`): `ok/ok1/ok2/fail/pop/welldone/prize/levelcomplete/…` + `themes/main_theme.ogg` y `themes/juego.ogg` (se eliminaron los temas de juegos ya inexistentes: tincanalley, whackamole, ringtoss, duckshoot, credits).
 
 ---
 
 ## 4) Registro del juego — `data/games.json`
 
-Solo entra plinko:
+Solo entra un juego:
 
 ```json
 {
-	"plinko": {
+	"juego": {
 		"escena_juego": "res://scenes/main.tscn",
 		"ruta_niveles_json": "res://data/niveles.json",
-		"textos_json": "res://data/plinko_textos.json",
-		"textura_logo": "res://assets/images/plinko_logo.webp",
-		"prefijo_texto": "plinko_"
+		"textos_json": "res://data/juego_textos.json",
+		"textura_logo": "res://assets/images/juego_logo.webp",
+		"prefijo_texto": "juego_"
 	}
 }
 ```
@@ -127,20 +127,20 @@ Campos: `escena_juego`, `ruta_niveles_json`, `textos_json`, `textura_logo` (`.we
 
 ---
 
-## 5) Plinko — datos y escenas del juego
+## 5) Juego — datos y escenas del juego
 
 - `data/niveles.json`: `{"1": {"puntaje":450, "color_board":"EB051B", "pegs":[{x,y}…], "ramps":[{x,y,rot}…], "slots":[{x_start,x_end,pts,color}…]}}`. Claves `"1".."N"` contiguas.
-- `data/plinko_textos.json`: títulos de nivel con prefijo `plinko_` gestionado por `game_manager`.
-- `scenes/main.tscn`: escena jugable de plinko (board, pegs, ramps, slots, bola, cámara, UI). Usa `scenes/plinko_audio_manager.tscn` para SFX propios (`pik1`, `pik2`, `points`).
+- `data/juego_textos.json`: títulos de nivel con prefijo `juego_` gestionado por `game_manager`.
+- `scenes/main.tscn`: escena jugable (board, pegs, ramps, slots, bola, cámara, UI). Usa `scenes/juego_audio_manager.tscn` para SFX propios (`pik1`, `pik2`, `points`).
 - `scripts/main.gd`: contrato con el core — lee `save_manager.nivel_actual_seleccionado`, expone `puntaje_nivel`/`puntaje_maximo_nivel`, incrusta `PanelResultados`, usa `ControladorResultados` y `EfectosUI.crear_efecto_puntos()`.
 
-Scripts propios de plinko (en `scripts/`): `main.gd`, `ball.gd`, `board_frame.gd`, `color_utils.gd`, `peg.gd`, `ramp.gd`, `slot.gd`, `plinko_audio_manager.gd` (renombrado de `audio_manager.gd` para no colisionar con el autoload del core).
+Scripts propios (en `scripts/`): `main.gd`, `ball.gd`, `board_frame.gd`, `color_utils.gd`, `peg.gd`, `ramp.gd`, `slot.gd`, `juego_audio_manager.gd` (renombrado de `audio_manager.gd` para no colisionar con el autoload del core).
 
 ---
 
 ## 6) Skeleton `main.gd` — patrón del juego
 
-Patrón consolidado (plinko `scripts/main.gd`):
+Patrón consolidado (`scripts/main.gd`):
 
 ```gdscript
 extends Node3D
@@ -201,8 +201,8 @@ func reiniciar_nivel() -> void:
 - **Desbloqueo de nivel:** `n` desbloqueado si `score(n-1)/max(n-1) >= 1/3`. Nivel 1 siempre desbloqueado.
 - **Ribbons:** amarilla ≥1/3, roja ≥2/3, azul = 100% (`score >= max`).
 - **Meta del nivel:** `puntaje_maximo` ≈ 60% del puntaje perfecto.
-- **Premios globales:** `azules = contar_ribbons_azules()`; `total_niveles = obtener_total_niveles_game("plinko")`; para premio `i`: `requeridas = ceil(i * total_niveles / 18)`.
-- **Localización:** `data/textos.json` (core, sin prefijo) + `data/plinko_textos.json` (prefijo `plinko_`). `obtener_texto` con fallback `es`. `obtener_titulo_nivel("3")` → busca `"plinko_3"`.
+- **Premios globales:** `azules = contar_ribbons_azules()`; `total_niveles = obtener_total_niveles_game("juego")`; para premio `i`: `requeridas = ceil(i * total_niveles / 18)`.
+- **Localización:** `data/textos.json` (core, sin prefijo) + `data/juego_textos.json` (prefijo `juego_`). `obtener_texto` con fallback `es`. `obtener_titulo_nivel("3")` → busca `"juego_3"`.
 - **Audio prefs:** `audio_manager` persiste `music_enabled/sfx_enabled` en `save_manager`.
 
 ---
@@ -214,24 +214,24 @@ func reiniciar_nivel() -> void:
 ├── project.godot              # autoloads (UID), viewport 720×1280, Jolt, main_scene title.tscn
 ├── export_presets.cfg
 ├── data/
-│   ├── games.json             ← registry (único punto de registro, solo plinko)
+│   ├── games.json             ← registry (único punto de registro, un solo juego)
 │   ├── textos.json            ← {seleccion_nivel, nuevo_premio, pausa} es/en/pt
-│   ├── plinko_textos.json     ← títulos de nivel de plinko (prefijo plinko_)
-│   └── niveles.json           ← niveles de plinko
-├── scripts/                   # autoloads + controladores + scripts de plinko
+│   ├── juego_textos.json     ← títulos de nivel (prefijo juego_)
+│   └── niveles.json           ← niveles
+├── scripts/                   # autoloads + controladores + scripts
 │   ├── save_manager.gd / game_manager.gd / audio_manager.gd / efectos_ui.gd
 │   ├── controlador_resultados.gd / game_audio_base.gd / panel_resultados.gd
 │   ├── title.gd / seleccion_niveles.gd / slot_nivel.gd / carousel_menu.gd
 │   ├── ui_puntaje/timer/level_number.gd / options.gd / premios*.gd / panel_pausa.gd
 │   ├── fondo_dinamico.gd / label.gd / logo_script.gd / austral_animated_logo.gd
 │   ├── inappupdate.gd
-│   └── plinko/: main.gd, ball.gd, board_frame.gd, color_utils.gd, peg.gd, ramp.gd, slot.gd, plinko_audio_manager.gd
+│   └── juego_audio_manager.gd
 ├── scenes/                    # todas las pantallas
 │   ├── title.tscn / seleccion_niveles.tscn / slot_nivel.tscn / panel_resultados.tscn
 │   ├── puntos_flotantes.tscn / ui_puntaje/timer/level_number.tscn
 │   ├── options.tscn / premios.tscn / premio_desbloqueado.tscn / audio_manager.tscn
 │   ├── panel_pausa.tscn / austral_animated_logo.tscn / InAppUpdate.tscn
-│   └── plinko/: main.tscn, ball.tscn, board_frame.tscn, divider.tscn, peg.tscn, ramp.tscn, slot.tscn, plinko_audio_manager.tscn
+│   └── juego_audio_manager.tscn
 ├── shaders/                   # desenfoque, chromatic_aberration, crt_effect, logo_dissolver
 ├── assets/
 │   ├── fonts/                 # carnivalee_freakshow.ttf, evereast.ttf, PressStart2P-Regular.ttf
@@ -239,12 +239,12 @@ func reiniciar_nivel() -> void:
 │   │   ├── ui/                # botones, iconos, ribbons, paneles, shelve
 │   │   ├── prizes/            # 18 PNG de premios
 │   │   ├── fondodia/tarde/noche.webp, logo.webp, logoaustral.webp
-│   │   ├── plinko_logo.webp   # logo del tablero de plinko (renombrado)
+│   │   ├── juego_logo.webp   # logo del tablero (renombrado)
 │   │   ├── floor.webp, world/fondo_interior.webp
-│   │   └── models/board.glb   # tablero 3D de plinko
+│   │   └── models/board.glb   # tablero 3D
 │   └── sounds/
 │       ├── *.wav (SFX del core)
-│       └── themes/            # main_theme.ogg, plinko.ogg
+│       └── themes/            # main_theme.ogg, juego.ogg
 └── skill.md
 ```
 
@@ -254,7 +254,7 @@ func reiniciar_nivel() -> void:
 
 ```gdscript
 # title.gd — selección del único juego
-save_manager.juego_actual_seleccionado = "plinko"
+save_manager.juego_actual_seleccionado = "juego"
 get_tree().change_scene_to_file("res://scenes/seleccion_niveles.tscn")
 
 # seleccion_niveles.gd — lee games.json, fondo/logo, cuenta niveles
@@ -262,7 +262,7 @@ var cfg = game_manager.obtener_config_juego_actual() # {escena_juego, ruta_nivel
 save_manager.nivel_actual_seleccionado = numero_nivel
 get_tree().change_scene_to_file(cfg["escena_juego"])   # res://scenes/main.tscn
 
-# scenes/main.tscn (plinko) — carga nivel, juega, termina
+# scenes/main.tscn — carga nivel, juega, termina
 ctrl_resultados.mostrar(nivel_actual, puntaje_nivel, puntaje_maximo_nivel)
 # → panel_resultados.gd: save_manager.registrar_puntaje_nivel(...) → ribbons + premio?
 # → OK → premio_desbloqueado.tscn (si hay premio) o seleccion_niveles.tscn
@@ -273,11 +273,11 @@ ctrl_resultados.mostrar(nivel_actual, puntaje_nivel, puntaje_maximo_nivel)
 ## 10) Qué NO hacer
 
 - No uses `res://core/` ni `res://games/` — ya no existen; usa `res://scripts/`, `res://scenes/`, `res://data/`, `res://assets/`.
-- No hardcodees `id` de juego — usa `save_manager.juego_actual_seleccionado` (siempre `"plinko"`).
+- No hardcodees `id` de juego — usa `save_manager.juego_actual_seleccionado`.
 - No dupliques lógica de ribbons/desbloqueo — usa `save_manager` y `panel_resultados`.
 - No instancies `puntos_flotantes.tscn` directo — usa `EfectosUI.crear_efecto_puntos(pos3D, pts)`.
 - No añadas `AudioStreamPlayer` sueltos sin `GameAudioBase` — pierdes respeto a `sfx_enabled`.
-- No olvides `prefijo_texto` (`plinko_`) — sin él los textos colisionan.
+- No olvides `prefijo_texto` (`juego_`) — sin él los textos colisionan.
 - Todo botón UI del core suena `audio_manager.play_ok1()` (click).
 
 ---
@@ -288,4 +288,4 @@ Abrir la raíz en **Godot 4.7+** → Run (main scene = `title.tscn`). Export ví
 
 ---
 
-*Última actualización: 2026-10-27 — un juego (plinko), arquitectura unificada en raíz, eliminadas carpetas `core/` y `games/` y los 4 juegos previos (tincanalley, whackamole, ringtoss, duckshoot), unificados scripts/scenes/data/assets/shaders en raíz. Convención: metas de nivel al 60% del perfecto; click único `play_ok1()` en botones UI.*
+*Última actualización: 2026-10-27 — un juego, arquitectura unificada en raíz, eliminadas carpetas `core/` y `games/` y los 4 juegos previos (tincanalley, whackamole, ringtoss, duckshoot), unificados scripts/scenes/data/assets/shaders en raíz. Convención: metas de nivel al 60% del perfecto; click único `play_ok1()` en botones UI.*

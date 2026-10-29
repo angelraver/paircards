@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://b1ydv2fydkff8" path="res://assets/images/logo.webp" id="4_4e4sy"]
 [ext_resource type="Texture2D" uid="uid://dn6ainl72ncm3" path="res://assets/images/ui/button_prizes.webp" id="6_ljifs"]
 [ext_resource type="Texture2D" uid="uid://davnew6qw8y5b" path="res://assets/images/ui/button_options.webp" id="7_uj4fn"]
-[ext_resource type="Texture2D" uid="uid://yw1nfdd7sldg" path="res://assets/images/plinko_logo.webp" id="9_imagenjuegos"]
+[ext_resource type="Texture2D" uid="uid://yw1nfdd7sldg" path="res://assets/images/juego_logo.webp" id="9_imagenjuegos"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_tydxx"]
 shader = ExtResource("3_2xeeo")

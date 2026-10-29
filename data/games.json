@@ -1,9 +1,9 @@
 {
-	"plinko": {
+	"juego": {
 		"escena_juego": "res://scenes/main.tscn",
 		"ruta_niveles_json": "res://data/niveles.json",
-		"textos_json": "res://data/plinko_textos.json",
-		"textura_logo": "res://assets/images/plinko_logo.webp",
-		"prefijo_texto": "plinko_"
+		"textos_json": "res://data/juego_textos.json",
+		"textura_logo": "res://assets/images/juego_logo.webp",
+		"prefijo_texto": "juego_"
 	}
 }

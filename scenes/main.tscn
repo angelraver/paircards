@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b08dalc26x27u" path="res://scenes/ui_level_number.tscn" id="3_levelnum"]
 [ext_resource type="PackedScene" uid="uid://cmgyjw5107ww2" path="res://scenes/panel_resultados.tscn" id="4_panel"]
 [ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="8_ever"]
-[ext_resource type="PackedScene" uid="uid://2tqs8i44pxnp" path="res://scenes/plinko_audio_manager.tscn" id="10_audio"]
+[ext_resource type="PackedScene" uid="uid://2tqs8i44pxnp" path="res://scenes/juego_audio_manager.tscn" id="10_audio"]
 [ext_resource type="Texture2D" uid="uid://dtfxh5v7h3tyb" path="res://assets/images/ui/button_pause.webp" id="11_pausebtn"]
 [ext_resource type="PackedScene" uid="uid://epau5a222r3y" path="res://scenes/panel_pausa.tscn" id="12_pausa"]
 

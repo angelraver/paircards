@@ -2,7 +2,7 @@ extends Node
 class_name ControladorResultados
 
 ## Controlador reutilizable para el flujo estándar de PanelResultados.
-## Extrae la duplicación de los 3 minijuegos (tincanalley, whackamole, plinko):
+## Extrae la duplicación de los minijuegos:
 ##  - reset de flag + ocultar panel al iniciar nivel
 ##  - guard + ocultar HUD + mostrar panel al finalizar
 ##  - conexión de reiniciar_solicitado -> callback
