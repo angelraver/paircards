@@ -4,7 +4,7 @@
 [ext_resource type="Shader" uid="uid://cxaqtqf2cuq7n" path="res://shaders/logo_dissolver.gshader.gdshader" id="1_xlfdt"]
 [ext_resource type="Texture2D" uid="uid://22ivelngw2g7" path="res://assets/images/logoaustral.webp" id="3_i31ri"]
 [ext_resource type="Script" uid="uid://crg0shgk80tx0" path="res://scripts/logo_script.gd" id="3_w34d2"]
-[ext_resource type="FontFile" uid="uid://wscybhe32177" path="res://fonts/PressStart2P-Regular.ttf" id="4_0pxjp"]
+[ext_resource type="FontFile" uid="uid://ckjwsg6v6s332" path="res://assets/fonts/PressStart2P-Regular.ttf" id="4_0pxjp"]
 [ext_resource type="Shader" uid="uid://bt6k72wxlttto" path="res://shaders/chromatic_aberration.gdshader" id="4_8chsa"]
 [ext_resource type="AudioStream" uid="uid://cahffoscw58qj" path="res://assets/sounds/penguinwind.wav" id="5_kpgpv"]
 [ext_resource type="Script" uid="uid://csqknn3oul3e4" path="res://scripts/label.gd" id="6_d6l6l"]
