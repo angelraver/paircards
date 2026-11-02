@@ -3,20 +3,23 @@ extends Node3D
 # ============================================================================
 #  PARI CARDS - NIVEL 1
 # ----------------------------------------------------------------------------
-#  Juego de emparejar cartas sobre un tablero 3D con cámara fija y vista
+#  Juego de emparejar fichas 3D sobre un tablero con cámara fija y vista
 #  cenital. El tablero se genera proceduralmente en 5 capas (layers) con
 #  grillas alternadas: las capas impares (1, 3, 5) usan 5x5 y las pares
 #  (2, 4) usan 6x6. Ambas grillas comparten centro, por lo que las capas
-#  6x6 quedan intercaladas y sobresalen media carta por cada lado.
+#  6x6 quedan intercaladas y sobresalen media ficha por cada lado.
+#
+#  Cada ficha usa assets/models/ficha.glb como base genérica y recibe en su
+#  cara superior la textura de una carta (carta_01.png ... carta_20.png).
 #
 #  Regla de visibilidad:
-#    Una carta sólo puede tocarse si ninguna carta de una capa superior
+#    Una ficha sólo puede tocarse si ninguna ficha de una capa superior
 #    (número de capa menor) se superpone a su área.
 #
 #  Barra inferior:
-#    5 espacios. Al tocar una carta libre, ésta vuela a la barra. Si entra
-#    una carta del mismo tipo que otra ya presente, ambas desaparecen.
-#    Si la barra llega a 5 cartas sin haber formado pareja, se pierde.
+#    5 espacios. Al tocar una ficha libre, ésta vuela a la barra. Si entra
+#    una ficha del mismo tipo que otra ya presente, ambas desaparecen.
+#    Si la barra llega a 5 fichas sin haber formado pareja, se pierde.
 # ============================================================================
 
 # --- Constantes de grilla y capas -------------------------------------------
@@ -26,20 +29,36 @@ const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
 const TIPOS_CARTA: int = 20               # carta_01.png ... carta_20.png.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
 
-# Oscurecimiento de las cartas bloqueadas según su capa. Índice 0 = capa 1.
-const OSCURIDAD_POR_CAPA: Array[float] = [0.05, 0.15, 0.25, 0.35, 0.45]
+# Slots de la barra y render 3D de la ficha que muestran.
+const TAMANO_SLOT_BARRA := Vector2(96.0, 96.0)
+const MARGEN_ICONO_BARRA: float = 3.0
+const TAMANO_CAMARA_ICONO: float = 0.14
+
+# Oscurecimiento de las fichas bloqueadas. La capa 1 se queda en 10% y las
+# capas 2-5 llevan 10% extra: 30%, 40%, 50% y 60%. Índice 0 = capa 1.
+const OSCURIDAD_POR_CAPA: Array[float] = [0.10, 0.30, 0.40, 0.50, 0.60]
 
 # --- Constantes geométricas -------------------------------------------------
-# Tamaño de una celda (y de una carta) en unidades del mundo 3D.
-# La proporción 0.14 x 0.21 respeta el aspecto 2:3 de los PNG (360x540).
+# Tamaño de una celda en unidades del mundo 3D. La proporción 0.14 x 0.21
+# conserva el reparto espacial del tablero original. Las fichas usan el ancho
+# de la celda como diámetro.
 const TAMANO_CELDA := Vector2(0.14, 0.21)
 
 # Altura de la superficie del piso (CSGBox3D "Piso" de main.tscn).
 const ALTURA_PISO: float = -0.04
 
-# Separación vertical entre capas y grosor de la caja de colisión de la carta.
-const SEPARACION_CAPAS: float = 0.008
-const GROSOR_CARTA: float = 0.004
+# Ficha 3D genérica y shader que pinta su cara superior.
+const FICHA_ESCENA: PackedScene = preload("res://assets/models/ficha.glb")
+const SHADER_CARA: Shader = preload("res://shaders/ficha_cara.gdshader")
+
+# Diámetro y grosor de la ficha. La separación entre capas deja un pequeño
+# aire para que las fichas no se intersecten al apilarse.
+const DIAMETRO_FICHA: float = 0.132
+const GROSOR_FICHA: float = 0.022
+const SEPARACION_CAPAS: float = 0.026
+
+# Duración del vuelo de una ficha desde el tablero hasta la barra.
+const DURACION_VUELO: float = 0.44
 
 # Centro visual del tablero. Se desplaza ligeramente en Z para que la grilla
 # 6x6 quede centrada entre el HUD superior y la barra inferior.
@@ -55,9 +74,10 @@ const RUTA_CARTA: String = "res://assets/images/cards/carta_%02d.png"
 # ============================================================================
 #  CLASE INTERNA: CartaTablero
 # ----------------------------------------------------------------------------
-#  Nodo 3D que representa una carta. Contiene:
-#    - Un QuadMesh horizontal con la textura de la carta.
-#    - Un StaticBody3D con BoxShape3D para poder seleccionarla con raycast.
+#  Nodo 3D que representa una ficha. Contiene:
+#    - La malla de assets/models/ficha.glb, cuya cara superior ya trae la
+#      textura de la carta asignada por main.gd.
+#    - Un StaticBody3D con CylinderShape3D para poder seleccionarla con raycast.
 #    - Datos lógicos: tipo, capa, columna, fila y estado de visibilidad.
 # ============================================================================
 class CartaTablero extends Node3D:
@@ -66,11 +86,11 @@ class CartaTablero extends Node3D:
 	var col: int = 0
 	var fila: int = 0
 	var textura: Texture2D = null
-	var material: StandardMaterial3D = null
+	var material: ShaderMaterial = null
 	var cuerpo: StaticBody3D = null
 	var libre: bool = false
 
-	# Construye la malla, el material y la caja de colisión de la carta.
+	# Incorpora la ficha ya configurada y crea su caja de colisión.
 	# Recibe las medidas desde main.gd para que la clase interna no dependa
 	# de las constantes de la clase exterior.
 	func construir(
@@ -79,7 +99,9 @@ class CartaTablero extends Node3D:
 		p_col: int,
 		p_fila: int,
 		p_textura: Texture2D,
-		p_tamano: Vector2,
+		p_ficha: Node3D,
+		p_material_cara: ShaderMaterial,
+		p_diametro: float,
 		p_grosor: float,
 		p_capa_colision: int
 	) -> void:
@@ -88,35 +110,11 @@ class CartaTablero extends Node3D:
 		col = p_col
 		fila = p_fila
 		textura = p_textura
+		material = p_material_cara
 
-		# --- Malla horizontal -------------------------------------------------
-		var quad := QuadMesh.new()
-		quad.size = p_tamano
-
-		var malla := MeshInstance3D.new()
-		malla.name = "Malla"
-		malla.mesh = quad
-		malla.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-
-		# Material sin iluminación para que el arte de la carta conserve sus
-		# colores originales. Alpha scissor evita problemas de ordenamiento
-		# con las transparencias del PNG.
-		material = StandardMaterial3D.new()
-		material.albedo_texture = p_textura
-		material.albedo_color = Color.WHITE
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
-		material.alpha_scissor_threshold = 0.5
-		material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-		malla.material_override = material
-
-		add_child(malla)
-
-		# La cámara mira hacia abajo y su "arriba" es +Z. Esta rotación deja
-		# el QuadMesh plano sobre el piso, con la textura orientada como en
-		# pantalla (sin espejado ni giro de 180°).
-		basis = Basis(Vector3.UP, PI) * Basis(Vector3.RIGHT, -PI * 0.5)
+		# La ficha ya viene escalada y desplazada para que el centro de su
+		# cara superior coincida con el origen de este nodo.
+		add_child(p_ficha)
 
 		# --- Colisión para el raycast ----------------------------------------
 		cuerpo = StaticBody3D.new()
@@ -126,14 +124,16 @@ class CartaTablero extends Node3D:
 
 		var forma := CollisionShape3D.new()
 		forma.name = "Forma"
-		var caja := BoxShape3D.new()
-		# En el espacio local de la carta: X = ancho, Y = alto, Z = grosor.
-		# La rotación del nodo convierte Y local en Z del mundo y Z local en Y.
-		caja.size = Vector3(p_tamano.x, p_tamano.y, p_grosor)
-		forma.shape = caja
+		var cilindro := CylinderShape3D.new()
+		# El cilindro ocupa el volumen de la ficha: de su base a la cara
+		# superior.
+		cilindro.radius = p_diametro * 0.5
+		cilindro.height = p_grosor
+		forma.shape = cilindro
+		forma.position = Vector3(0.0, -p_grosor * 0.5, 0.0)
 		cuerpo.add_child(forma)
 
-		# El cuerpo guarda una referencia a esta carta para que el raycast
+		# El cuerpo guarda una referencia a esta ficha para que el raycast
 		# pueda recuperarla desde el colisionador.
 		cuerpo.set_meta("carta", self)
 		add_child(cuerpo)
@@ -157,10 +157,19 @@ class CartaTablero extends Node3D:
 var nivel_actual: int = 1
 var ctrl_resultados: ControladorResultados
 
-var _cartas_tablero: Array[CartaTablero] = []   # Sólo cartas aún en el tablero.
+var _cartas_tablero: Array[CartaTablero] = []   # Sólo fichas aún en el tablero.
 var _texturas: Array[Texture2D] = []            # Cache de las 20 texturas.
 
+# Configuración de la ficha 3D, calculada una vez a partir del GLB.
+var _radio_ficha: float = 1.0
+var _escala_ficha: Vector3 = Vector3.ONE
+var _offset_ficha: Vector3 = Vector3.ZERO
+var _indice_cara_superior: int = 0
+
 var _barra_tipos: Array[int] = []               # Tipos en la barra, en orden.
+# Tipos que ya están en la barra lógica pero cuya ficha todavía está volando:
+# su icono 3D permanece oculto hasta que termina la animación.
+var _tipos_pendientes_visual: Array[int] = []
 var _pares_encontrados: int = 0
 var _juego_terminado: bool = false
 
@@ -174,6 +183,9 @@ var _barra_ui: Control = null
 var _capa_efectos: Control = null
 var _slots: Array[Panel] = []
 var _slots_texturas: Array[TextureRect] = []
+var _slots_viewports: Array[SubViewport] = []
+var _slots_fichas: Array[Node3D] = []
+var _slots_materiales: Array[ShaderMaterial] = []
 
 # ============================================================================
 #  CICLO DE VIDA
@@ -183,7 +195,8 @@ func _ready() -> void:
 
 	nivel_actual = save_manager.nivel_actual_seleccionado
 
-	# Texturas, barra inferior y capa de efectos visuales.
+	# Ficha 3D, texturas, barra inferior y capa de efectos visuales.
+	_preparar_ficha()
 	_cargar_texturas()
 	_crear_barra_ui()
 	_crear_capa_efectos()
@@ -224,6 +237,104 @@ func _textura_para_tipo(tipo: int) -> Texture2D:
 		return null
 	return _texturas[indice]
 
+# Lee la malla base de ficha.glb y calcula la escala, el desplazamiento y la
+# superficie que se usará como cara. Se ejecuta una sola vez por nivel.
+func _preparar_ficha() -> void:
+	var temporal := FICHA_ESCENA.instantiate()
+	var malla := _buscar_mesh_instance(temporal)
+	if malla == null or malla.mesh == null:
+		push_error("No se pudo obtener la malla de res://assets/models/ficha.glb")
+		temporal.free()
+		return
+
+	var aabb := malla.mesh.get_aabb()
+	_radio_ficha = maxf(aabb.size.x, aabb.size.z) * 0.5
+
+	var escala_xz := DIAMETRO_FICHA / (2.0 * _radio_ficha)
+	var escala_y := GROSOR_FICHA / maxf(aabb.size.y, 0.0001)
+	_escala_ficha = Vector3(escala_xz, escala_y, escala_xz)
+
+	# El nodo de la ficha representa su cara superior: se baja la malla para
+	# que la tapa quede en y = 0 y el cuerpo crezca hacia abajo.
+	_offset_ficha = Vector3(
+		-aabb.get_center().x * escala_xz,
+		-aabb.end.y * escala_y,
+		-aabb.get_center().z * escala_xz
+	)
+
+	_indice_cara_superior = _indice_superficie_superior(malla.mesh)
+	temporal.free()
+
+func _buscar_mesh_instance(nodo: Node) -> MeshInstance3D:
+	if nodo is MeshInstance3D:
+		return nodo as MeshInstance3D
+	for hijo in nodo.get_children():
+		var encontrada := _buscar_mesh_instance(hijo)
+		if encontrada != null:
+			return encontrada
+	return null
+
+# Busca la superficie de la cara superior. Primero intenta por el nombre del
+# material y, si el importador lo pierde, por la cantidad de normales +Y.
+func _indice_superficie_superior(malla: Mesh) -> int:
+	for i in range(malla.get_surface_count()):
+		var material := malla.surface_get_material(i)
+		if material != null and material.resource_name.to_lower().contains("superior"):
+			return i
+
+	var mejor := 0
+	var mejor_score := -1.0
+	for i in range(malla.get_surface_count()):
+		var arrays := malla.surface_get_arrays(i)
+		var normales = arrays[Mesh.ARRAY_NORMAL]
+		if normales == null or normales.is_empty():
+			continue
+		var arriba := 0
+		for normal in normales:
+			if normal.y > 0.9:
+				arriba += 1
+		var score := float(arriba) / float(normales.size())
+		if score > mejor_score:
+			mejor_score = score
+			mejor = i
+	return mejor
+
+func _crear_material_cara(textura: Texture2D) -> ShaderMaterial:
+	var material := ShaderMaterial.new()
+	material.shader = SHADER_CARA
+	material.set_shader_parameter("albedo_textura", textura)
+	material.set_shader_parameter("radio_cara", _radio_ficha)
+	material.set_shader_parameter("brillo", 1.0)
+	return material
+
+# Configura una instancia de ficha.glb para que su cara superior muestre la
+# textura indicada. Devuelve el material de la cara para poder cambiar la
+# textura después (por ejemplo, en los iconos de la barra).
+func _configurar_visual_ficha(ficha: Node3D, textura: Texture2D) -> ShaderMaterial:
+	var malla := _buscar_mesh_instance(ficha)
+	if malla == null or malla.mesh == null:
+		return null
+
+	malla.scale = _escala_ficha
+	malla.position = _offset_ficha
+	malla.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+	var material := _crear_material_cara(textura)
+	if _indice_cara_superior < malla.mesh.get_surface_count():
+		malla.set_surface_override_material(_indice_cara_superior, material)
+	return material
+
+# Entorno mínimo para renderizar los iconos 3D de la barra con fondo
+# transparente y una iluminación similar a la del tablero.
+func _crear_entorno_ficha() -> Environment:
+	var entorno := Environment.new()
+	entorno.background_mode = Environment.BG_CLEAR_COLOR
+	entorno.background_color = Color(0.0, 0.0, 0.0, 0.0)
+	entorno.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	entorno.ambient_light_color = Color(0.627451, 0.627451, 0.627451)
+	entorno.ambient_light_energy = 0.5
+	return entorno
+
 # ============================================================================
 #  GENERACIÓN PROCEDURAL DEL NIVEL
 # ============================================================================
@@ -233,6 +344,7 @@ func _cargar_nivel(n: int) -> void:
 
 	# Limpieza de estado anterior (reinicio).
 	_barra_tipos.clear()
+	_tipos_pendientes_visual.clear()
 	_actualizar_barra_ui()
 	_limpiar_tablero()
 	_limpiar_efectos()
@@ -306,10 +418,20 @@ func _generar_cartas() -> void:
 			_crear_carta(tipos[indice_tipo], capa, celda.x, celda.y)
 			indice_tipo += 1
 
-# Instancia una carta y la coloca en su posición del mundo.
+# Instancia una ficha, le asigna la textura de su tipo y la coloca en el mundo.
 func _crear_carta(tipo: int, capa: int, col: int, fila: int) -> void:
 	var textura := _textura_para_tipo(tipo)
 	if textura == null:
+		return
+
+	var ficha := FICHA_ESCENA.instantiate() as Node3D
+	var material_cara: ShaderMaterial = null
+	if ficha != null:
+		material_cara = _configurar_visual_ficha(ficha, textura)
+	if ficha == null or material_cara == null:
+		push_error("No se pudo instanciar la malla de ficha.glb")
+		if ficha:
+			ficha.free()
 		return
 
 	var carta := CartaTablero.new()
@@ -320,8 +442,10 @@ func _crear_carta(tipo: int, capa: int, col: int, fila: int) -> void:
 		col,
 		fila,
 		textura,
-		TAMANO_CELDA,
-		GROSOR_CARTA,
+		ficha,
+		material_cara,
+		DIAMETRO_FICHA,
+		GROSOR_FICHA,
 		CAPA_COLISION_CARTAS
 	)
 
@@ -340,18 +464,19 @@ func _posicion_mundo(col: int, fila: int, capa: int) -> Vector3:
 
 	# Ambas grillas comparten centro. Como la capa par tiene una columna y una
 	# fila extra, sus centros quedan intercalados media celda respecto de la
-	# capa impar y sus bordes sobresalen media carta por cada lado.
+	# capa impar y sus bordes sobresalen media ficha por cada lado.
 	return Vector3(
 		CENTRO_TABLERO.x - x_logica,
 		_y_para_capa(capa),
 		CENTRO_TABLERO.z - y_logica
 	)
 
-# Altura de cada capa. La capa 1 es la superior; la 5, la inferior.
+# Altura de la cara superior de cada capa. La capa 1 es la superior; la 5,
+# la inferior. La capa inferior se apoya sobre el piso.
 func _y_para_capa(capa: int) -> float:
 	return ALTURA_PISO \
-		+ float(LAYER_COUNT - capa) * SEPARACION_CAPAS \
-		+ GROSOR_CARTA * 0.5
+		+ GROSOR_FICHA \
+		+ float(LAYER_COUNT - capa) * SEPARACION_CAPAS
 
 func _es_capa_par(capa: int) -> bool:
 	return capa % 2 == 0
@@ -392,20 +517,19 @@ func _se_superponen(a: CartaTablero, b: CartaTablero) -> bool:
 	const EPSILON: float = 0.0001
 	return dx < TAMANO_CELDA.x - EPSILON and dz < TAMANO_CELDA.y - EPSILON
 
-# Feedback visual: las cartas tapadas se muestran oscurecidas.
+# Feedback visual: las fichas tapadas se muestran oscurecidas.
 func _aplicar_estado_visual(carta: CartaTablero) -> void:
 	if carta.material == null:
 		return
 
-	# Las cartas libres conservan su brillo original.
-	if carta.libre:
-		carta.material.albedo_color = Color.WHITE
-		return
+	# Las fichas libres conservan su brillo original.
+	var brillo := 1.0
+	if not carta.libre:
+		# Las bloqueadas se oscurecen según la capa a la que pertenecen.
+		var indice := clampi(carta.capa - 1, 0, OSCURIDAD_POR_CAPA.size() - 1)
+		brillo = 1.0 - OSCURIDAD_POR_CAPA[indice]
 
-	# Las bloqueadas se oscurecen según la capa a la que pertenecen.
-	var indice := clampi(carta.capa - 1, 0, OSCURIDAD_POR_CAPA.size() - 1)
-	var brillo := 1.0 - OSCURIDAD_POR_CAPA[indice]
-	carta.material.albedo_color = Color(brillo, brillo, brillo, 1.0)
+	carta.material.set_shader_parameter("brillo", brillo)
 
 # ============================================================================
 #  INPUT Y SELECCIÓN
@@ -477,28 +601,32 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 
 	var tipo := carta.tipo
 
-	# Si ya hay una carta del mismo tipo, el fantasma vuela hacia ese espacio.
+	# Si ya hay una ficha del mismo tipo, el vuelo apunta a ese espacio.
 	var indice_destino: int = _barra_tipos.size()
 	var indice_match := _barra_tipos.find(tipo)
 	if indice_match != -1:
 		indice_destino = indice_match
 
-	# Animación visual desde la posición proyectada de la carta a la barra.
+	# La ficha 3D seleccionada vuela hasta la barra; la animación la libera al
+	# terminar. Se quita del tablero de inmediato para que no pueda volver a
+	# seleccionarse mientras está en el aire.
 	_animar_carta_a_barra(carta, indice_destino)
 
 	if audio_juego:
 		audio_juego.play_aleatorio("Pik")
 
-	# La carta desaparece del tablero inmediatamente.
 	_cartas_tablero.erase(carta)
 	carta.libre = false
 	if carta.cuerpo:
 		carta.cuerpo.collision_layer = 0
-	carta.visible = false
-	carta.queue_free()
 
 	# Al quitar esta carta pueden quedar libres cartas de capas inferiores.
 	_actualizar_visibilidad()
+
+	# Si la ficha ocupa un hueco nuevo, su icono se mantiene oculto hasta que
+	# termina el vuelo. Las parejas no dejan un icono nuevo en la barra.
+	if indice_match == -1:
+		_tipos_pendientes_visual.append(tipo)
 
 	# Resolución de la barra (pareja, derrota o victoria).
 	_agregar_a_barra(tipo)
@@ -515,6 +643,14 @@ func _crear_barra_ui() -> void:
 
 	_slots.clear()
 	_slots_texturas.clear()
+	_slots_viewports.clear()
+	_slots_fichas.clear()
+	_slots_materiales.clear()
+
+	var entorno_ficha := _crear_entorno_ficha()
+	var textura_inicial: Texture2D = null
+	if not _texturas.is_empty():
+		textura_inicial = _texturas[0]
 
 	_barra_ui = Control.new()
 	_barra_ui.name = "BarraRecoleccion"
@@ -561,7 +697,7 @@ func _crear_barra_ui() -> void:
 
 	for _i in range(CAPACIDAD_BARRA):
 		var slot := Panel.new()
-		slot.custom_minimum_size = Vector2(96, 144)
+		slot.custom_minimum_size = TAMANO_SLOT_BARRA
 		slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		slot.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -573,22 +709,73 @@ func _crear_barra_ui() -> void:
 		estilo.set_corner_radius_all(10)
 		slot.add_theme_stylebox_override("panel", estilo)
 
-		var textura_rect := TextureRect.new()
-		textura_rect.name = "Carta"
-		textura_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		textura_rect.offset_left = 3.0
-		textura_rect.offset_top = 3.0
-		textura_rect.offset_right = -3.0
-		textura_rect.offset_bottom = -3.0
-		textura_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		textura_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		textura_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		textura_rect.visible = false
-		slot.add_child(textura_rect)
+		var icono := TextureRect.new()
+		icono.name = "Ficha"
+		icono.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		icono.offset_left = MARGEN_ICONO_BARRA
+		icono.offset_top = MARGEN_ICONO_BARRA
+		icono.offset_right = -MARGEN_ICONO_BARRA
+		icono.offset_bottom = -MARGEN_ICONO_BARRA
+		icono.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icono.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icono.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icono.visible = false
+		slot.add_child(icono)
+
+		# Vista 3D aislada por slot. Se renderiza solo cuando cambia su
+		# contenido para no gastar un render 3D extra cada frame.
+		var viewport := SubViewport.new()
+		viewport.name = "VistaFicha"
+		viewport.size = Vector2i(192, 192)
+		viewport.transparent_bg = true
+		viewport.own_world_3d = true
+		viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
+		viewport.msaa_3d = Viewport.MSAA_4X
+		slot.add_child(viewport)
+
+		var camara_ficha := Camera3D.new()
+		camara_ficha.name = "Camara"
+		camara_ficha.projection = Camera3D.PROJECTION_ORTHOGONAL
+		camara_ficha.size = TAMANO_CAMARA_ICONO
+		camara_ficha.near = 0.01
+		camara_ficha.far = 10.0
+		camara_ficha.environment = entorno_ficha
+		var base := Basis.IDENTITY
+		if camara:
+			base = camara.global_transform.basis.orthonormalized()
+		var centro := Vector3(0.0, -GROSOR_FICHA * 0.5, 0.0)
+		camara_ficha.transform = Transform3D(base, centro + base.z * 0.3)
+		camara_ficha.current = true
+		viewport.add_child(camara_ficha)
+
+		for nombre_luz in ["DirectionalLight3D", "SunLight"]:
+			var fuente := get_node_or_null(nombre_luz) as DirectionalLight3D
+			if fuente:
+				var luz := DirectionalLight3D.new()
+				luz.name = "Luz_" + nombre_luz
+				luz.transform = fuente.transform
+				luz.light_color = fuente.light_color
+				luz.light_energy = fuente.light_energy
+				luz.shadow_enabled = false
+				viewport.add_child(luz)
+
+		var ficha: Node3D = FICHA_ESCENA.instantiate() as Node3D
+		var material_ficha: ShaderMaterial = null
+		if ficha != null:
+			material_ficha = _configurar_visual_ficha(ficha, textura_inicial)
+		if ficha != null and material_ficha != null:
+			ficha.visible = false
+			viewport.add_child(ficha)
+		elif ficha != null:
+			ficha.free()
+			ficha = null
 
 		caja.add_child(slot)
 		_slots.append(slot)
-		_slots_texturas.append(textura_rect)
+		_slots_texturas.append(icono)
+		_slots_viewports.append(viewport)
+		_slots_fichas.append(ficha)
+		_slots_materiales.append(material_ficha)
 
 	ui.add_child(_barra_ui)
 	# Al índice 0 para que PanelResultados y PanelPausa queden por encima.
@@ -598,14 +785,31 @@ func _crear_barra_ui() -> void:
 
 func _actualizar_barra_ui() -> void:
 	for i in range(_slots.size()):
-		var textura_rect := _slots_texturas[i]
+		var icono := _slots_texturas[i]
+		var viewport := _slots_viewports[i]
+		var ficha := _slots_fichas[i]
+		var material := _slots_materiales[i]
+
+		var tipo := 0
+		var textura: Texture2D = null
 		if i < _barra_tipos.size():
-			var textura := _textura_para_tipo(_barra_tipos[i])
-			textura_rect.texture = textura
-			textura_rect.visible = textura != null
+			tipo = _barra_tipos[i]
+			textura = _textura_para_tipo(tipo)
+		var pendiente := textura != null and _tipos_pendientes_visual.has(tipo)
+
+		if textura != null and ficha != null and material != null:
+			# Se renderiza desde ya, pero oculto, para que al revelarlo el
+			# icono ya tenga la textura correcta (sin un frame con la anterior).
+			icono.texture = viewport.get_texture()
+			icono.visible = not pendiente
+			ficha.visible = true
+			material.set_shader_parameter("albedo_textura", textura)
+			viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 		else:
-			textura_rect.texture = null
-			textura_rect.visible = false
+			icono.visible = false
+			if ficha:
+				ficha.visible = false
+			viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 # Añade un tipo a la barra y resuelve la lógica de pareja / derrota.
 func _agregar_a_barra(tipo: int) -> void:
@@ -662,39 +866,64 @@ func _limpiar_efectos() -> void:
 		_capa_efectos.remove_child(hijo)
 		hijo.queue_free()
 
-# Anima una copia 2D de la carta desde su posición en pantalla hasta el slot
-# correspondiente de la barra. La carta 3D se oculta inmediatamente, de modo
-# que el jugador percibe que la carta vuela del tablero a la barra.
+# Anima la ficha 3D seleccionada desde su posición en el tablero hasta el
+# centro del slot correspondiente de la barra. La ficha se encoge para encajar
+# en el espacio y se libera al terminar el vuelo.
 func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
-	if _capa_efectos == null or _slots.is_empty() or camara == null:
+	if _slots.is_empty() or camara == null:
+		carta.queue_free()
 		return
 
-	# Coincide con el tamaño de los slots de la barra inferior.
-	var tamano_fantasma := Vector2(96, 144)
-	var origen := camara.unproject_position(carta.global_position) - tamano_fantasma * 0.5
-
-	var fantasma := TextureRect.new()
-	fantasma.texture = carta.textura
-	fantasma.size = tamano_fantasma
-	fantasma.position = origen
-	fantasma.pivot_offset = tamano_fantasma * 0.5
-	fantasma.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	fantasma.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	fantasma.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_capa_efectos.add_child(fantasma)
-
 	var slot := _slots[clampi(indice_slot, 0, _slots.size() - 1)]
-	var destino := slot.get_global_rect().get_center() - tamano_fantasma * 0.5
+	var centro_slot := slot.get_global_rect().get_center()
 
-	var tween := create_tween()
+	# Punto del mundo que, visto por la cámara, coincide con el centro del
+	# slot. Se usa un plano horizontal a la altura de la ficha para conservar
+	# su altura durante el vuelo.
+	var plano := Plane(Vector3.UP, carta.global_position.y)
+	var interseccion: Variant = plano.intersects_ray(
+		camara.project_ray_origin(centro_slot),
+		camara.project_ray_normal(centro_slot)
+	)
+	if interseccion == null:
+		carta.queue_free()
+		return
+
+	var destino: Vector3 = interseccion
+
+	# Escala final para que el diámetro de la ficha coincida con el icono 3D
+	# que se muestra dentro del slot.
+	var radio := DIAMETRO_FICHA * 0.5
+	var ancho_token := camara.unproject_position(destino + Vector3(radio, 0.0, 0.0)) \
+		.distance_to(camara.unproject_position(destino - Vector3(radio, 0.0, 0.0)))
+	var ancho_icono := (slot.size.x - MARGEN_ICONO_BARRA * 2.0) \
+		* (DIAMETRO_FICHA / TAMANO_CAMARA_ICONO)
+	var escala_final := 1.0
+	if ancho_token > 0.001:
+		escala_final = clampf(ancho_icono / ancho_token, 0.3, 1.0)
+
+	var tween := carta.create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(fantasma, "position", destino, 0.22) \
+	tween.tween_property(carta, "global_position", destino, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_CUBIC) \
 		.set_ease(Tween.EASE_IN)
-	tween.tween_property(fantasma, "scale", Vector2(1.15, 1.15), 0.22) \
-		.set_trans(Tween.TRANS_BACK) \
+	tween.tween_property(carta, "scale", Vector3.ONE * escala_final, DURACION_VUELO) \
+		.set_trans(Tween.TRANS_CUBIC) \
 		.set_ease(Tween.EASE_OUT)
-	tween.finished.connect(fantasma.queue_free)
+	var tipo := carta.tipo
+	tween.finished.connect(func() -> void:
+		carta.queue_free()
+		_revelar_ficha_en_barra(tipo)
+	)
+
+# Muestra el icono de la ficha que acaba de aterrizar en la barra. Si otra
+# ficha del mismo tipo sigue volando, el icono permanece oculto.
+func _revelar_ficha_en_barra(tipo: int) -> void:
+	var indice := _tipos_pendientes_visual.find(tipo)
+	if indice == -1:
+		return
+	_tipos_pendientes_visual.remove_at(indice)
+	_actualizar_barra_ui()
 
 # ============================================================================
 #  LIMPIEZA Y FIN DE PARTIDA

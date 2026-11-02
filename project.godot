@@ -13,14 +13,13 @@ config_version=5
 config/name="Pari Cards"
 run/main_scene="uid://cokb2wqhdfvfb"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="uid://chtg7qgkso4gc"
+config/icon="uid://crspjtxgrtpp"
 
 [autoload]
 
 save_manager="*uid://cots0gs8v334y"
 audio_manager="*uid://kka34qmlhs2y"
 game_manager="*uid://dj08o70wsge1m"
-EfectosUI="*uid://dac5xnnjvcybv"
 InAppUpdate="*uid://bmk2vbp0o6g7x"
 
 [display]
