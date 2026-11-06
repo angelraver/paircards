@@ -31,10 +31,15 @@ const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
 const TIPOS_CARTA: int = 20               # carta_01.png ... carta_20.png.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
 
-# Slots de la barra y render 3D de la ficha que muestran.
-const TAMANO_SLOT_BARRA := Vector2(96.0, 96.0)
-const MARGEN_ICONO_BARRA: float = 3.0
+# Slots de la barra y render 3D de la ficha que muestran. Las fichas
+# acumuladas y sus placeholders se dibujan un 30% más grandes.
+const ESCALA_FICHAS_BARRA: float = 1.3
+const TAMANO_SLOT_BARRA := Vector2(96.0, 96.0) * ESCALA_FICHAS_BARRA
+const MARGEN_ICONO_BARRA: float = 3.0 * ESCALA_FICHAS_BARRA
 const TAMANO_CAMARA_ICONO: float = 0.14
+
+# Altura de la barra inferior, en píxeles lógicos de la pantalla.
+const ALTO_BARRA: float = 200.0
 
 # Oscurecimiento de las fichas bloqueadas. La capa 1 se queda en 10% y las
 # capas 2-5 llevan 10% extra: 30%, 40%, 50% y 60%. Índice 0 = capa 1.
@@ -43,6 +48,10 @@ const OSCURIDAD_POR_CAPA: Array[float] = [0.10, 0.30, 0.40, 0.50, 0.60]
 # --- Constantes geométricas -------------------------------------------------
 # Altura de la superficie del piso (CSGBox3D "Piso" de main.tscn).
 const ALTURA_PISO: float = -0.04
+
+# La barra es un quad 3D apenas por encima del piso: así las fichas, que
+# siempre están más altas, quedan por delante y no las tapa.
+const ALTURA_BARRA_3D: float = ALTURA_PISO + 0.002
 
 # Ficha 3D genérica y shader que pinta su cara superior.
 const FICHA_ESCENA: PackedScene = preload("res://assets/models/ficha.glb")
@@ -67,7 +76,11 @@ const SQRT3: float = 1.7320508075688772
 const DESPLAZAMIENTO_INTERCALADO := Vector2(0.5, 0.28867513459481287)
 
 # Duración del vuelo de una ficha desde el tablero hasta la barra.
-const DURACION_VUELO: float = 0.44
+const DURACION_VUELO: float = 1.1
+
+# Pequeño salto vertical al seleccionar una ficha, antes de viajar a la barra.
+const ALTURA_SALTO_SELECCION: float = DIAMETRO_FICHA * 1.2
+const DURACION_SALTO: float = DURACION_VUELO * 0.18
 
 # Centro visual del tablero. Se desplaza ligeramente en Z para que la grilla
 # circular quede centrada entre el HUD superior y la barra inferior.
@@ -186,6 +199,8 @@ var _total_pares: int = 0
 
 # Nodos de UI creados por código para no exigir cambios en main.tscn.
 var _barra_ui: Control = null
+var _barra_viewport: SubViewport = null
+var _barra_sprite: Sprite3D = null
 var _capa_efectos: Control = null
 var _slots: Array[Panel] = []
 var _slots_texturas: Array[TextureRect] = []
@@ -649,12 +664,9 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 #  BARRA INFERIOR ("SCRABBLE BAR")
 # ============================================================================
 # Crea por código la barra de 5 espacios en la parte inferior de la pantalla.
-# Se inserta al fondo del CanvasLayer para quedar debajo de los paneles.
+# Se renderiza en un quad 3D apoyado en el piso para que las fichas queden
+# siempre por encima de ella.
 func _crear_barra_ui() -> void:
-	var ui := $UI as CanvasLayer
-	if ui == null:
-		return
-
 	_slots.clear()
 	_slots_texturas.clear()
 	_slots_viewports.clear()
@@ -670,15 +682,8 @@ func _crear_barra_ui() -> void:
 	_barra_ui.name = "BarraRecoleccion"
 	_barra_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	# Anclada al borde inferior, 200 px de alto.
-	_barra_ui.anchor_left = 0.0
-	_barra_ui.anchor_top = 1.0
-	_barra_ui.anchor_right = 1.0
-	_barra_ui.anchor_bottom = 1.0
-	_barra_ui.offset_left = 0.0
-	_barra_ui.offset_top = -200.0
-	_barra_ui.offset_right = 0.0
-	_barra_ui.offset_bottom = 0.0
+	# Dentro de su SubViewport la barra ocupa todo el rectángulo.
+	_barra_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	# Fondo semitransparente.
 	var fondo := ColorRect.new()
@@ -720,7 +725,7 @@ func _crear_barra_ui() -> void:
 		estilo.bg_color = Color(0.08, 0.08, 0.12, 0.88)
 		estilo.border_color = Color(0.95, 0.78, 0.25, 0.8)
 		estilo.set_border_width_all(2)
-		estilo.set_corner_radius_all(10)
+		estilo.set_corner_radius_all(int(TAMANO_SLOT_BARRA.x * 0.5))
 		slot.add_theme_stylebox_override("panel", estilo)
 
 		var icono := TextureRect.new()
@@ -791,11 +796,67 @@ func _crear_barra_ui() -> void:
 		_slots_fichas.append(ficha)
 		_slots_materiales.append(material_ficha)
 
-	ui.add_child(_barra_ui)
-	# Al índice 0 para que PanelResultados y PanelPausa queden por encima.
-	ui.move_child(_barra_ui, 0)
+	# La barra se dibuja en un quad 3D sobre el piso, alineado con el
+	# rectángulo inferior de la pantalla. Al estar por debajo de todas las
+	# fichas, éstas ya no quedan tapadas al llegar a los slots.
+	_barra_viewport = SubViewport.new()
+	_barra_viewport.name = "BarraViewport"
+	_barra_viewport.transparent_bg = true
+	_barra_viewport.disable_3d = true
+	_barra_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(_barra_viewport)
+	_barra_viewport.add_child(_barra_ui)
+
+	_barra_sprite = Sprite3D.new()
+	_barra_sprite.name = "Barra3D"
+	_barra_sprite.texture = _barra_viewport.get_texture()
+	_barra_sprite.shaded = false
+	_barra_sprite.double_sided = true
+	_barra_sprite.flip_h = true
+	_barra_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+	_barra_sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_barra_sprite)
+	_actualizar_barra_3d()
+	if not get_viewport().size_changed.is_connected(_actualizar_barra_3d):
+		get_viewport().size_changed.connect(_actualizar_barra_3d)
 
 	_actualizar_barra_ui()
+
+# Ajusta el quad 3D de la barra al rectángulo inferior de la pantalla. Como
+# la cámara mira hacia abajo, el plano del piso es paralelo al de la imagen:
+# proyectando sus esquinas se obtienen el centro y el tamaño exactos.
+func _actualizar_barra_3d() -> void:
+	if _barra_viewport == null or _barra_sprite == null or camara == null:
+		return
+
+	var pantalla := get_viewport().get_visible_rect().size
+	_barra_viewport.size = Vector2i(int(pantalla.x), int(ALTO_BARRA))
+
+	var plano := Plane(Vector3.UP, ALTURA_BARRA_3D)
+	var esquina_sup := Vector2(0.0, pantalla.y - ALTO_BARRA)
+	var esquina_inf := Vector2(pantalla.x, pantalla.y)
+	var sup: Variant = plano.intersects_ray(
+		camara.project_ray_origin(esquina_sup),
+		camara.project_ray_normal(esquina_sup)
+	)
+	var inf: Variant = plano.intersects_ray(
+		camara.project_ray_origin(esquina_inf),
+		camara.project_ray_normal(esquina_inf)
+	)
+	if sup == null or inf == null:
+		return
+
+	var sup_v: Vector3 = sup
+	var inf_v: Vector3 = inf
+	var centro := (sup_v + inf_v) * 0.5
+	var tam := Vector2(absf(sup_v.x - inf_v.x), absf(sup_v.z - inf_v.z))
+	var tam_tex := Vector2(_barra_viewport.size)
+
+	_barra_sprite.position = centro
+	_barra_sprite.rotation = Vector3(PI * 0.5, 0.0, 0.0)
+	_barra_sprite.pixel_size = 1.0
+	if tam_tex.x > 0.0 and tam_tex.y > 0.0:
+		_barra_sprite.scale = Vector3(tam.x / tam_tex.x, tam.y / tam_tex.y, 1.0)
 
 func _actualizar_barra_ui() -> void:
 	for i in range(_slots.size()):
@@ -881,15 +942,23 @@ func _limpiar_efectos() -> void:
 		hijo.queue_free()
 
 # Anima la ficha 3D seleccionada desde su posición en el tablero hasta el
-# centro del slot correspondiente de la barra. La ficha se encoge para encajar
-# en el espacio y se libera al terminar el vuelo.
+# centro del slot correspondiente de la barra. La ficha se lanza en arco y
+# gira como una moneda al aire mientras se encoge para encajar en el espacio;
+# al terminar el vuelo se libera y se muestra el icono del slot.
 func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 	if _slots.is_empty() or camara == null:
 		carta.queue_free()
 		return
 
 	var slot := _slots[clampi(indice_slot, 0, _slots.size() - 1)]
-	var centro_slot := slot.get_global_rect().get_center()
+	# El slot vive dentro del viewport de la barra: se traslada su centro al
+	# rectángulo que la barra ocupa en la pantalla.
+	var rect_slot := slot.get_global_rect()
+	var pantalla := get_viewport().get_visible_rect().size
+	var centro_slot := Vector2(
+		rect_slot.get_center().x,
+		pantalla.y - ALTO_BARRA + rect_slot.get_center().y
+	)
 
 	# Punto del mundo que, visto por la cámara, coincide con el centro del
 	# slot. Se usa un plano horizontal a la altura de la ficha para conservar
@@ -916,11 +985,32 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 	if ancho_token > 0.001:
 		escala_final = clampf(ancho_icono / ancho_token, 0.3, 1.0)
 
+	# Arco del lanzamiento: la ficha sube mientras viaja y baja al llegar.
+	var origen: Vector3 = carta.global_position
+	var distancia := origen.distance_to(destino)
+	var altura_arco := clampf(distancia * 0.25, 0.05, 0.18)
+
+	# El vuelo parte desde lo alto del salto inicial.
+	var origen_vuelo := origen + Vector3(0.0, ALTURA_SALTO_SELECCION, 0.0)
+	var mover := func(t: float) -> void:
+		var pos := origen_vuelo.lerp(destino, t)
+		pos.y += sin(t * PI) * altura_arco
+		carta.global_position = pos
+
 	var tween := carta.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(carta, "global_position", destino, DURACION_VUELO) \
+	# 1) Salto vertical en el sitio, como preparación del lanzamiento.
+	tween.tween_property(carta, "global_position:y", origen_vuelo.y, DURACION_SALTO) \
+		.set_trans(Tween.TRANS_QUAD) \
+		.set_ease(Tween.EASE_OUT)
+	# 2) Vuelo hacia la barra; comienza al terminar el salto.
+	tween.chain().tween_method(mover, 0.0, 1.0, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_CUBIC) \
-		.set_ease(Tween.EASE_IN)
+		.set_ease(Tween.EASE_IN_OUT)
+	tween.set_parallel(true)
+	# Dos vueltas completas sobre el eje X: termina de nuevo con la cara
+	# hacia arriba, como una moneda que cae de canto y vuelve a su posición.
+	tween.tween_property(carta, "rotation:x", -TAU * 2.0, DURACION_VUELO) \
+		.set_trans(Tween.TRANS_LINEAR)
 	tween.tween_property(carta, "scale", Vector3.ONE * escala_final, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_CUBIC) \
 		.set_ease(Tween.EASE_OUT)
