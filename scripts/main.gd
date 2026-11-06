@@ -11,7 +11,7 @@ extends Node3D
 #  epicentro queda vacío y cada capa se intercala con la anterior.
 #
 #  Cada ficha usa assets/models/ficha.glb como base genérica y recibe en su
-#  cara superior la textura de una carta (carta_01.png ... carta_20.png).
+#  cara superior la textura de una ficha (ficha_01.webp ... ficha_20.webp).
 #
 #  Regla de visibilidad:
 #    Una ficha sólo puede tocarse si ninguna ficha de una capa superior
@@ -28,7 +28,7 @@ extends Node3D
 # la red hexagonal con este radio produce una grilla circular.
 const RADIO_MAX_CAPA: float = 2.1
 const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
-const TIPOS_CARTA: int = 20               # carta_01.png ... carta_20.png.
+const TIPOS_CARTA: int = 20               # ficha_01.webp ... ficha_20.webp.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
 
 # Slots de la barra y render 3D de la ficha que muestran. Las fichas
@@ -90,8 +90,8 @@ const CENTRO_TABLERO := Vector3(0.0, 0.0, 0.16)
 # choque con el piso o con otros objetos de la escena.
 const CAPA_COLISION_CARTAS: int = 2
 
-# Ruta de las texturas. carta_01.png ... carta_20.png.
-const RUTA_CARTA: String = "res://assets/images/cards/carta_%02d.png"
+# Ruta de las texturas. ficha_01.webp ... ficha_20.webp.
+const RUTA_CARTA: String = "res://assets/images/fichas/ficha_%02d.webp"
 
 # ============================================================================
 #  CLASE INTERNA: CartaTablero
