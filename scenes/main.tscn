@@ -26,7 +26,7 @@ script = ExtResource("1_7jgrb")
 environment = SubResource("Environment_8dl7b")
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=163960831]
-transform = Transform3D(-1, 6.5855376e-15, -8.742279e-08, -7.7844106e-08, 0.45511496, 0.8904327, 3.9787423e-08, 0.8904327, -0.45511496, 0, 1.1037735, -0.44384456)
+transform = Transform3D(-1, -8.742278e-08, -3.821371e-15, 0, -4.371139e-08, 1, -8.742278e-08, 1, 4.371139e-08, 0, 0.83549607, 0.17147219)
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=2018093019]
 transform = Transform3D(-0.99801755, -3.7179055e-09, -0.06293674, -0.033995464, 0.8415669, 0.5390821, 0.052965473, 0.5401529, -0.8398985, 0, 2.372969, -3.3614645)

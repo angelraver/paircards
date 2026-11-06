@@ -4,10 +4,11 @@ extends Node3D
 #  PARI CARDS - NIVEL 1
 # ----------------------------------------------------------------------------
 #  Juego de emparejar fichas 3D sobre un tablero con cámara fija y vista
-#  cenital. El tablero se genera proceduralmente en 5 capas (layers) con
-#  grillas alternadas: las capas impares (1, 3, 5) usan 5x5 y las pares
-#  (2, 4) usan 6x6. Ambas grillas comparten centro, por lo que las capas
-#  6x6 quedan intercaladas y sobresalen media ficha por cada lado.
+#  cenital. El tablero se genera proceduralmente en 5 capas (layers). Cada
+#  capa es una grilla circular recortada de una red hexagonal en la que las
+#  fichas se tocan entre sí. Las capas impares tienen una ficha en el
+#  epicentro; las pares se desplazan al hueco triangular, de modo que el
+#  epicentro queda vacío y cada capa se intercala con la anterior.
 #
 #  Cada ficha usa assets/models/ficha.glb como base genérica y recibe en su
 #  cara superior la textura de una carta (carta_01.png ... carta_20.png).
@@ -22,9 +23,10 @@ extends Node3D
 #    Si la barra llega a 5 fichas sin haber formado pareja, se pierde.
 # ============================================================================
 
-# --- Constantes de grilla y capas -------------------------------------------
-const GRID_IMPAR: int = 5                 # Lado de las capas 1, 3 y 5.
-const GRID_PAR: int = 6                   # Lado de las capas 2 y 4.
+# --- Constantes de la grilla circular y capas -------------------------------
+# Radio máximo de cada capa, en múltiplos del diámetro de la ficha. Recortar
+# la red hexagonal con este radio produce una grilla circular.
+const RADIO_MAX_CAPA: float = 2.1
 const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
 const TIPOS_CARTA: int = 20               # carta_01.png ... carta_20.png.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
@@ -39,11 +41,6 @@ const TAMANO_CAMARA_ICONO: float = 0.14
 const OSCURIDAD_POR_CAPA: Array[float] = [0.10, 0.30, 0.40, 0.50, 0.60]
 
 # --- Constantes geométricas -------------------------------------------------
-# Tamaño de una celda en unidades del mundo 3D. La proporción 0.14 x 0.21
-# conserva el reparto espacial del tablero original. Las fichas usan el ancho
-# de la celda como diámetro.
-const TAMANO_CELDA := Vector2(0.14, 0.21)
-
 # Altura de la superficie del piso (CSGBox3D "Piso" de main.tscn).
 const ALTURA_PISO: float = -0.04
 
@@ -57,11 +54,23 @@ const DIAMETRO_FICHA: float = 0.132
 const GROSOR_FICHA: float = 0.022
 const SEPARACION_CAPAS: float = 0.026
 
+# Distancia entre los centros de fichas de una misma capa. Igual al diámetro
+# para que queden pegadas, formando un empaquetado hexagonal.
+const SEPARACION_FICHAS: float = DIAMETRO_FICHA
+
+# Raíz de 3, usada para la geometría de la red hexagonal.
+const SQRT3: float = 1.7320508075688772
+
+# Desplazamiento de la red de las capas pares, en unidades de diámetro: media
+# ficha en X y √3/6 en Y. Coincide con el centro del hueco triangular que
+# dejan tres fichas contiguas, así que el epicentro de la capa queda vacío.
+const DESPLAZAMIENTO_INTERCALADO := Vector2(0.5, 0.28867513459481287)
+
 # Duración del vuelo de una ficha desde el tablero hasta la barra.
 const DURACION_VUELO: float = 0.44
 
 # Centro visual del tablero. Se desplaza ligeramente en Z para que la grilla
-# 6x6 quede centrada entre el HUD superior y la barra inferior.
+# circular quede centrada entre el HUD superior y la barra inferior.
 const CENTRO_TABLERO := Vector3(0.0, 0.0, 0.16)
 
 # Capa de física exclusiva para las cartas (bit 2). Evita que el raycast
@@ -78,13 +87,12 @@ const RUTA_CARTA: String = "res://assets/images/cards/carta_%02d.png"
 #    - La malla de assets/models/ficha.glb, cuya cara superior ya trae la
 #      textura de la carta asignada por main.gd.
 #    - Un StaticBody3D con CylinderShape3D para poder seleccionarla con raycast.
-#    - Datos lógicos: tipo, capa, columna, fila y estado de visibilidad.
+#    - Datos lógicos: tipo, capa, celda axial y estado de visibilidad.
 # ============================================================================
 class CartaTablero extends Node3D:
 	var tipo: int = 0
 	var capa: int = 0
-	var col: int = 0
-	var fila: int = 0
+	var celda: Vector2i = Vector2i.ZERO
 	var textura: Texture2D = null
 	var material: ShaderMaterial = null
 	var cuerpo: StaticBody3D = null
@@ -96,8 +104,7 @@ class CartaTablero extends Node3D:
 	func construir(
 		p_tipo: int,
 		p_capa: int,
-		p_col: int,
-		p_fila: int,
+		p_celda: Vector2i,
 		p_textura: Texture2D,
 		p_ficha: Node3D,
 		p_material_cara: ShaderMaterial,
@@ -107,8 +114,7 @@ class CartaTablero extends Node3D:
 	) -> void:
 		tipo = p_tipo
 		capa = p_capa
-		col = p_col
-		fila = p_fila
+		celda = p_celda
 		textura = p_textura
 		material = p_material_cara
 
@@ -365,8 +371,7 @@ func _preparar_reparto() -> void:
 	var total := 0
 
 	for capa in range(1, LAYER_COUNT + 1):
-		var lado := _lado_grilla(capa)
-		var capacidad := lado * lado
+		var capacidad := _capacidad_capa(capa)
 		_cartas_por_capa.append(capacidad)
 		total += capacidad
 
@@ -381,7 +386,7 @@ func _preparar_reparto() -> void:
 	print("Reparto: capas=", _cartas_por_capa, " total=", _total_cartas, " pares=", _total_pares)
 
 # Crea las parejas necesarias para llenar las grillas y las reparte entre capas.
-# Cada capa elige celdas distintas al azar dentro de su grilla (5x5 o 6x6).
+# Cada capa elige celdas distintas al azar de su red hexagonal recortada.
 func _generar_cartas() -> void:
 	var tipos: Array[int] = []
 
@@ -397,13 +402,7 @@ func _generar_cartas() -> void:
 	var indice_tipo: int = 0
 
 	for capa in range(1, LAYER_COUNT + 1):
-		var lado := _lado_grilla(capa)
-
-		# Todas las celdas posibles de esta capa.
-		var celdas: Array[Vector2i] = []
-		for fila in range(lado):
-			for col in range(lado):
-				celdas.append(Vector2i(col, fila))
+		var celdas := _generar_celdas(capa)
 
 		# Se eligen celdas distintas para evitar dos cartas en la misma celda.
 		celdas.shuffle()
@@ -414,12 +413,11 @@ func _generar_cartas() -> void:
 		for i in range(cantidad):
 			if indice_tipo >= tipos.size():
 				break
-			var celda := celdas[i]
-			_crear_carta(tipos[indice_tipo], capa, celda.x, celda.y)
+			_crear_carta(tipos[indice_tipo], capa, celdas[i])
 			indice_tipo += 1
 
 # Instancia una ficha, le asigna la textura de su tipo y la coloca en el mundo.
-func _crear_carta(tipo: int, capa: int, col: int, fila: int) -> void:
+func _crear_carta(tipo: int, capa: int, celda: Vector2i) -> void:
 	var textura := _textura_para_tipo(tipo)
 	if textura == null:
 		return
@@ -435,12 +433,11 @@ func _crear_carta(tipo: int, capa: int, col: int, fila: int) -> void:
 		return
 
 	var carta := CartaTablero.new()
-	carta.name = "Carta_L%d_%d_%d" % [capa, col, fila]
+	carta.name = "Carta_L%d_Q%d_R%d" % [capa, celda.x, celda.y]
 	carta.construir(
 		tipo,
 		capa,
-		col,
-		fila,
+		celda,
 		textura,
 		ficha,
 		material_cara,
@@ -450,25 +447,18 @@ func _crear_carta(tipo: int, capa: int, col: int, fila: int) -> void:
 	)
 
 	contenedor_cartas.add_child(carta)
-	carta.position = _posicion_mundo(col, fila, capa)
+	carta.position = _posicion_mundo(celda, capa)
 	_cartas_tablero.append(carta)
 
-# Convierte una celda lógica (columna, fila) y una capa a coordenadas 3D.
-#
-# La cámara está rotada 180° en X respecto a la pantalla: su derecha es -X
-# y su arriba es +Z. Por eso la columna crece hacia -X y la fila hacia -Z.
-func _posicion_mundo(col: int, fila: int, capa: int) -> Vector3:
-	var lado := _lado_grilla(capa)
-	var x_logica := (float(col) - (float(lado) - 1.0) * 0.5) * TAMANO_CELDA.x
-	var y_logica := (float(fila) - (float(lado) - 1.0) * 0.5) * TAMANO_CELDA.y
-
-	# Ambas grillas comparten centro. Como la capa par tiene una columna y una
-	# fila extra, sus centros quedan intercalados media celda respecto de la
-	# capa impar y sus bordes sobresalen media ficha por cada lado.
+# Convierte una celda axial (q, r) y una capa a coordenadas 3D. Las capas
+# pares suman el desplazamiento de intercalado: su red cae en los huecos
+# triangulares de la capa superior y deja el epicentro vacío.
+func _posicion_mundo(celda: Vector2i, capa: int) -> Vector3:
+	var plano := (_axial_a_plano(celda) + _desplazamiento_capa(capa)) * SEPARACION_FICHAS
 	return Vector3(
-		CENTRO_TABLERO.x - x_logica,
+		CENTRO_TABLERO.x + plano.x,
 		_y_para_capa(capa),
-		CENTRO_TABLERO.z - y_logica
+		CENTRO_TABLERO.z + plano.y
 	)
 
 # Altura de la cara superior de cada capa. La capa 1 es la superior; la 5,
@@ -478,12 +468,36 @@ func _y_para_capa(capa: int) -> float:
 		+ GROSOR_FICHA \
 		+ float(LAYER_COUNT - capa) * SEPARACION_CAPAS
 
-func _es_capa_par(capa: int) -> bool:
-	return capa % 2 == 0
+# Convierte coordenadas axiales de la red hexagonal a un punto del plano XZ.
+# La unidad es un diámetro de ficha.
+func _axial_a_plano(celda: Vector2i) -> Vector2:
+	return Vector2(
+		float(celda.x) + float(celda.y) * 0.5,
+		float(celda.y) * SQRT3 * 0.5
+	)
 
-# Las capas 2 y 4 usan una grilla 6x6; las capas 1, 3 y 5 usan 5x5.
-func _lado_grilla(capa: int) -> int:
-	return GRID_PAR if _es_capa_par(capa) else GRID_IMPAR
+# Las capas impares llevan una ficha en el epicentro; las pares se desplazan
+# al centro del hueco triangular que dejan tres fichas contiguas.
+func _desplazamiento_capa(capa: int) -> Vector2:
+	return Vector2.ZERO if capa % 2 == 1 else DESPLAZAMIENTO_INTERCALADO
+
+# Celdas de una capa: todas las posiciones de la red hexagonal cuyo centro
+# cae dentro del radio de la grilla circular.
+func _generar_celdas(capa: int) -> Array[Vector2i]:
+	var celdas: Array[Vector2i] = []
+	var desplazamiento := _desplazamiento_capa(capa)
+	var rango := ceili(RADIO_MAX_CAPA) + 2
+	for r in range(-rango, rango + 1):
+		for q in range(-rango, rango + 1):
+			var celda := Vector2i(q, r)
+			var plano := _axial_a_plano(celda) + desplazamiento
+			if plano.length() <= RADIO_MAX_CAPA + 0.0001:
+				celdas.append(celda)
+	return celdas
+
+# Capacidad total de una capa según su red hexagonal recortada.
+func _capacidad_capa(capa: int) -> int:
+	return _generar_celdas(capa).size()
 
 # ============================================================================
 #  VISIBILIDAD (OVERLAP CHECK)
@@ -497,7 +511,7 @@ func _actualizar_visibilidad() -> void:
 		_aplicar_estado_visual(carta)
 
 # Una carta está libre si ninguna carta de una capa superior se superpone
-# a su huella rectangular en el plano XZ.
+# a su huella circular en el plano XZ.
 func _esta_libre(carta: CartaTablero) -> bool:
 	for otra in _cartas_tablero:
 		if otra == carta:
@@ -509,13 +523,13 @@ func _esta_libre(carta: CartaTablero) -> bool:
 			return false
 	return true
 
-# Comprueba si dos cartas comparten área. Todas tienen el mismo tamaño, así
-# que basta comparar la distancia entre centros contra el tamaño de celda.
+# Comprueba si dos fichas redondas se superponen. Al ser círculos del mismo
+# diámetro, basta comparar la distancia entre sus centros contra el diámetro.
 func _se_superponen(a: CartaTablero, b: CartaTablero) -> bool:
-	var dx := absf(a.global_position.x - b.global_position.x)
-	var dz := absf(a.global_position.z - b.global_position.z)
+	var dx := a.global_position.x - b.global_position.x
+	var dz := a.global_position.z - b.global_position.z
 	const EPSILON: float = 0.0001
-	return dx < TAMANO_CELDA.x - EPSILON and dz < TAMANO_CELDA.y - EPSILON
+	return sqrt(dx * dx + dz * dz) < DIAMETRO_FICHA - EPSILON
 
 # Feedback visual: las fichas tapadas se muestran oscurecidas.
 func _aplicar_estado_visual(carta: CartaTablero) -> void:
