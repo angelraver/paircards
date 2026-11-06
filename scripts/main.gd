@@ -639,7 +639,8 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 	# La ficha 3D seleccionada vuela hasta la barra; la animación la libera al
 	# terminar. Se quita del tablero de inmediato para que no pueda volver a
 	# seleccionarse mientras está en el aire.
-	_animar_carta_a_barra(carta, indice_destino)
+	var resolver_pareja := indice_match != -1
+	_animar_carta_a_barra(carta, indice_destino, resolver_pareja)
 
 	if audio_juego:
 		audio_juego.play_aleatorio("Pik")
@@ -656,9 +657,8 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 	# termina el vuelo. Las parejas no dejan un icono nuevo en la barra.
 	if indice_match == -1:
 		_tipos_pendientes_visual.append(tipo)
-
-	# Resolución de la barra (pareja, derrota o victoria).
-	_agregar_a_barra(tipo)
+		# Resolución de la barra (pareja, derrota o victoria).
+		_agregar_a_barra(tipo)
 
 # ============================================================================
 #  BARRA INFERIOR ("SCRABBLE BAR")
@@ -945,9 +945,11 @@ func _limpiar_efectos() -> void:
 # centro del slot correspondiente de la barra. La ficha se lanza en arco y
 # gira como una moneda al aire mientras se encoge para encajar en el espacio;
 # al terminar el vuelo se libera y se muestra el icono del slot.
-func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
+func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_pareja: bool = false) -> void:
 	if _slots.is_empty() or camara == null:
 		carta.queue_free()
+		if resolver_pareja:
+			_resolver_pareja_en_barra(indice_slot)
 		return
 
 	var slot := _slots[clampi(indice_slot, 0, _slots.size() - 1)]
@@ -970,6 +972,8 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 	)
 	if interseccion == null:
 		carta.queue_free()
+		if resolver_pareja:
+			_resolver_pareja_en_barra(indice_slot)
 		return
 
 	var destino: Vector3 = interseccion
@@ -1017,8 +1021,24 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 	var tipo := carta.tipo
 	tween.finished.connect(func() -> void:
 		carta.queue_free()
-		_revelar_ficha_en_barra(tipo)
+		if resolver_pareja:
+			_resolver_pareja_en_barra(indice_slot)
+		else:
+			_revelar_ficha_en_barra(tipo)
 	)
+
+func _resolver_pareja_en_barra(indice_slot: int) -> void:
+	if _juego_terminado:
+		return
+	_barra_tipos.remove_at(indice_slot)
+	_pares_encontrados += 1
+	if audio_juego:
+		audio_juego.play("Points")
+	_actualizar_barra_ui()
+	if _pares_encontrados >= _total_pares \
+	and _cartas_tablero.is_empty() \
+	and _barra_tipos.is_empty():
+		_finalizar_partida(true)
 
 # Muestra el icono de la ficha que acaba de aterrizar en la barra. Si otra
 # ficha del mismo tipo sigue volando, el icono permanece oculto.
