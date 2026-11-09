@@ -20,6 +20,8 @@ config/icon="uid://crspjtxgrtpp"
 save_manager="*uid://cots0gs8v334y"
 audio_manager="*uid://kka34qmlhs2y"
 game_manager="*uid://dj08o70wsge1m"
+EfectosUI="*uid://dac5xnnjvcybv"
+InAppUpdate="*uid://bmk2vbp0o6g7x"
 
 [display]
 
