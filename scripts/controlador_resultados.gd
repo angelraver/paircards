@@ -6,13 +6,13 @@ class_name ControladorResultados
 ##  - reset de flag + ocultar panel al iniciar nivel
 ##  - guard + ocultar HUD + mostrar panel al finalizar
 ##  - conexión de reiniciar_solicitado -> callback
-##  - actualización de UIPuntaje / UILevelNumber
+##  - actualización de UILevelNumber
 ##
 ## Uso:
 ##   @onready var ctrl_resultados := ControladorResultados.new()
 ##   func _ready():
 ##       add_child(ctrl_resultados)
-##       ctrl_resultados.configurar(panel_resultados, [ui_puntaje, ui_level_number, barra_energia], ui_puntaje, ui_level_number, reiniciar_nivel)
+##       ctrl_resultados.configurar(panel_resultados, [ui_level_number, boton_pausa], ui_level_number, reiniciar_nivel)
 ##   func cargar_nivel(n):
 ##       ctrl_resultados.reset() # o al_iniciar_nivel()
 ##       ...

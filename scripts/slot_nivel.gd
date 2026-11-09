@@ -4,9 +4,6 @@ signal nivel_seleccionado(numero_nivel: int)
 
 @onready var boton_nivel: TextureButton = $BotonNivel
 @onready var label_numero: Label = $BotonNivel/LabelNumero
-@onready var ribbon_amarilla: TextureRect = $ContenedorRibbons/RibbonAmarilla
-@onready var ribbon_roja: TextureRect = $ContenedorRibbons/RibbonRoja
-@onready var ribbon_azul: TextureRect = $ContenedorRibbons/RibbonAzul
 
 var nivel_id: int = 1
 
@@ -43,8 +40,6 @@ func configurar(numero_nivel: int) -> void:
 		label_numero.text = str(numero_nivel)
 		label_numero.modulate = Color(0.7, 0.7, 0.7, 0.9)
 
-		# 4. Ocultar las ribbons
-		ocultar_ribbons()
 		return
 
 	# --- NIVEL DESBLOQUEADO ---
@@ -57,24 +52,3 @@ func configurar(numero_nivel: int) -> void:
 	boton_nivel.modulate = Color.WHITE
 	label_numero.modulate = Color.WHITE
 	label_numero.text = str(numero_nivel)
-
-	# 3. Leer datos de puntaje del juego activo y activar las ribbons ganadas
-	var puntaje = save_manager.obtener_puntaje_nivel(numero_nivel, id_juego)
-	var maximo = save_manager.obtener_maximo_nivel(numero_nivel, id_juego)
-
-	if maximo > 0 and puntaje > 0:
-		var umbral_1 = maximo * (1.0 / 3.0)
-		var umbral_2 = maximo * (2.0 / 3.0)
-		var umbral_3 = float(maximo)
-
-		if ribbon_amarilla: ribbon_amarilla.visible = (puntaje >= umbral_1)
-		if ribbon_roja: ribbon_roja.visible = (puntaje >= umbral_2)
-		if ribbon_azul: ribbon_azul.visible = (puntaje >= umbral_3)
-	else:
-		ocultar_ribbons()
-
-
-func ocultar_ribbons() -> void:
-	if ribbon_amarilla: ribbon_amarilla.visible = false
-	if ribbon_roja: ribbon_roja.visible = false
-	if ribbon_azul: ribbon_azul.visible = false

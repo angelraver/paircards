@@ -11,7 +11,7 @@ extends Node3D
 #  epicentro queda vacío y cada capa se intercala con la anterior.
 #
 #  Cada ficha usa assets/models/ficha.glb como base genérica y recibe en su
-#  cara superior la textura de una ficha (ficha_01.webp ... ficha_20.webp).
+#  cara superior una textura de assets/images/astronomia.
 #
 #  Regla de visibilidad:
 #    Una ficha sólo puede tocarse si ninguna ficha de una capa superior
@@ -28,7 +28,7 @@ extends Node3D
 # la red hexagonal con este radio produce una grilla circular.
 const RADIO_MAX_CAPA: float = 2.1
 const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
-const TIPOS_CARTA: int = 20               # ficha_01.webp ... ficha_20.webp.
+const TIPOS_CARTA: int = 24               # 24 fichas de astronomía.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
 
 # Slots de la barra y render 3D de la ficha que muestran. Las fichas
@@ -90,8 +90,34 @@ const CENTRO_TABLERO := Vector3(0.0, 0.0, 0.16)
 # choque con el piso o con otros objetos de la escena.
 const CAPA_COLISION_CARTAS: int = 2
 
-# Ruta de las texturas. ficha_01.webp ... ficha_20.webp.
-const RUTA_CARTA: String = "res://assets/images/fichas/ficha_%02d.webp"
+# Texturas de las fichas. El orden de esta lista define el tipo de cada ficha.
+const RUTA_CARPETA_CARTAS: String = "res://assets/images/astronomia/"
+const NOMBRES_CARTA: Array[String] = [
+	"cometa",
+	"cruz",
+	"cuadrante",
+	"cuartocreciente",
+	"cuartomenguante",
+	"eclipselunar",
+	"eclipsesolar",
+	"ejetiempo",
+	"esferaarmilar",
+	"jupiter",
+	"lente",
+	"lunallena",
+	"lunaroja",
+	"marte",
+	"meridiano",
+	"orion",
+	"osamayor",
+	"pleyades",
+	"polar",
+	"saturno",
+	"sol",
+	"triangulo",
+	"venus",
+	"zodiaco",
+]
 
 const SMOKE_PUFF_2D: PackedScene = preload(
 	"res://crisp_juice_fx/fx2d/elements/smoke_puff_2d.tscn"
@@ -253,8 +279,8 @@ func _ready() -> void:
 # ============================================================================
 func _cargar_texturas() -> void:
 	_texturas.clear()
-	for i in range(1, TIPOS_CARTA + 1):
-		var ruta := RUTA_CARTA % i
+	for nombre in NOMBRES_CARTA:
+		var ruta := RUTA_CARPETA_CARTAS + nombre + ".png"
 		var textura := load(ruta) as Texture2D
 		if textura == null:
 			push_error("No se pudo cargar la textura de carta: %s" % ruta)
@@ -665,8 +691,10 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 	# termina el vuelo. Las parejas no dejan un icono nuevo en la barra.
 	if indice_match == -1:
 		_tipos_pendientes_visual.append(tipo)
-		# Resolución de la barra (pareja, derrota o victoria).
-		_agregar_a_barra(tipo)
+	# Resolución de la barra (pareja, derrota o victoria). Se hace de inmediato
+	# para que varios vuelos simultáneos no trabajen sobre índices obsoletos;
+	# en las parejas el refresco visual se pospone al aterrizaje de la ficha.
+	_agregar_a_barra(tipo, indice_match == -1)
 
 # ============================================================================
 #  BARRA INFERIOR ("SCRABBLE BAR")
@@ -895,7 +923,9 @@ func _actualizar_barra_ui() -> void:
 			viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
 # Añade un tipo a la barra y resuelve la lógica de pareja / derrota.
-func _agregar_a_barra(tipo: int) -> void:
+# [param actualizar_ui] permite resolver la lógica al instante pero posponer el
+# refresco visual hasta que la ficha termine su vuelo.
+func _agregar_a_barra(tipo: int, actualizar_ui: bool = true) -> void:
 	if _juego_terminado:
 		return
 
@@ -917,7 +947,8 @@ func _agregar_a_barra(tipo: int) -> void:
 			_finalizar_partida(false)
 			return
 
-	_actualizar_barra_ui()
+	if actualizar_ui:
+		_actualizar_barra_ui()
 
 	# Victoria: se encontraron todos los pares y no queda nada en tablero ni barra.
 	if _pares_encontrados >= _total_pares \
@@ -968,8 +999,6 @@ func _disparar_smoke_puff(posicion: Vector3) -> void:
 func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_pareja: bool = false) -> void:
 	if _slots.is_empty() or camara == null:
 		carta.queue_free()
-		if resolver_pareja:
-			_resolver_pareja_en_barra(indice_slot)
 		return
 
 	var slot := _slots[clampi(indice_slot, 0, _slots.size() - 1)]
@@ -992,8 +1021,6 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_parej
 	)
 	if interseccion == null:
 		carta.queue_free()
-		if resolver_pareja:
-			_resolver_pareja_en_barra(indice_slot)
 		return
 
 	var destino: Vector3 = interseccion
@@ -1043,23 +1070,12 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_parej
 		carta.queue_free()
 		if resolver_pareja:
 			_disparar_smoke_puff(destino)
-			_resolver_pareja_en_barra(indice_slot)
+			# La pareja ya se resolvió al seleccionar; aquí solo se refleja en
+			# la barra cuando la ficha termina su vuelo.
+			_actualizar_barra_ui()
 		else:
 			_revelar_ficha_en_barra(tipo)
 	)
-
-func _resolver_pareja_en_barra(indice_slot: int) -> void:
-	if _juego_terminado:
-		return
-	_barra_tipos.remove_at(indice_slot)
-	_pares_encontrados += 1
-	if audio_juego:
-		audio_juego.play("Points")
-	_actualizar_barra_ui()
-	if _pares_encontrados >= _total_pares \
-	and _cartas_tablero.is_empty() \
-	and _barra_tipos.is_empty():
-		_finalizar_partida(true)
 
 # Muestra el icono de la ficha que acaba de aterrizar en la barra. Si otra
 # ficha del mismo tipo sigue volando, el icono permanece oculto.
