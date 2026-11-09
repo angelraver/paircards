@@ -11,7 +11,6 @@ func _ready() -> void:
 	actualizar_ui()
 
 func establecer_nivel(nuevo_nivel: int) -> void:
-	print("llamado")
 	nivel_actual = nuevo_nivel
 	actualizar_ui()
 

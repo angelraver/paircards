@@ -1,0 +1,120 @@
+[gd_scene load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://crisp_juice_fx/scripts/crisp_fx_3d.gd" id="1"]
+[ext_resource type="Shader" path="res://crisp_juice_fx/shaders/popup_3d.gdshader" id="2"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/coin_spin.png" id="3"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/star4.png" id="4"]
+[ext_resource type="Shader" path="res://crisp_juice_fx/shaders/ring_3d.gdshader" id="5"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+resource_local_to_scene = true
+shader = ExtResource("2")
+shader_parameter/sprite = ExtResource("3")
+shader_parameter/frames = 8
+shader_parameter/rise = 0.3
+shader_parameter/spin_turns = 1.5
+shader_parameter/sprite_size = 0.36
+shader_parameter/start_y = 0.68
+shader_parameter/billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_2"]
+size = Vector2(2.0, 2.0)
+
+[sub_resource type="Curve" id="Curve_3"]
+_data = [Vector2(0.0, 0.0), 5.0, 5.0, 0, 0, Vector2(0.2, 1.0), 1.125, 1.125, 0, 0, Vector2(0.4, 0.45), 0.0, 0.0, 0, 0, Vector2(0.6, 1.0), -0.75, -0.75, 0, 0, Vector2(1.0, 0.0), -2.5, -2.5, 0, 0]
+point_count = 5
+
+[sub_resource type="CurveTexture" id="CurveTexture_4"]
+curve = SubResource("Curve_3")
+
+[sub_resource type="Gradient" id="Gradient_5"]
+offsets = PackedFloat32Array(0.0, 0.5, 1.0)
+colors = PackedColorArray(1.0, 1.0, 1.0, 1.0, 1.0, 0.901961, 0.501961, 1.0, 1.0, 0.760784, 0.2, 0.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_6"]
+gradient = SubResource("Gradient_5")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_7"]
+emission_shape = 1
+emission_sphere_radius = 0.3
+direction = Vector3(0.0, 1.0, 0.0)
+spread = 180.0
+initial_velocity_min = 0.8
+initial_velocity_max = 2.2
+gravity = Vector3(0.0, 0.0, 0.0)
+damping_min = 3.0
+damping_max = 4.0
+scale_min = 0.22
+scale_max = 0.36
+scale_curve = SubResource("CurveTexture_4")
+color_ramp = SubResource("GradientTexture1D_6")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_texture = ExtResource("4")
+disable_receive_shadows = true
+blend_mode = 1
+billboard_mode = 3
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_9"]
+size = Vector2(1.0, 1.0)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_10"]
+resource_local_to_scene = true
+shader = ExtResource("5")
+shader_parameter/color = Color(1.0, 0.901961, 0.501961, 1.0)
+shader_parameter/thickness = 0.12
+shader_parameter/glow_amount = 0.5
+shader_parameter/billboard_mode = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_11"]
+size = Vector2(1.5, 1.5)
+
+[node name="CoinPickup" type="Node3D"]
+script = ExtResource("1")
+metadata/fx_key_color = Color(1.0, 0.760784, 0.2, 1.0)
+metadata/view = 2.4
+metadata/demo_y = 0.4
+metadata/demo_motion = ""
+metadata/frame_y = 0.0
+metadata/best_t = 0.2
+
+[node name="Coin" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_2")
+material_override = SubResource("ShaderMaterial_1")
+extra_cull_margin = 2.0
+visible = false
+metadata/fx_duration = 0.85
+
+[node name="Glints" type="GPUParticles3D" parent="."]
+position = Vector3(0.0, 0.45, 0.0)
+emitting = false
+amount = 7
+lifetime = 0.55
+one_shot = true
+explosiveness = 0.9
+fixed_fps = 60
+local_coords = true
+visibility_aabb = AABB(-2, -2, -2, 4, 4, 4)
+cast_shadow = 0
+material_override = SubResource("StandardMaterial3D_8")
+process_material = SubResource("ParticleProcessMaterial_7")
+draw_pass_1 = SubResource("QuadMesh_9")
+metadata/fx_delay = 0.1
+
+[node name="Ring" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.35, 0.0)
+cast_shadow = 0
+mesh = SubResource("QuadMesh_11")
+material_override = SubResource("ShaderMaterial_10")
+extra_cull_margin = 2.0
+visible = false
+metadata/fx_duration = 0.35
+metadata/fx_delay = 0.05

@@ -1,0 +1,141 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://crisp_juice_fx/scripts/crisp_fx_2d.gd" id="1"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/star4.png" id="2"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/soft_dot.png" id="3"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/star5.png" id="4"]
+
+[sub_resource type="Curve" id="Curve_1"]
+_data = [Vector2(0.0, 0.0), 5.0, 5.0, 0, 0, Vector2(0.2, 1.0), 1.125, 1.125, 0, 0, Vector2(0.4, 0.45), 0.0, 0.0, 0, 0, Vector2(0.6, 1.0), -0.75, -0.75, 0, 0, Vector2(1.0, 0.0), -2.5, -2.5, 0, 0]
+point_count = 5
+
+[sub_resource type="CurveTexture" id="CurveTexture_2"]
+curve = SubResource("Curve_1")
+
+[sub_resource type="Gradient" id="Gradient_3"]
+offsets = PackedFloat32Array(0.0, 0.333333, 0.666667, 1.0)
+colors = PackedColorArray(1.0, 1.0, 1.0, 1.0, 0.886275, 0.784314, 1.0, 1.0, 0.768627, 0.627451, 1.0, 1.0, 0.658824, 0.470588, 1.0, 0.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_4"]
+gradient = SubResource("Gradient_3")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_5"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 75.0
+direction = Vector3(0.0, -1.0, 0.0)
+spread = 180.0
+initial_velocity_min = 5.0
+initial_velocity_max = 25.0
+gravity = Vector3(0.0, 0.0, 0.0)
+scale_min = 0.25
+scale_max = 0.429688
+scale_curve = SubResource("CurveTexture_2")
+color_ramp = SubResource("GradientTexture1D_4")
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_6"]
+blend_mode = 1
+
+[sub_resource type="Gradient" id="Gradient_7"]
+offsets = PackedFloat32Array(0.0, 0.333333, 0.666667, 1.0)
+colors = PackedColorArray(1.0, 1.0, 1.0, 0.0, 0.941176, 0.894118, 1.0, 1.0, 0.815686, 0.690196, 1.0, 1.0, 0.658824, 0.470588, 1.0, 0.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_8"]
+gradient = SubResource("Gradient_7")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_9"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 80.0
+direction = Vector3(0.0, -1.0, 0.0)
+spread = 30.0
+initial_velocity_min = 20.0
+initial_velocity_max = 50.0
+gravity = Vector3(0.0, 0.0, 0.0)
+scale_min = 0.109375
+scale_max = 0.203125
+color_ramp = SubResource("GradientTexture1D_8")
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_10"]
+blend_mode = 1
+
+[sub_resource type="Curve" id="Curve_11"]
+max_value = 1.2
+_data = [Vector2(0.0, 0.0), 9.58333, 9.58333, 0, 0, Vector2(0.12, 1.15), 4.0, 4.0, 0, 0, Vector2(0.25, 1.0), -0.47619, -0.47619, 0, 0, Vector2(0.75, 0.85), -1.33333, -1.33333, 0, 0, Vector2(1.0, 0.0), -3.4, -3.4, 0, 0]
+point_count = 5
+
+[sub_resource type="CurveTexture" id="CurveTexture_12"]
+curve = SubResource("Curve_11")
+
+[sub_resource type="Gradient" id="Gradient_13"]
+offsets = PackedFloat32Array(0.0, 0.5, 1.0)
+colors = PackedColorArray(0.964706, 0.933333, 1.0, 1.0, 0.847059, 0.737255, 1.0, 1.0, 0.721569, 0.564706, 1.0, 0.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_14"]
+gradient = SubResource("Gradient_13")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_15"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 60.0
+direction = Vector3(0.0, -1.0, 0.0)
+spread = 40.0
+initial_velocity_min = 20.0
+initial_velocity_max = 40.0
+angular_velocity_min = -90.0
+angular_velocity_max = 90.0
+gravity = Vector3(0.0, 0.0, 0.0)
+angle_min = 0.0
+angle_max = 360.0
+scale_min = 0.117188
+scale_max = 0.171875
+scale_curve = SubResource("CurveTexture_12")
+color_ramp = SubResource("GradientTexture1D_14")
+
+[node name="MagicSparkles" type="Node2D"]
+script = ExtResource("1")
+metadata/fx_key_color = Color(0.658824, 0.470588, 1.0, 1.0)
+metadata/view = 2.2
+metadata/demo_y = 1.0
+metadata/demo_motion = ""
+metadata/frame_y = 0.0
+metadata/bounds2d = [-92.4, -88.6, 74.1, 77.5]
+
+[node name="Twinkles" type="GPUParticles2D" parent="."]
+emitting = true
+amount = 14
+lifetime = 1.1
+one_shot = false
+preprocess = 1.1
+fixed_fps = 60
+local_coords = true
+visibility_rect = Rect2(-300.0, -300.0, 600.0, 600.0)
+process_material = SubResource("ParticleProcessMaterial_5")
+texture = ExtResource("2")
+material = SubResource("CanvasItemMaterial_6")
+
+[node name="Motes" type="GPUParticles2D" parent="."]
+emitting = true
+amount = 18
+lifetime = 1.6
+one_shot = false
+preprocess = 1.6
+fixed_fps = 60
+local_coords = true
+visibility_rect = Rect2(-300.0, -300.0, 600.0, 600.0)
+process_material = SubResource("ParticleProcessMaterial_9")
+texture = ExtResource("3")
+material = SubResource("CanvasItemMaterial_10")
+
+[node name="Stars" type="GPUParticles2D" parent="."]
+emitting = true
+amount = 4
+lifetime = 1.4
+one_shot = false
+preprocess = 1.4
+fixed_fps = 60
+local_coords = true
+visibility_rect = Rect2(-300.0, -300.0, 600.0, 600.0)
+process_material = SubResource("ParticleProcessMaterial_15")
+texture = ExtResource("4")
+draw_order = 1

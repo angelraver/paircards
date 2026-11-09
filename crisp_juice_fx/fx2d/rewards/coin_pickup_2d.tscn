@@ -1,0 +1,100 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://crisp_juice_fx/scripts/crisp_fx_2d.gd" id="1"]
+[ext_resource type="Shader" path="res://crisp_juice_fx/shaders/popup_2d.gdshader" id="2"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/coin_spin.png" id="3"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/white.png" id="4"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/star4.png" id="5"]
+[ext_resource type="Shader" path="res://crisp_juice_fx/shaders/ring_2d.gdshader" id="6"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+resource_local_to_scene = true
+shader = ExtResource("2")
+shader_parameter/sprite = ExtResource("3")
+shader_parameter/frames = 8
+shader_parameter/rise = 0.3
+shader_parameter/spin_turns = 1.5
+shader_parameter/sprite_size = 0.36
+shader_parameter/start_y = 0.68
+
+[sub_resource type="Curve" id="Curve_2"]
+_data = [Vector2(0.0, 0.0), 5.0, 5.0, 0, 0, Vector2(0.2, 1.0), 1.125, 1.125, 0, 0, Vector2(0.4, 0.45), 0.0, 0.0, 0, 0, Vector2(0.6, 1.0), -0.75, -0.75, 0, 0, Vector2(1.0, 0.0), -2.5, -2.5, 0, 0]
+point_count = 5
+
+[sub_resource type="CurveTexture" id="CurveTexture_3"]
+curve = SubResource("Curve_2")
+
+[sub_resource type="Gradient" id="Gradient_4"]
+offsets = PackedFloat32Array(0.0, 0.5, 1.0)
+colors = PackedColorArray(1.0, 1.0, 1.0, 1.0, 1.0, 0.901961, 0.501961, 1.0, 1.0, 0.760784, 0.2, 0.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_5"]
+gradient = SubResource("Gradient_4")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_6"]
+particle_flag_disable_z = true
+emission_shape = 1
+emission_sphere_radius = 30.0
+direction = Vector3(0.0, -1.0, 0.0)
+spread = 180.0
+initial_velocity_min = 80.0
+initial_velocity_max = 220.0
+gravity = Vector3(0.0, 0.0, 0.0)
+damping_min = 300.0
+damping_max = 400.0
+scale_min = 0.171875
+scale_max = 0.28125
+scale_curve = SubResource("CurveTexture_3")
+color_ramp = SubResource("GradientTexture1D_5")
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_7"]
+blend_mode = 1
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8"]
+resource_local_to_scene = true
+shader = ExtResource("6")
+shader_parameter/color = Color(1.0, 0.901961, 0.501961, 1.0)
+shader_parameter/thickness = 0.12
+shader_parameter/glow_amount = 0.5
+
+[node name="CoinPickup" type="Node2D"]
+script = ExtResource("1")
+metadata/fx_key_color = Color(1.0, 0.760784, 0.2, 1.0)
+metadata/view = 2.4
+metadata/demo_y = 0.4
+metadata/demo_motion = ""
+metadata/frame_y = 0.0
+metadata/best_t = 0.2
+metadata/bounds2d = [-67.7, -101.9, 67.2, 62.5]
+
+[node name="Coin" type="Sprite2D" parent="."]
+texture = ExtResource("4")
+position = Vector2(0.0, 0.0)
+scale = Vector2(12.5, 12.5)
+material = SubResource("ShaderMaterial_1")
+visible = false
+metadata/fx_duration = 0.85
+
+[node name="Glints" type="GPUParticles2D" parent="."]
+position = Vector2(0.0, -45.0)
+emitting = false
+amount = 7
+lifetime = 0.55
+one_shot = true
+explosiveness = 0.9
+fixed_fps = 60
+local_coords = true
+visibility_rect = Rect2(-200.0, -200.0, 400.0, 400.0)
+process_material = SubResource("ParticleProcessMaterial_6")
+texture = ExtResource("5")
+material = SubResource("CanvasItemMaterial_7")
+metadata/fx_delay = 0.1
+
+[node name="Ring" type="Sprite2D" parent="."]
+texture = ExtResource("4")
+position = Vector2(0.0, -35.0)
+scale = Vector2(9.375, 9.375)
+material = SubResource("ShaderMaterial_8")
+visible = false
+metadata/fx_duration = 0.35
+metadata/fx_delay = 0.05

@@ -93,6 +93,14 @@ const CAPA_COLISION_CARTAS: int = 2
 # Ruta de las texturas. ficha_01.webp ... ficha_20.webp.
 const RUTA_CARTA: String = "res://assets/images/fichas/ficha_%02d.webp"
 
+const SMOKE_PUFF_2D: PackedScene = preload(
+	"res://crisp_juice_fx/fx2d/elements/smoke_puff_2d.tscn"
+)
+
+# Escala del humo al resolver una pareja. Al ser 2D, este valor controla
+# directamente el tamaño en pantalla del efecto.
+const ESCALA_SMOKE_PUFF: float = 1.0
+
 # ============================================================================
 #  CLASE INTERNA: CartaTablero
 # ----------------------------------------------------------------------------
@@ -941,6 +949,18 @@ func _limpiar_efectos() -> void:
 		_capa_efectos.remove_child(hijo)
 		hijo.queue_free()
 
+func _disparar_smoke_puff(posicion: Vector3) -> void:
+	if camara == null or _capa_efectos == null:
+		return
+	var fx := SMOKE_PUFF_2D.instantiate() as CrispFx2D
+	if fx == null:
+		return
+	fx.autoplay = false
+	fx.fx_scale = ESCALA_SMOKE_PUFF
+	_capa_efectos.add_child(fx)
+	fx.global_position = camara.unproject_position(posicion)
+	fx.play()
+
 # Anima la ficha 3D seleccionada desde su posición en el tablero hasta el
 # centro del slot correspondiente de la barra. La ficha se lanza en arco y
 # gira como una moneda al aire mientras se encoge para encajar en el espacio;
@@ -1022,6 +1042,7 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_parej
 	tween.finished.connect(func() -> void:
 		carta.queue_free()
 		if resolver_pareja:
+			_disparar_smoke_puff(destino)
 			_resolver_pareja_en_barra(indice_slot)
 		else:
 			_revelar_ficha_en_barra(tipo)
