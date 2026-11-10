@@ -33,7 +33,7 @@ window/handheld/orientation=1
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/inapp_update/plugin.cfg")
+enabled=PackedStringArray()
 
 [physics]
 

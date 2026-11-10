@@ -209,7 +209,7 @@ class CartaTablero extends Node3D:
 @onready var ui_level_number: UILevelNumber = $UI/LevelNumber as UILevelNumber
 @onready var ui_level_title: Label = $UI/LevelTitle
 @onready var panel_resultados: PanelResultados = $UI/PanelResultados as PanelResultados
-@onready var audio_juego: GameAudioBase = $AudioJuego
+@onready var audio_juego = $AudioJuego
 @onready var boton_pausa: TextureButton = $UI/BotonPausa
 @onready var panel_pausa: PanelPausa = $UI/PanelPausa as PanelPausa
 
@@ -586,14 +586,16 @@ func _animar_entrada_cartas() -> void:
 		_pendientes_entrada += 1
 		delay_actual += ESPACIO_ENTRE_CARTAS
 
-# Ordena cartas por capa descendente (inferiores primero). Empate: aleatorio.
+# Ordena cartas por capa descendente (inferiores primero).
 func _ordenar_entrada_carta(a, b) -> int:
 	if a.capa != b.capa:
 		return b.capa - a.capa
-	return randi_range(0, 1) * 2 - 1
+	return 0
 
 func _on_entrada_carta_terminada() -> void:
 	_pendientes_entrada -= 1
+	if audio_juego != null:
+		audio_juego.play_drop()
 	if _pendientes_entrada <= 0:
 		_animando_entrada = false
 		_actualizar_visibilidad()
@@ -729,7 +731,7 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 	_animar_carta_a_barra(carta, indice_destino, resolver_pareja)
 
 	if audio_juego:
-		audio_juego.play_aleatorio("Pik")
+		audio_juego.play_select()
 
 	_cartas_tablero.erase(carta)
 	carta.libre = false
@@ -987,11 +989,11 @@ func _agregar_a_barra(tipo: int, actualizar_ui: bool = true) -> void:
 
 	if indice_match != -1:
 		# Pareja encontrada: desaparecen la carta existente y la recién llegada.
+		# El sonido se reproduce al terminar el vuelo (junto con el humo),
+		# no al seleccionar la ficha.
 		_barra_tipos.remove_at(indice_match)
 		_barra_tipos.pop_back()
 		_pares_encontrados += 1
-		if audio_juego:
-			audio_juego.play("Points")
 	else:
 		# Sin pareja. Si la barra se llenó, es derrota.
 		if _barra_tipos.size() >= CAPACIDAD_BARRA:
@@ -1122,11 +1124,15 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_parej
 		carta.queue_free()
 		if resolver_pareja:
 			_disparar_smoke_puff(destino)
+			if audio_juego:
+				audio_juego.play("Points")
 			# La pareja ya se resolvió al seleccionar; aquí solo se refleja en
 			# la barra cuando la ficha termina su vuelo.
 			_actualizar_barra_ui()
 		else:
 			_revelar_ficha_en_barra(tipo)
+			if audio_juego:
+				audio_juego.play_select()
 	)
 
 # Muestra el icono de la ficha que acaba de aterrizar en la barra. Si otra
