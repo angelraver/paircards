@@ -90,6 +90,15 @@ const CENTRO_TABLERO := Vector3(0.0, 0.0, 0.16)
 # choque con el piso o con otros objetos de la escena.
 const CAPA_COLISION_CARTAS: int = 2
 
+# Altura inicial (por encima de todo) desde la que cada ficha cae a su lugar.
+const ALTURA_CAIDA_INICIAL: float = 4.0
+# Duración de la caída de cada ficha.
+const DURACION_CAIDA: float = 0.7
+# Escalón de retraso entre capas (capas inferiores caen primero).
+const ESCALON_CAIDA_POR_CAPA: float = 0.12
+# Intervalo de inicio entre cada ficha (caída una por una).
+const ESPACIO_ENTRE_CARTAS: float = 0.05
+
 # Texturas de las fichas. El orden de esta lista define el tipo de cada ficha.
 const RUTA_CARPETA_CARTAS: String = "res://assets/images/astronomia/"
 const NOMBRES_CARTA: Array[String] = [
@@ -225,6 +234,8 @@ var _barra_tipos: Array[int] = []               # Tipos en la barra, en orden.
 var _tipos_pendientes_visual: Array[int] = []
 var _pares_encontrados: int = 0
 var _juego_terminado: bool = false
+var _animando_entrada: bool = false
+var _pendientes_entrada: int = 0
 
 # Reparto calculado a partir de las capacidades de cada grilla.
 var _cartas_por_capa: Array[int] = []
@@ -412,7 +423,7 @@ func _cargar_nivel(n: int) -> void:
 		ui_level_number.establecer_nivel(n)
 
 	_generar_cartas()
-	_actualizar_visibilidad()
+	_animar_entrada_cartas()
 
 # Calcula cuántas cartas caben en cada capa y ajusta el total a un número par.
 func _preparar_reparto() -> void:
@@ -496,7 +507,9 @@ func _crear_carta(tipo: int, capa: int, celda: Vector2i) -> void:
 	)
 
 	contenedor_cartas.add_child(carta)
-	carta.position = _posicion_mundo(celda, capa)
+	# Posición inicial: X/Z finales, Y por encima de todo para la caída.
+	var pos_final := _posicion_mundo(celda, capa)
+	carta.position = Vector3(pos_final.x, ALTURA_CAIDA_INICIAL, pos_final.z)
 	_cartas_tablero.append(carta)
 
 # Convierte una celda axial (q, r) y una capa a coordenadas 3D. Las capas
@@ -547,6 +560,43 @@ func _generar_celdas(capa: int) -> Array[Vector2i]:
 # Capacidad total de una capa según su red hexagonal recortada.
 func _capacidad_capa(capa: int) -> int:
 	return _generar_celdas(capa).size()
+
+# Anima la entrada de todas las fichas: caen desde ALTURA_CAIDA_INICIAL hasta
+# su posición final. Las capas inferiores (número de capa mayor) empiezan a
+# caer primero, y las superiores se van "enterrando" sobre ellas al terminar.
+# Las fichas caen una por una con un pequeño intervalo entre inicio y otro.
+func _animar_entrada_cartas() -> void:
+	_animando_entrada = true
+	_pendientes_entrada = 0
+
+	# Lista ordenada: capas inferiores primero, aleatorio dentro de cada capa.
+	var todas_cartas: Array = _cartas_tablero.duplicate()
+	todas_cartas.sort_custom(Callable(self, "_ordenar_entrada_carta"))
+	randomize()
+
+	var delay_actual: float = 0.0
+	for carta in todas_cartas:
+		var pos_final := _posicion_mundo(carta.celda, carta.capa)
+		var tween: Tween = carta.create_tween()
+		tween.tween_interval(delay_actual)
+		tween.tween_property(carta, "position:y", pos_final.y, DURACION_CAIDA) \
+			.set_trans(Tween.TRANS_QUAD) \
+			.set_ease(Tween.EASE_IN_OUT)
+		tween.finished.connect(_on_entrada_carta_terminada)
+		_pendientes_entrada += 1
+		delay_actual += ESPACIO_ENTRE_CARTAS
+
+# Ordena cartas por capa descendente (inferiores primero). Empate: aleatorio.
+func _ordenar_entrada_carta(a, b) -> int:
+	if a.capa != b.capa:
+		return b.capa - a.capa
+	return randi_range(0, 1) * 2 - 1
+
+func _on_entrada_carta_terminada() -> void:
+	_pendientes_entrada -= 1
+	if _pendientes_entrada <= 0:
+		_animando_entrada = false
+		_actualizar_visibilidad()
 
 # ============================================================================
 #  VISIBILIDAD (OVERLAP CHECK)
@@ -600,6 +650,8 @@ func _aplicar_estado_visual(carta: CartaTablero) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _juego_terminado or get_tree().paused:
 		return
+	if _animando_entrada:
+		return
 	if panel_resultados and panel_resultados.visible:
 		return
 
@@ -616,7 +668,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 
 func _intentar_seleccionar(pos_2d: Vector2) -> void:
-	if _juego_terminado:
+	if _juego_terminado or _animando_entrada:
 		return
 
 	var carta := _carta_bajo_punto(pos_2d)
