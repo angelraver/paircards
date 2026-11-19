@@ -231,6 +231,10 @@ var _indice_cara_superior: int = 0
 
 # Barra: array de tamaño fijo (una entrada por slot). 0 = slot vacío.
 var _barra_tipos: Array[int] = []
+# Cantidad acumulada por slot (1 = solitaria, >=2 = puede desaparecer al cerrarse la ventana).
+var _barra_conteo: Array[int] = []
+# Oculta el icono del slot mientras su primera ficha aún está en vuelo.
+var _barra_icono_oculto: Array[bool] = []
 # Estado del combo activo.
 var _combo_activo: bool = false
 var _combo_tipo: int = 0
@@ -418,8 +422,12 @@ func _cargar_nivel(n: int) -> void:
 
 	# Limpieza de estado anterior (reinicio).
 	_barra_tipos.clear()
+	_barra_conteo.clear()
+	_barra_icono_oculto.clear()
 	for _i in range(CAPACIDAD_BARRA):
 		_barra_tipos.append(0)
+		_barra_conteo.append(0)
+		_barra_icono_oculto.append(false)
 	_combo_activo = false
 	_combo_tipo = 0
 	_combo_slot = -1
@@ -735,36 +743,43 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 
 	var tipo := carta.tipo
 
-	if not _combo_activo:
-		# Iniciar un nuevo combo con esta ficha.
-		var slot := _primer_slot_libre()
-		if slot == -1:
-			_finalizar_partida(false)
-			return
-		_combo_activo = true
-		_combo_tipo = tipo
-		_combo_slot = slot
-		_combo_contador = 1
-		_iniciar_timer_combo()
-	elif tipo == _combo_tipo:
-		# Misma ficha: continúa el combo en el mismo slot y reinicia el timer.
-		_combo_contador += 1
-		_iniciar_timer_combo()
-	else:
-		# Ficha diferente: rompe el combo actual (desaparece solo si hubo coincidencias acumuladas)
-		# y empieza uno nuevo con la nueva ficha.
-		_romper_combo()
-		var slot := _primer_slot_libre()
-		if slot == -1:
-			_finalizar_partida(false)
-			return
-		_combo_activo = true
-		_combo_tipo = tipo
-		_combo_slot = slot
-		_combo_contador = 1
-		_iniciar_timer_combo()
+	# Si esa cara ya espera en la barra (combo activo o ficha solitaria),
+	# la ficha viaja a su coincidencia y se (re)abre la ventana de 2 segundos.
+	var slot_match := _buscar_slot_por_tipo(tipo)
 
-	# Marcar la ficha en la barra (su icono se revelará al terminar el vuelo).
+	if slot_match != -1:
+		if _combo_activo and _combo_slot == slot_match:
+			# Misma cara del combo activo: solo se suma al mismo slot y se reinicia el timer.
+			_combo_contador += 1
+		else:
+			# Se cambia el foco a este slot: se resuelve el combo activo previo (si lo hay)
+			# y se activa la acumulación en el slot coincidente.
+			if _combo_activo:
+				_romper_combo()
+			_combo_activo = true
+			_combo_tipo = tipo
+			_combo_slot = slot_match
+			_combo_contador = _barra_conteo[slot_match] + 1
+		_barra_conteo[_combo_slot] = _combo_contador
+	else:
+		# Cara nueva en la barra: se resuelve el combo activo y se ocupa un slot libre.
+		if _combo_activo:
+			_romper_combo()
+		var slot := _primer_slot_libre()
+		if slot == -1:
+			_finalizar_partida(false)
+			return
+		_combo_activo = true
+		_combo_tipo = tipo
+		_combo_slot = slot
+		_combo_contador = 1
+		_barra_tipos[slot] = tipo
+		_barra_conteo[slot] = 1
+		_barra_icono_oculto[slot] = true
+
+	# Marcar la ficha en la barra. Se registra siempre el vuelo para no resolver
+	# el combo mientras una coincidencia está en animación; el icono solo se
+	# oculta para la primera ficha que ocupa el slot.
 	_barra_tipos[_combo_slot] = tipo
 	_slots_en_vuelo.append(_combo_slot)
 
@@ -793,9 +808,10 @@ func _crear_timer_combo() -> void:
 	_timer_combo.timeout.connect(_on_timer_combo_timeout)
 	add_child(_timer_combo)
 
-# Detiene el timer del combo y, si hubo coincidencias acumuladas (contador >= 2),
-# elimina las fichas del slot con efecto de humo. Si solo hay una ficha (contador == 1),
-# se queda en su slot y el combo simplemente se desactiva.
+# Detiene el timer del combo y resuelve el slot activo.
+# - 2+ acumuladas: desaparecen al cerrarse la ventana de 2s sin nueva coincidencia
+#   o al seleccionar una carta de otra cara.
+# - 1 sola (solitaria): se queda en su slot.
 func _romper_combo() -> void:
 	if not _combo_activo:
 		return
@@ -805,12 +821,13 @@ func _romper_combo() -> void:
 	var hay_coincidencias := _combo_contador >= 2
 
 	if hay_coincidencias:
-		# Liberar las fichas que aún están volando hacia la barra.
+		# 2+ acumuladas: el slot desaparece (ventana cerrada o carta distinta).
 		for carta in _cartas_en_vuelo:
 			if is_instance_valid(carta):
 				carta.queue_free()
 		_cartas_en_vuelo.clear()
-		_slots_en_vuelo.clear()
+		while _slots_en_vuelo.has(_combo_slot):
+			_slots_en_vuelo.erase(_combo_slot)
 		# Efecto de humo en el slot del combo antes de que sus fichas desaparezcan.
 		if _combo_slot >= 0 and _combo_slot < _slots.size() and camara != null:
 			var slot := _slots[_combo_slot]
@@ -830,14 +847,12 @@ func _romper_combo() -> void:
 		# Vaciar el slot del combo en la barra.
 		if _combo_slot >= 0 and _combo_slot < _barra_tipos.size():
 			_barra_tipos[_combo_slot] = 0
+			_barra_conteo[_combo_slot] = 0
+			_barra_icono_oculto[_combo_slot] = false
 	else:
-		# No hay coincidencias acumuladas: la ficha se queda en su slot.
-		# Solo limpiar las referencias de vuelo (las fichas ya aterrizaron o se liberan).
-		for carta in _cartas_en_vuelo:
-			if is_instance_valid(carta):
-				carta.queue_free()
+		# Solitaria (1): se queda en su slot. No destruir fichas en vuelo para
+		# que puedan aterrizar y mostrarse.
 		_cartas_en_vuelo.clear()
-		_slots_en_vuelo.clear()
 
 	_actualizar_barra_ui()
 	_combo_activo = false
@@ -851,6 +866,10 @@ func _romper_combo() -> void:
 
 # Se dispara cuando se agotan los 2 segundos de ventana del combo.
 func _on_timer_combo_timeout() -> void:
+	# Si aún hay una ficha volando hacia el slot activo, la ventana se abrirá
+	# al aterrizar; no se resuelve todavía.
+	if _combo_activo and _slots_en_vuelo.has(_combo_slot):
+		return
 	_romper_combo()
 
 # Devuelve true si no hay ningún tipo en la barra.
@@ -864,6 +883,15 @@ func _barra_esta_vacia() -> bool:
 func _primer_slot_libre() -> int:
 	for i in range(_barra_tipos.size()):
 		if _barra_tipos[i] == 0:
+			return i
+	return -1
+
+# Devuelve el índice del slot de la barra que ya lleva este tipo, o -1 si ninguno lo tiene.
+func _buscar_slot_por_tipo(tipo: int) -> int:
+	if tipo == 0:
+		return -1
+	for i in range(_barra_tipos.size()):
+		if _barra_tipos[i] == tipo:
 			return i
 	return -1
 
@@ -1083,7 +1111,7 @@ func _actualizar_barra_ui() -> void:
 			tipo = _barra_tipos[i]
 		var textura := _textura_para_tipo(tipo)
 
-		if tipo != 0 and textura != null and ficha != null and material != null and not _slots_en_vuelo.has(i):
+		if tipo != 0 and textura != null and ficha != null and material != null and not _barra_icono_oculto[i]:
 			icono.texture = viewport.get_texture()
 			icono.visible = true
 			ficha.visible = true
@@ -1227,7 +1255,12 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 		var idx := _slots_en_vuelo.find(indice_slot)
 		if idx != -1:
 			_slots_en_vuelo.remove_at(idx)
+		if indice_slot >= 0 and indice_slot < _barra_icono_oculto.size():
+			_barra_icono_oculto[indice_slot] = false
 		_actualizar_barra_ui()
+		# Al mostrarse en la barra, se (re)abre la ventana de 2 segundos del combo activo.
+		if _combo_activo and _combo_slot == indice_slot:
+			_iniciar_timer_combo()
 	)
 
 # ============================================================================

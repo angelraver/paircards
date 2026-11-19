@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Pari Cards"
+config/name="Pair Cards"
 run/main_scene="uid://cokb2wqhdfvfb"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="uid://crspjtxgrtpp"
