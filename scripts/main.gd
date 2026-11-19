@@ -137,6 +137,8 @@ const SMOKE_PUFF_2D: PackedScene = preload(
 # directamente el tamaño en pantalla del efecto.
 const ESCALA_SMOKE_PUFF: float = 1.0
 
+const PUNTOS_FLOTANTES_ESCENA: PackedScene = preload("res://scenes/puntos_flotantes.tscn")
+
 # ============================================================================
 #  CLASE INTERNA: CartaTablero
 # ----------------------------------------------------------------------------
@@ -783,9 +785,14 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 	_barra_tipos[_combo_slot] = tipo
 	_slots_en_vuelo.append(_combo_slot)
 
+	# Cada coincidencia acumulada muestra +1, +2, +3... al aterrizar en el slot.
+	var puntos_ganados := 0
+	if _combo_contador >= 2:
+		puntos_ganados = _combo_contador - 1
+
 	# La ficha 3D seleccionada vuela hasta la barra. Se quita del tablero de
 	# inmediato para que no pueda volver a seleccionarse mientras está en el aire.
-	_animar_carta_a_barra(carta, _combo_slot)
+	_animar_carta_a_barra(carta, _combo_slot, puntos_ganados)
 
 	if audio_juego:
 		audio_juego.play_select()
@@ -1174,11 +1181,48 @@ func _disparar_smoke_puff(posicion: Vector3) -> void:
 	fx.global_position = camara.unproject_position(posicion)
 	fx.play()
 
+# Muestra un texto flotante (+1, +2, +3...) sobre el slot indicado de la barra.
+func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int) -> void:
+	if _capa_efectos == null or _barra_ui == null or indice_slot < 0 or indice_slot >= _slots.size():
+		return
+	var fx := PUNTOS_FLOTANTES_ESCENA.instantiate() as Control
+	if fx == null:
+		return
+	var etiqueta := fx.get_node_or_null("Label") as Label
+	if etiqueta:
+		etiqueta.text = "+%d" % puntos
+		etiqueta.reset_size()
+	_capa_efectos.add_child(fx)
+
+	# El slot vive dentro del viewport de la barra: se traduce su rectángulo al
+	# área inferior de la pantalla donde se proyecta esa barra.
+	var rect_slot := _slots[indice_slot].get_global_rect()
+	var pantalla := get_viewport().get_visible_rect().size
+	var centro := Vector2(
+		rect_slot.get_center().x,
+		pantalla.y - ALTO_BARRA + rect_slot.position.y
+	)
+	fx.global_position = centro
+	if etiqueta:
+		etiqueta.position = Vector2(-etiqueta.size.x * 0.5, -etiqueta.size.y)
+
+	var tween := fx.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(fx, "position:y", fx.position.y - 90.0, 1.0) \
+		.set_trans(Tween.TRANS_CUBIC) \
+		.set_ease(Tween.EASE_OUT)
+	tween.tween_property(fx, "modulate:a", 0.0, 1.0) \
+		.set_trans(Tween.TRANS_QUAD) \
+		.set_ease(Tween.EASE_IN)
+	tween.set_parallel(false)
+	tween.tween_callback(fx.queue_free)
+
 # Anima la ficha 3D seleccionada desde su posición en el tablero hasta el
 # centro del slot correspondiente de la barra. La ficha se lanza en arco y
 # gira como una moneda al aire mientras se encoge para encajar en el espacio;
-# al terminar el vuelo se libera y se muestra el icono del slot.
-func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
+# al terminar el vuelo se libera, se muestra el icono del slot y, si corresponde,
+# se disparan los puntos de la coincidencia.
+func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, puntos_ganados: int = 0) -> void:
 	if _slots.is_empty() or camara == null:
 		carta.queue_free()
 		return
@@ -1248,7 +1292,8 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 		.set_trans(Tween.TRANS_CUBIC) \
 		.set_ease(Tween.EASE_OUT)
 	tween.finished.connect(func() -> void:
-		carta.queue_free()
+		if is_instance_valid(carta):
+			carta.queue_free()
 		if audio_juego:
 			audio_juego.play_select()
 		# La ficha aterrizó: revelar su icono en el slot.
@@ -1258,6 +1303,9 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 		if indice_slot >= 0 and indice_slot < _barra_icono_oculto.size():
 			_barra_icono_oculto[indice_slot] = false
 		_actualizar_barra_ui()
+		# Los puntos se muestran al llegar la ficha a su destino.
+		if puntos_ganados > 0:
+			_mostrar_puntos_flotantes_en_slot(indice_slot, puntos_ganados)
 		# Al mostrarse en la barra, se (re)abre la ventana de 2 segundos del combo activo.
 		if _combo_activo and _combo_slot == indice_slot:
 			_iniciar_timer_combo()
