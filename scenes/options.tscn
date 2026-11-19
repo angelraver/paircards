@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://4sdawtbd5yp4" path="res://assets/images/fondodia.webp" id="2_aea3w"]
 [ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="3_gyu1t"]
 [ext_resource type="Texture2D" uid="uid://b6vectgoji2i8" path="res://assets/images/ui/panel_options.webp" id="4_g5hix"]
-[ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="5_rftt1"]
+[ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="5_rftt1"]
 [ext_resource type="Texture2D" uid="uid://dm6ypisvmk6gk" path="res://assets/images/ui/icon_music.webp" id="6_0un6s"]
 [ext_resource type="Texture2D" uid="uid://co6vuafvrnhyr" path="res://assets/images/ui/icon_check_off.webp" id="7_kywri"]
 [ext_resource type="Texture2D" uid="uid://cfuwaypycktpp" path="res://assets/images/ui/icon_sound.webp" id="8_apvty"]

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://neu1avqif3tr"]
 
-[ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://core/assets/fonts/carnivalee_freakshow.ttf" id="1_1c4c3"]
+[ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="1_1c4c3"]
 
 [node name="PuntosFlotantes" type="Control" unique_id=1359377036]
 layout_mode = 3

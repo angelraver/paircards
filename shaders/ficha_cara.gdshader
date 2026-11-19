@@ -22,7 +22,7 @@ void vertex() {
 
 void fragment() {
 	vec4 color = texture(albedo_textura, uv_cara);
-	// Las cartas tienen un margen transparente; en la ficha ese margen se
+	// Las fichas tienen un margen transparente; en la ficha ese margen se
 	// rellena con el color del cuerpo para no perforar la cara superior.
 	vec3 superficie = mix(color_base, color.rgb, step(0.5, color.a));
 	ALBEDO = superficie * brillo;

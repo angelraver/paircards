@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://sih04qfkaejs" path="res://scripts/premio_desbloqueado.gd" id="1_5x0u0"]
 [ext_resource type="Texture2D" uid="uid://b7ru85h4dqni5" path="res://assets/images/ui/panel_prize.webp" id="1_tmdpf"]
-[ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="3_sialf"]
+[ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="3_sialf"]
 
 [node name="PremioDesbloqueado" type="Control" unique_id=1099836888]
 layout_mode = 3

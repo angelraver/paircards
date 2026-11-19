@@ -190,7 +190,7 @@ func reiniciar_nivel() -> void:
 ├── scenes/                    # todas las pantallas
 ├── shaders/                   # desenfoque, chromatic_aberration, crt_effect, logo_dissolver
 ├── assets/
-│   ├── fonts/                 # carnivalee_freakshow.ttf, evereast.ttf, PressStart2P-Regular.ttf
+│   ├── fonts/                 # carnivalee_freakshow.ttf, Title Wave Regular.ttf, PressStart2P-Regular.ttf
 │   ├── images/
 │   │   ├── ui/                # botones, iconos, ribbons, paneles
 │   │   ├── prizes/            # 18 PNG de premios

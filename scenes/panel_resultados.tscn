@@ -5,7 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://b1nd223v2oh78" path="res://assets/images/ui/panel_level.webp" id="2_pqqu8"]
 [ext_resource type="Texture2D" uid="uid://cusn3egnh88b4" path="res://assets/images/ui/button_ok.webp" id="3_shjp8"]
 [ext_resource type="Texture2D" uid="uid://dch1821c0hon" path="res://assets/images/ui/button_restart.webp" id="4_3qrhc"]
-[ext_resource type="FontFile" uid="uid://d1v4p465ivejs" path="res://assets/fonts/evereast.ttf" id="8_at4u4"]
+[ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="8_at4u4"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_kyv4s"]
 shader = ExtResource("1_diad0")

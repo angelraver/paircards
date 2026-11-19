@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://ov0lifr7f0e5" path="res://scenes/slot_nivel.tscn" id="5_4cylx"]
 [ext_resource type="Texture2D" uid="uid://c0hwcw2eq8gcw" path="res://assets/images/ui/button_home.webp" id="6_a2uob"]
 [ext_resource type="Texture2D" uid="uid://dhh7a4ftnhf6o" path="res://assets/images/ui/button_arrow.webp" id="7_6oqdd"]
-[ext_resource type="FontFile" uid="uid://b3nlbqd0gqnvc" path="res://assets/fonts/evereast.ttf" id="8_4f7dg"]
+[ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="8_4f7dg"]
 [ext_resource type="Texture2D" uid="uid://b1ydv2fydkff8" path="res://assets/images/logo.webp" id="9_b48cm"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_w7a4w"]

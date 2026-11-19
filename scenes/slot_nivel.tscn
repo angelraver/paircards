@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://ov0lifr7f0e5"]
 
 [ext_resource type="Texture2D" uid="uid://c3rjnhgi4wkls" path="res://assets/images/ui/button_gen.webp" id="1_eq4ny"]
-[ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="2_mxd4b"]
+[ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="2_mxd4b"]
 [ext_resource type="Script" uid="uid://bqnck5q1ji4bv" path="res://scripts/slot_nivel.gd" id="6_mxd4b"]
 
 [node name="SlotNivel" type="Control" unique_id=1697595032]

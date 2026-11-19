@@ -28,7 +28,7 @@ extends Node3D
 # la red hexagonal con este radio produce una grilla circular.
 const RADIO_MAX_CAPA: float = 2.1
 const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
-const TIPOS_CARTA: int = 24               # 24 fichas de astronomía.
+const TIPOS_FICHA: int = 24               # 24 fichas de astronomía.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
 const TIEMPO_COMBO: float = 2.0           # Ventana de tiempo (segundos) para seguir el combo.
 
@@ -87,9 +87,9 @@ const DURACION_SALTO: float = DURACION_VUELO * 0.18
 # circular quede centrada entre el HUD superior y la barra inferior.
 const CENTRO_TABLERO := Vector3(0.0, 0.0, 0.16)
 
-# Capa de física exclusiva para las cartas (bit 2). Evita que el raycast
+# Capa de física exclusiva para las fichas (bit 2). Evita que el raycast
 # choque con el piso o con otros objetos de la escena.
-const CAPA_COLISION_CARTAS: int = 2
+const CAPA_COLISION_FICHAS: int = 2
 
 # Altura inicial (por encima de todo) desde la que cada ficha cae a su lugar.
 const ALTURA_CAIDA_INICIAL: float = 4.0
@@ -98,11 +98,11 @@ const DURACION_CAIDA: float = 0.7
 # Escalón de retraso entre capas (capas inferiores caen primero).
 const ESCALON_CAIDA_POR_CAPA: float = 0.12
 # Intervalo de inicio entre cada ficha (caída una por una).
-const ESPACIO_ENTRE_CARTAS: float = 0.05
+const ESPACIO_ENTRE_FICHAS: float = 0.05
 
 # Texturas de las fichas. El orden de esta lista define el tipo de cada ficha.
-const RUTA_CARPETA_CARTAS: String = "res://assets/images/astronomia/"
-const NOMBRES_CARTA: Array[String] = [
+const RUTA_CARPETA_FICHAS: String = "res://assets/images/astronomia/"
+const NOMBRES_FICHA: Array[String] = [
 	"cometa",
 	"cruz",
 	"cuadrante",
@@ -140,15 +140,15 @@ const ESCALA_SMOKE_PUFF: float = 1.0
 const PUNTOS_FLOTANTES_ESCENA: PackedScene = preload("res://scenes/puntos_flotantes.tscn")
 
 # ============================================================================
-#  CLASE INTERNA: CartaTablero
+#  CLASE INTERNA: FichaTablero
 # ----------------------------------------------------------------------------
 #  Nodo 3D que representa una ficha. Contiene:
 #    - La malla de assets/models/ficha.glb, cuya cara superior ya trae la
-#      textura de la carta asignada por main.gd.
+#      textura de la ficha asignada por main.gd.
 #    - Un StaticBody3D con CylinderShape3D para poder seleccionarla con raycast.
 #    - Datos lógicos: tipo, capa, celda axial y estado de visibilidad.
 # ============================================================================
-class CartaTablero extends Node3D:
+class FichaTablero extends Node3D:
 	var tipo: int = 0
 	var capa: int = 0
 	var celda: Vector2i = Vector2i.ZERO
@@ -200,13 +200,13 @@ class CartaTablero extends Node3D:
 
 		# El cuerpo guarda una referencia a esta ficha para que el raycast
 		# pueda recuperarla desde el colisionador.
-		cuerpo.set_meta("carta", self)
+		cuerpo.set_meta("ficha", self)
 		add_child(cuerpo)
 
 # ============================================================================
 #  NODOS DE LA ESCENA
 # ============================================================================
-@onready var contenedor_cartas: Node3D = $BoardElements
+@onready var contenedor_fichas: Node3D = $BoardElements
 @onready var camara: Camera3D = $Camera3D
 
 @onready var ui_level_number: UILevelNumber = $UI/LevelNumber as UILevelNumber
@@ -222,7 +222,7 @@ class CartaTablero extends Node3D:
 var nivel_actual: int = 1
 var ctrl_resultados: ControladorResultados
 
-var _cartas_tablero: Array[CartaTablero] = []   # Sólo fichas aún en el tablero.
+var _fichas_tablero: Array[FichaTablero] = []   # Sólo fichas aún en el tablero.
 var _texturas: Array[Texture2D] = []            # Cache de las 20 texturas.
 
 # Configuración de la ficha 3D, calculada una vez a partir del GLB.
@@ -244,7 +244,7 @@ var _combo_slot: int = -1
 var _combo_contador: int = 0
 var _timer_combo: Timer = null
 # Fichas que están volando hacia la barra y aún no han aterrizado.
-var _cartas_en_vuelo: Array[CartaTablero] = []
+var _fichas_en_vuelo: Array[FichaTablero] = []
 # Slots de la barra que tienen una ficha en vuelo (su icono no se muestra hasta aterrizar).
 var _slots_en_vuelo: Array[int] = []
 var _juego_terminado: bool = false
@@ -252,8 +252,8 @@ var _animando_entrada: bool = false
 var _pendientes_entrada: int = 0
 
 # Reparto calculado a partir de las capacidades de cada grilla.
-var _cartas_por_capa: Array[int] = []
-var _total_cartas: int = 0
+var _fichas_por_capa: Array[int] = []
+var _total_fichas: int = 0
 var _total_pares: int = 0
 
 # Nodos de UI creados por código para no exigir cambios en main.tscn.
@@ -305,11 +305,11 @@ func _ready() -> void:
 # ============================================================================
 func _cargar_texturas() -> void:
 	_texturas.clear()
-	for nombre in NOMBRES_CARTA:
-		var ruta := RUTA_CARPETA_CARTAS + nombre + ".png"
+	for nombre in NOMBRES_FICHA:
+		var ruta := RUTA_CARPETA_FICHAS + nombre + ".png"
 		var textura := load(ruta) as Texture2D
 		if textura == null:
-			push_error("No se pudo cargar la textura de carta: %s" % ruta)
+			push_error("No se pudo cargar la textura de ficha: %s" % ruta)
 		_texturas.append(textura)
 
 func _textura_para_tipo(tipo: int) -> Texture2D:
@@ -434,7 +434,7 @@ func _cargar_nivel(n: int) -> void:
 	_combo_tipo = 0
 	_combo_slot = -1
 	_combo_contador = 0
-	_cartas_en_vuelo.clear()
+	_fichas_en_vuelo.clear()
 	_slots_en_vuelo.clear()
 	if _timer_combo:
 		_timer_combo.stop()
@@ -449,37 +449,37 @@ func _cargar_nivel(n: int) -> void:
 	if ui_level_number:
 		ui_level_number.establecer_nivel(n)
 
-	_generar_cartas()
-	_animar_entrada_cartas()
+	_generar_fichas()
+	_animar_entrada_fichas()
 
-# Calcula cuántas cartas caben en cada capa y ajusta el total a un número par.
+# Calcula cuántas fichas caben en cada capa y ajusta el total a un número par.
 func _preparar_reparto() -> void:
-	_cartas_por_capa.clear()
+	_fichas_por_capa.clear()
 	var total := 0
 
 	for capa in range(1, LAYER_COUNT + 1):
 		var capacidad := _capacidad_capa(capa)
-		_cartas_por_capa.append(capacidad)
+		_fichas_por_capa.append(capacidad)
 		total += capacidad
 
 	# Las parejas exigen un total par. Si la suma de capacidades es impar,
 	# se deja una celda vacía en la capa inferior (la menos visible).
 	if total % 2 != 0:
-		_cartas_por_capa[LAYER_COUNT - 1] -= 1
+		_fichas_por_capa[LAYER_COUNT - 1] -= 1
 		total -= 1
 
-	_total_cartas = total
+	_total_fichas = total
 	_total_pares = total / 2
-	print("Reparto: capas=", _cartas_por_capa, " total=", _total_cartas, " pares=", _total_pares)
+	print("Reparto: capas=", _fichas_por_capa, " total=", _total_fichas, " pares=", _total_pares)
 
 # Crea las parejas necesarias para llenar las grillas y las reparte entre capas.
 # Cada capa elige celdas distintas al azar de su red hexagonal recortada.
-func _generar_cartas() -> void:
+func _generar_fichas() -> void:
 	var tipos: Array[int] = []
 
 	# Cada pareja se agrega dos veces para que siempre haya match.
 	for _i in range(_total_pares):
-		var tipo := randi_range(1, TIPOS_CARTA)
+		var tipo := randi_range(1, TIPOS_FICHA)
 		tipos.append(tipo)
 		tipos.append(tipo)
 
@@ -491,20 +491,20 @@ func _generar_cartas() -> void:
 	for capa in range(1, LAYER_COUNT + 1):
 		var celdas := _generar_celdas(capa)
 
-		# Se eligen celdas distintas para evitar dos cartas en la misma celda.
+		# Se eligen celdas distintas para evitar dos fichas en la misma celda.
 		celdas.shuffle()
 
-		var cantidad: int = _cartas_por_capa[capa - 1]
+		var cantidad: int = _fichas_por_capa[capa - 1]
 		cantidad = mini(cantidad, celdas.size())
 
 		for i in range(cantidad):
 			if indice_tipo >= tipos.size():
 				break
-			_crear_carta(tipos[indice_tipo], capa, celdas[i])
+			_crear_ficha(tipos[indice_tipo], capa, celdas[i])
 			indice_tipo += 1
 
 # Instancia una ficha, le asigna la textura de su tipo y la coloca en el mundo.
-func _crear_carta(tipo: int, capa: int, celda: Vector2i) -> void:
+func _crear_ficha(tipo: int, capa: int, celda: Vector2i) -> void:
 	var textura := _textura_para_tipo(tipo)
 	if textura == null:
 		return
@@ -519,9 +519,9 @@ func _crear_carta(tipo: int, capa: int, celda: Vector2i) -> void:
 			ficha.free()
 		return
 
-	var carta := CartaTablero.new()
-	carta.name = "Carta_L%d_Q%d_R%d" % [capa, celda.x, celda.y]
-	carta.construir(
+	var ficha := FichaTablero.new()
+	ficha.name = "Ficha_L%d_Q%d_R%d" % [capa, celda.x, celda.y]
+	ficha.construir(
 		tipo,
 		capa,
 		celda,
@@ -530,14 +530,14 @@ func _crear_carta(tipo: int, capa: int, celda: Vector2i) -> void:
 		material_cara,
 		DIAMETRO_FICHA,
 		GROSOR_FICHA,
-		CAPA_COLISION_CARTAS
+		CAPA_COLISION_FICHAS
 	)
 
-	contenedor_cartas.add_child(carta)
+	contenedor_fichas.add_child(ficha)
 	# Posición inicial: X/Z finales, Y por encima de todo para la caída.
 	var pos_final := _posicion_mundo(celda, capa)
-	carta.position = Vector3(pos_final.x, ALTURA_CAIDA_INICIAL, pos_final.z)
-	_cartas_tablero.append(carta)
+	ficha.position = Vector3(pos_final.x, ALTURA_CAIDA_INICIAL, pos_final.z)
+	_fichas_tablero.append(ficha)
 
 # Convierte una celda axial (q, r) y una capa a coordenadas 3D. Las capas
 # pares suman el desplazamiento de intercalado: su red cae en los huecos
@@ -592,34 +592,34 @@ func _capacidad_capa(capa: int) -> int:
 # su posición final. Las capas inferiores (número de capa mayor) empiezan a
 # caer primero, y las superiores se van "enterrando" sobre ellas al terminar.
 # Las fichas caen una por una con un pequeño intervalo entre inicio y otro.
-func _animar_entrada_cartas() -> void:
+func _animar_entrada_fichas() -> void:
 	_animando_entrada = true
 	_pendientes_entrada = 0
 
 	# Lista ordenada: capas inferiores primero, aleatorio dentro de cada capa.
-	var todas_cartas: Array = _cartas_tablero.duplicate()
-	todas_cartas.sort_custom(Callable(self, "_ordenar_entrada_carta"))
+	var todas_fichas: Array = _fichas_tablero.duplicate()
+	todas_fichas.sort_custom(Callable(self, "_ordenar_entrada_ficha"))
 	randomize()
 
 	var delay_actual: float = 0.0
-	for carta in todas_cartas:
-		var pos_final := _posicion_mundo(carta.celda, carta.capa)
-		var tween: Tween = carta.create_tween()
+	for ficha in todas_fichas:
+		var pos_final := _posicion_mundo(ficha.celda, ficha.capa)
+		var tween: Tween = ficha.create_tween()
 		tween.tween_interval(delay_actual)
-		tween.tween_property(carta, "position:y", pos_final.y, DURACION_CAIDA) \
+		tween.tween_property(ficha, "position:y", pos_final.y, DURACION_CAIDA) \
 			.set_trans(Tween.TRANS_QUAD) \
 			.set_ease(Tween.EASE_IN_OUT)
-		tween.finished.connect(_on_entrada_carta_terminada)
+		tween.finished.connect(_on_entrada_ficha_terminada)
 		_pendientes_entrada += 1
-		delay_actual += ESPACIO_ENTRE_CARTAS
+		delay_actual += ESPACIO_ENTRE_FICHAS
 
-# Ordena cartas por capa descendente (inferiores primero).
-func _ordenar_entrada_carta(a, b) -> int:
+# Ordena fichas por capa descendente (inferiores primero).
+func _ordenar_entrada_ficha(a, b) -> int:
 	if a.capa != b.capa:
 		return b.capa - a.capa
 	return 0
 
-func _on_entrada_carta_terminada() -> void:
+func _on_entrada_ficha_terminada() -> void:
 	_pendientes_entrada -= 1
 	if audio_juego != null:
 		audio_juego.play_drop()
@@ -630,48 +630,48 @@ func _on_entrada_carta_terminada() -> void:
 # ============================================================================
 #  VISIBILIDAD (OVERLAP CHECK)
 # ============================================================================
-# Recalcula qué cartas están libres. Se llama después de generar el tablero
-# y después de retirar una carta, porque al eliminar una capa superior las
-# cartas de abajo pueden quedar destapadas.
+# Recalcula qué fichas están libres. Se llama después de generar el tablero
+# y después de retirar una ficha, porque al eliminar una capa superior las
+# fichas de abajo pueden quedar destapadas.
 func _actualizar_visibilidad() -> void:
-	for carta in _cartas_tablero:
-		carta.libre = _esta_libre(carta)
-		_aplicar_estado_visual(carta)
+	for ficha in _fichas_tablero:
+		ficha.libre = _esta_libre(ficha)
+		_aplicar_estado_visual(ficha)
 
-# Una carta está libre si ninguna carta de una capa superior se superpone
+# Una ficha está libre si ninguna ficha de una capa superior se superpone
 # a su huella circular en el plano XZ.
-func _esta_libre(carta: CartaTablero) -> bool:
-	for otra in _cartas_tablero:
-		if otra == carta:
+func _esta_libre(ficha: FichaTablero) -> bool:
+	for otra in _fichas_tablero:
+		if otra == ficha:
 			continue
 		# Capa 1 es la más alta. Sólo las capas con número menor tapan.
-		if otra.capa >= carta.capa:
+		if otra.capa >= ficha.capa:
 			continue
-		if _se_superponen(carta, otra):
+		if _se_superponen(ficha, otra):
 			return false
 	return true
 
 # Comprueba si dos fichas redondas se superponen. Al ser círculos del mismo
 # diámetro, basta comparar la distancia entre sus centros contra el diámetro.
-func _se_superponen(a: CartaTablero, b: CartaTablero) -> bool:
+func _se_superponen(a: FichaTablero, b: FichaTablero) -> bool:
 	var dx := a.global_position.x - b.global_position.x
 	var dz := a.global_position.z - b.global_position.z
 	const EPSILON: float = 0.0001
 	return sqrt(dx * dx + dz * dz) < DIAMETRO_FICHA - EPSILON
 
 # Feedback visual: las fichas tapadas se muestran oscurecidas.
-func _aplicar_estado_visual(carta: CartaTablero) -> void:
-	if carta.material == null:
+func _aplicar_estado_visual(ficha: FichaTablero) -> void:
+	if ficha.material == null:
 		return
 
 	# Las fichas libres conservan su brillo original.
 	var brillo := 1.0
-	if not carta.libre:
+	if not ficha.libre:
 		# Las bloqueadas se oscurecen según la capa a la que pertenecen.
-		var indice := clampi(carta.capa - 1, 0, OSCURIDAD_POR_CAPA.size() - 1)
+		var indice := clampi(ficha.capa - 1, 0, OSCURIDAD_POR_CAPA.size() - 1)
 		brillo = 1.0 - OSCURIDAD_POR_CAPA[indice]
 
-	carta.material.set_shader_parameter("brillo", brillo)
+	ficha.material.set_shader_parameter("brillo", brillo)
 
 # ============================================================================
 #  INPUT Y SELECCIÓN
@@ -700,19 +700,19 @@ func _intentar_seleccionar(pos_2d: Vector2) -> void:
 	if _juego_terminado or _animando_entrada:
 		return
 
-	var carta := _carta_bajo_punto(pos_2d)
-	if carta == null:
+	var ficha := _ficha_bajo_punto(pos_2d)
+	if ficha == null:
 		return
 
-	# La carta debe estar totalmente libre para poder tocarse.
-	if not carta.libre:
+	# La ficha debe estar totalmente libre para poder tocarse.
+	if not ficha.libre:
 		return
 
-	_seleccionar_carta(carta)
+	_seleccionar_ficha(ficha)
 
-# Lanza un rayo desde la cámara y devuelve la carta más cercana que golpea.
-# Como la cámara mira hacia abajo, la carta más cercana es la de capa superior.
-func _carta_bajo_punto(pos_2d: Vector2) -> CartaTablero:
+# Lanza un rayo desde la cámara y devuelve la ficha más cercana que golpea.
+# Como la cámara mira hacia abajo, la ficha más cercana es la de capa superior.
+func _ficha_bajo_punto(pos_2d: Vector2) -> FichaTablero:
 	if camara == null:
 		return null
 
@@ -723,7 +723,7 @@ func _carta_bajo_punto(pos_2d: Vector2) -> CartaTablero:
 	var consulta := PhysicsRayQueryParameters3D.create(
 		origen,
 		destino,
-		CAPA_COLISION_CARTAS
+		CAPA_COLISION_FICHAS
 	)
 	consulta.collide_with_areas = false
 	consulta.collide_with_bodies = true
@@ -733,17 +733,17 @@ func _carta_bajo_punto(pos_2d: Vector2) -> CartaTablero:
 		return null
 
 	var colisionador = resultado.get("collider")
-	if colisionador == null or not colisionador.has_meta("carta"):
+	if colisionador == null or not colisionador.has_meta("ficha"):
 		return null
 
-	var carta: CartaTablero = colisionador.get_meta("carta")
-	return carta
+	var ficha: FichaTablero = colisionador.get_meta("ficha")
+	return ficha
 
-func _seleccionar_carta(carta: CartaTablero) -> void:
-	if _juego_terminado or not carta.libre:
+func _seleccionar_ficha(ficha: FichaTablero) -> void:
+	if _juego_terminado or not ficha.libre:
 		return
 
-	var tipo := carta.tipo
+	var tipo := ficha.tipo
 
 	# Si esa cara ya espera en la barra (combo activo o ficha solitaria),
 	# la ficha viaja a su coincidencia y se (re)abre la ventana de 2 segundos.
@@ -792,18 +792,18 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 
 	# La ficha 3D seleccionada vuela hasta la barra. Se quita del tablero de
 	# inmediato para que no pueda volver a seleccionarse mientras está en el aire.
-	_animar_carta_a_barra(carta, _combo_slot, puntos_ganados)
+	_animar_ficha_a_barra(ficha, _combo_slot, puntos_ganados)
 
 	if audio_juego:
 		audio_juego.play_select()
 
-	_cartas_tablero.erase(carta)
-	carta.libre = false
-	if carta.cuerpo:
-		carta.cuerpo.collision_layer = 0
-	_cartas_en_vuelo.append(carta)
+	_fichas_tablero.erase(ficha)
+	ficha.libre = false
+	if ficha.cuerpo:
+		ficha.cuerpo.collision_layer = 0
+	_fichas_en_vuelo.append(ficha)
 
-	# Al quitar esta carta pueden quedar libres cartas de capas inferiores.
+	# Al quitar esta ficha pueden quedar libres fichas de capas inferiores.
 	_actualizar_visibilidad()
 
 # Crea el nodo Timer que gestiona la ventana de 2 segundos del combo.
@@ -817,7 +817,7 @@ func _crear_timer_combo() -> void:
 
 # Detiene el timer del combo y resuelve el slot activo.
 # - 2+ acumuladas: desaparecen al cerrarse la ventana de 2s sin nueva coincidencia
-#   o al seleccionar una carta de otra cara.
+#   o al seleccionar una ficha de otra cara.
 # - 1 sola (solitaria): se queda en su slot.
 func _romper_combo() -> void:
 	if not _combo_activo:
@@ -828,14 +828,15 @@ func _romper_combo() -> void:
 	var hay_coincidencias := _combo_contador >= 2
 
 	if hay_coincidencias:
-		# 2+ acumuladas: el slot desaparece (ventana cerrada o carta distinta).
-		for carta in _cartas_en_vuelo:
-			if is_instance_valid(carta):
-				carta.queue_free()
-		_cartas_en_vuelo.clear()
+		# 2+ acumuladas: el slot desaparece (ventana cerrada o ficha distinta).
+		for ficha in _fichas_en_vuelo:
+			if is_instance_valid(ficha):
+				ficha.queue_free()
+		_fichas_en_vuelo.clear()
 		while _slots_en_vuelo.has(_combo_slot):
 			_slots_en_vuelo.erase(_combo_slot)
-		# Efecto de humo en el slot del combo antes de que sus fichas desaparezcan.
+		# Sumatoria acumulada y efecto de humo al desaparecer.
+		_mostrar_puntos_flotantes_en_slot(_combo_slot, _combo_contador, false)
 		if _combo_slot >= 0 and _combo_slot < _slots.size() and camara != null:
 			var slot := _slots[_combo_slot]
 			var rect_slot := slot.get_global_rect()
@@ -859,7 +860,7 @@ func _romper_combo() -> void:
 	else:
 		# Solitaria (1): se queda en su slot. No destruir fichas en vuelo para
 		# que puedan aterrizar y mostrarse.
-		_cartas_en_vuelo.clear()
+		_fichas_en_vuelo.clear()
 
 	_actualizar_barra_ui()
 	_combo_activo = false
@@ -868,7 +869,7 @@ func _romper_combo() -> void:
 	_combo_contador = 0
 
 	# Victoria: tablero vacío y barra vacía.
-	if _cartas_tablero.is_empty() and _barra_esta_vacia():
+	if _fichas_tablero.is_empty() and _barra_esta_vacia():
 		_finalizar_partida(true)
 
 # Se dispara cuando se agotan los 2 segundos de ventana del combo.
@@ -1142,7 +1143,7 @@ func _agregar_a_barra(tipo: int) -> void:
 
 	# Victoria: tablero vacío y barra vacía (último combo roto sin fichas
 	# pendientes).
-	if _cartas_tablero.is_empty() and _barra_esta_vacia():
+	if _fichas_tablero.is_empty() and _barra_esta_vacia():
 		_finalizar_partida(true)
 
 # ============================================================================
@@ -1181,8 +1182,9 @@ func _disparar_smoke_puff(posicion: Vector3) -> void:
 	fx.global_position = camara.unproject_position(posicion)
 	fx.play()
 
-# Muestra un texto flotante (+1, +2, +3...) sobre el slot indicado de la barra.
-func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int) -> void:
+# Muestra un texto flotante sobre el slot indicado de la barra.
+# con_signo=true -> "+1, +2..."; con_signo=false -> total acumulado (ej. "3").
+func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int, con_signo: bool = true) -> void:
 	if _capa_efectos == null or _barra_ui == null or indice_slot < 0 or indice_slot >= _slots.size():
 		return
 	var fx := PUNTOS_FLOTANTES_ESCENA.instantiate() as Control
@@ -1190,7 +1192,7 @@ func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int) -> void:
 		return
 	var etiqueta := fx.get_node_or_null("Label") as Label
 	if etiqueta:
-		etiqueta.text = "+%d" % puntos
+		etiqueta.text = ("+%d" % puntos) if con_signo else str(puntos)
 		etiqueta.reset_size()
 	_capa_efectos.add_child(fx)
 
@@ -1222,9 +1224,9 @@ func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int) -> void:
 # gira como una moneda al aire mientras se encoge para encajar en el espacio;
 # al terminar el vuelo se libera, se muestra el icono del slot y, si corresponde,
 # se disparan los puntos de la coincidencia.
-func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, puntos_ganados: int = 0) -> void:
+func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados: int = 0) -> void:
 	if _slots.is_empty() or camara == null:
-		carta.queue_free()
+		ficha.queue_free()
 		return
 
 	var slot := _slots[clampi(indice_slot, 0, _slots.size() - 1)]
@@ -1240,13 +1242,13 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, puntos_ganados
 	# Punto del mundo que, visto por la cámara, coincide con el centro del
 	# slot. Se usa un plano horizontal a la altura de la ficha para conservar
 	# su altura durante el vuelo.
-	var plano := Plane(Vector3.UP, carta.global_position.y)
+	var plano := Plane(Vector3.UP, ficha.global_position.y)
 	var interseccion: Variant = plano.intersects_ray(
 		camara.project_ray_origin(centro_slot),
 		camara.project_ray_normal(centro_slot)
 	)
 	if interseccion == null:
-		carta.queue_free()
+		ficha.queue_free()
 		return
 
 	var destino: Vector3 = interseccion
@@ -1263,7 +1265,7 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, puntos_ganados
 		escala_final = clampf(ancho_icono / ancho_token, 0.3, 1.0)
 
 	# Arco del lanzamiento: la ficha sube mientras viaja y baja al llegar.
-	var origen: Vector3 = carta.global_position
+	var origen: Vector3 = ficha.global_position
 	var distancia := origen.distance_to(destino)
 	var altura_arco := clampf(distancia * 0.25, 0.05, 0.18)
 
@@ -1272,11 +1274,11 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, puntos_ganados
 	var mover := func(t: float) -> void:
 		var pos := origen_vuelo.lerp(destino, t)
 		pos.y += sin(t * PI) * altura_arco
-		carta.global_position = pos
+		ficha.global_position = pos
 
-	var tween := carta.create_tween()
+	var tween := ficha.create_tween()
 	# 1) Salto vertical en el sitio, como preparación del lanzamiento.
-	tween.tween_property(carta, "global_position:y", origen_vuelo.y, DURACION_SALTO) \
+	tween.tween_property(ficha, "global_position:y", origen_vuelo.y, DURACION_SALTO) \
 		.set_trans(Tween.TRANS_QUAD) \
 		.set_ease(Tween.EASE_OUT)
 	# 2) Vuelo hacia la barra; comienza al terminar el salto.
@@ -1286,14 +1288,14 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, puntos_ganados
 	tween.set_parallel(true)
 	# Dos vueltas completas sobre el eje X: termina de nuevo con la cara
 	# hacia arriba, como una moneda que cae de canto y vuelve a su posición.
-	tween.tween_property(carta, "rotation:x", -TAU * 2.0, DURACION_VUELO) \
+	tween.tween_property(ficha, "rotation:x", -TAU * 2.0, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_LINEAR)
-	tween.tween_property(carta, "scale", Vector3.ONE * escala_final, DURACION_VUELO) \
+	tween.tween_property(ficha, "scale", Vector3.ONE * escala_final, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_CUBIC) \
 		.set_ease(Tween.EASE_OUT)
 	tween.finished.connect(func() -> void:
-		if is_instance_valid(carta):
-			carta.queue_free()
+		if is_instance_valid(ficha):
+			ficha.queue_free()
 		if audio_juego:
 			audio_juego.play_select()
 		# La ficha aterrizó: revelar su icono en el slot.
@@ -1315,11 +1317,11 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, puntos_ganados
 #  LIMPIEZA Y FIN DE PARTIDA
 # ============================================================================
 func _limpiar_tablero() -> void:
-	_cartas_tablero.clear()
-	if contenedor_cartas == null:
+	_fichas_tablero.clear()
+	if contenedor_fichas == null:
 		return
-	for hijo in contenedor_cartas.get_children():
-		contenedor_cartas.remove_child(hijo)
+	for hijo in contenedor_fichas.get_children():
+		contenedor_fichas.remove_child(hijo)
 		hijo.queue_free()
 
 func _preparar_titulo() -> void:
