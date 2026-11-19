@@ -30,6 +30,7 @@ const RADIO_MAX_CAPA: float = 2.1
 const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
 const TIPOS_CARTA: int = 24               # 24 fichas de astronomía.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
+const TIEMPO_COMBO: float = 2.0           # Ventana de tiempo (segundos) para seguir el combo.
 
 # Slots de la barra y render 3D de la ficha que muestran. Las fichas
 # acumuladas y sus placeholders se dibujan un 30% más grandes.
@@ -228,11 +229,18 @@ var _escala_ficha: Vector3 = Vector3.ONE
 var _offset_ficha: Vector3 = Vector3.ZERO
 var _indice_cara_superior: int = 0
 
-var _barra_tipos: Array[int] = []               # Tipos en la barra, en orden.
-# Tipos que ya están en la barra lógica pero cuya ficha todavía está volando:
-# su icono 3D permanece oculto hasta que termina la animación.
-var _tipos_pendientes_visual: Array[int] = []
-var _pares_encontrados: int = 0
+# Barra: array de tamaño fijo (una entrada por slot). 0 = slot vacío.
+var _barra_tipos: Array[int] = []
+# Estado del combo activo.
+var _combo_activo: bool = false
+var _combo_tipo: int = 0
+var _combo_slot: int = -1
+var _combo_contador: int = 0
+var _timer_combo: Timer = null
+# Fichas que están volando hacia la barra y aún no han aterrizado.
+var _cartas_en_vuelo: Array[CartaTablero] = []
+# Slots de la barra que tienen una ficha en vuelo (su icono no se muestra hasta aterrizar).
+var _slots_en_vuelo: Array[int] = []
 var _juego_terminado: bool = false
 var _animando_entrada: bool = false
 var _pendientes_entrada: int = 0
@@ -267,6 +275,7 @@ func _ready() -> void:
 	_crear_barra_ui()
 	_crear_capa_efectos()
 	_preparar_titulo()
+	_crear_timer_combo()
 
 	# Controlador reutilizable de resultados (panel de fin de nivel).
 	ctrl_resultados = ControladorResultados.new()
@@ -406,11 +415,19 @@ func _crear_entorno_ficha() -> Environment:
 # ============================================================================
 func _cargar_nivel(n: int) -> void:
 	_juego_terminado = false
-	_pares_encontrados = 0
 
 	# Limpieza de estado anterior (reinicio).
 	_barra_tipos.clear()
-	_tipos_pendientes_visual.clear()
+	for _i in range(CAPACIDAD_BARRA):
+		_barra_tipos.append(0)
+	_combo_activo = false
+	_combo_tipo = 0
+	_combo_slot = -1
+	_combo_contador = 0
+	_cartas_en_vuelo.clear()
+	_slots_en_vuelo.clear()
+	if _timer_combo:
+		_timer_combo.stop()
 	_actualizar_barra_ui()
 	_limpiar_tablero()
 	_limpiar_efectos()
@@ -718,17 +735,42 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 
 	var tipo := carta.tipo
 
-	# Si ya hay una ficha del mismo tipo, el vuelo apunta a ese espacio.
-	var indice_destino: int = _barra_tipos.size()
-	var indice_match := _barra_tipos.find(tipo)
-	if indice_match != -1:
-		indice_destino = indice_match
+	if not _combo_activo:
+		# Iniciar un nuevo combo con esta ficha.
+		var slot := _primer_slot_libre()
+		if slot == -1:
+			_finalizar_partida(false)
+			return
+		_combo_activo = true
+		_combo_tipo = tipo
+		_combo_slot = slot
+		_combo_contador = 1
+		_iniciar_timer_combo()
+	elif tipo == _combo_tipo:
+		# Misma ficha: continúa el combo en el mismo slot y reinicia el timer.
+		_combo_contador += 1
+		_iniciar_timer_combo()
+	else:
+		# Ficha diferente: rompe el combo actual (desaparece solo si hubo coincidencias acumuladas)
+		# y empieza uno nuevo con la nueva ficha.
+		_romper_combo()
+		var slot := _primer_slot_libre()
+		if slot == -1:
+			_finalizar_partida(false)
+			return
+		_combo_activo = true
+		_combo_tipo = tipo
+		_combo_slot = slot
+		_combo_contador = 1
+		_iniciar_timer_combo()
 
-	# La ficha 3D seleccionada vuela hasta la barra; la animación la libera al
-	# terminar. Se quita del tablero de inmediato para que no pueda volver a
-	# seleccionarse mientras está en el aire.
-	var resolver_pareja := indice_match != -1
-	_animar_carta_a_barra(carta, indice_destino, resolver_pareja)
+	# Marcar la ficha en la barra (su icono se revelará al terminar el vuelo).
+	_barra_tipos[_combo_slot] = tipo
+	_slots_en_vuelo.append(_combo_slot)
+
+	# La ficha 3D seleccionada vuela hasta la barra. Se quita del tablero de
+	# inmediato para que no pueda volver a seleccionarse mientras está en el aire.
+	_animar_carta_a_barra(carta, _combo_slot)
 
 	if audio_juego:
 		audio_juego.play_select()
@@ -737,18 +779,99 @@ func _seleccionar_carta(carta: CartaTablero) -> void:
 	carta.libre = false
 	if carta.cuerpo:
 		carta.cuerpo.collision_layer = 0
+	_cartas_en_vuelo.append(carta)
 
 	# Al quitar esta carta pueden quedar libres cartas de capas inferiores.
 	_actualizar_visibilidad()
 
-	# Si la ficha ocupa un hueco nuevo, su icono se mantiene oculto hasta que
-	# termina el vuelo. Las parejas no dejan un icono nuevo en la barra.
-	if indice_match == -1:
-		_tipos_pendientes_visual.append(tipo)
-	# Resolución de la barra (pareja, derrota o victoria). Se hace de inmediato
-	# para que varios vuelos simultáneos no trabajen sobre índices obsoletos;
-	# en las parejas el refresco visual se pospone al aterrizaje de la ficha.
-	_agregar_a_barra(tipo, indice_match == -1)
+# Crea el nodo Timer que gestiona la ventana de 2 segundos del combo.
+func _crear_timer_combo() -> void:
+	_timer_combo = Timer.new()
+	_timer_combo.name = "TimerCombo"
+	_timer_combo.one_shot = true
+	_timer_combo.wait_time = TIEMPO_COMBO
+	_timer_combo.timeout.connect(_on_timer_combo_timeout)
+	add_child(_timer_combo)
+
+# Detiene el timer del combo y, si hubo coincidencias acumuladas (contador >= 2),
+# elimina las fichas del slot con efecto de humo. Si solo hay una ficha (contador == 1),
+# se queda en su slot y el combo simplemente se desactiva.
+func _romper_combo() -> void:
+	if not _combo_activo:
+		return
+	if _timer_combo:
+		_timer_combo.stop()
+
+	var hay_coincidencias := _combo_contador >= 2
+
+	if hay_coincidencias:
+		# Liberar las fichas que aún están volando hacia la barra.
+		for carta in _cartas_en_vuelo:
+			if is_instance_valid(carta):
+				carta.queue_free()
+		_cartas_en_vuelo.clear()
+		_slots_en_vuelo.clear()
+		# Efecto de humo en el slot del combo antes de que sus fichas desaparezcan.
+		if _combo_slot >= 0 and _combo_slot < _slots.size() and camara != null:
+			var slot := _slots[_combo_slot]
+			var rect_slot := slot.get_global_rect()
+			var pantalla := get_viewport().get_visible_rect().size
+			var centro_slot := Vector2(
+				rect_slot.get_center().x,
+				pantalla.y - ALTO_BARRA + rect_slot.get_center().y
+			)
+			var plano := Plane(Vector3.UP, ALTURA_BARRA_3D)
+			var interseccion: Variant = plano.intersects_ray(
+				camara.project_ray_origin(centro_slot),
+				camara.project_ray_normal(centro_slot)
+			)
+			if interseccion != null:
+				_disparar_smoke_puff(interseccion)
+		# Vaciar el slot del combo en la barra.
+		if _combo_slot >= 0 and _combo_slot < _barra_tipos.size():
+			_barra_tipos[_combo_slot] = 0
+	else:
+		# No hay coincidencias acumuladas: la ficha se queda en su slot.
+		# Solo limpiar las referencias de vuelo (las fichas ya aterrizaron o se liberan).
+		for carta in _cartas_en_vuelo:
+			if is_instance_valid(carta):
+				carta.queue_free()
+		_cartas_en_vuelo.clear()
+		_slots_en_vuelo.clear()
+
+	_actualizar_barra_ui()
+	_combo_activo = false
+	_combo_tipo = 0
+	_combo_slot = -1
+	_combo_contador = 0
+
+	# Victoria: tablero vacío y barra vacía.
+	if _cartas_tablero.is_empty() and _barra_esta_vacia():
+		_finalizar_partida(true)
+
+# Se dispara cuando se agotan los 2 segundos de ventana del combo.
+func _on_timer_combo_timeout() -> void:
+	_romper_combo()
+
+# Devuelve true si no hay ningún tipo en la barra.
+func _barra_esta_vacia() -> bool:
+	for t in _barra_tipos:
+		if t != 0:
+			return false
+	return true
+
+# Devuelve el índice del primer slot vacío de la barra, o -1 si la barra está llena.
+func _primer_slot_libre() -> int:
+	for i in range(_barra_tipos.size()):
+		if _barra_tipos[i] == 0:
+			return i
+	return -1
+
+# Inicia (o reinicia) la ventana de tiempo del combo.
+func _iniciar_timer_combo() -> void:
+	if _timer_combo:
+		_timer_combo.stop()
+		_timer_combo.start()
 
 # ============================================================================
 #  BARRA INFERIOR ("SCRABBLE BAR")
@@ -956,17 +1079,13 @@ func _actualizar_barra_ui() -> void:
 		var material := _slots_materiales[i]
 
 		var tipo := 0
-		var textura: Texture2D = null
 		if i < _barra_tipos.size():
 			tipo = _barra_tipos[i]
-			textura = _textura_para_tipo(tipo)
-		var pendiente := textura != null and _tipos_pendientes_visual.has(tipo)
+		var textura := _textura_para_tipo(tipo)
 
-		if textura != null and ficha != null and material != null:
-			# Se renderiza desde ya, pero oculto, para que al revelarlo el
-			# icono ya tenga la textura correcta (sin un frame con la anterior).
+		if tipo != 0 and textura != null and ficha != null and material != null and not _slots_en_vuelo.has(i):
 			icono.texture = viewport.get_texture()
-			icono.visible = not pendiente
+			icono.visible = true
 			ficha.visible = true
 			material.set_shader_parameter("albedo_textura", textura)
 			viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
@@ -976,38 +1095,19 @@ func _actualizar_barra_ui() -> void:
 				ficha.visible = false
 			viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
-# Añade un tipo a la barra y resuelve la lógica de pareja / derrota.
-# [param actualizar_ui] permite resolver la lógica al instante pero posponer el
-# refresco visual hasta que la ficha termine su vuelo.
-func _agregar_a_barra(tipo: int, actualizar_ui: bool = true) -> void:
+# Registra la llegada visual de una ficha al slot del combo. Ya no se resuelven
+# parejas aquí: el combo se rompe por tiempo agotado o por ficha distinta.
+func _agregar_a_barra(tipo: int) -> void:
 	if _juego_terminado:
 		return
 
-	# Buscar una pareja antes de añadir la nueva carta.
-	var indice_match := _barra_tipos.find(tipo)
-	_barra_tipos.append(tipo)
+	if _combo_slot >= 0 and _combo_slot < _barra_tipos.size():
+		_barra_tipos[_combo_slot] = tipo
+	_actualizar_barra_ui()
 
-	if indice_match != -1:
-		# Pareja encontrada: desaparecen la carta existente y la recién llegada.
-		# El sonido se reproduce al terminar el vuelo (junto con el humo),
-		# no al seleccionar la ficha.
-		_barra_tipos.remove_at(indice_match)
-		_barra_tipos.pop_back()
-		_pares_encontrados += 1
-	else:
-		# Sin pareja. Si la barra se llenó, es derrota.
-		if _barra_tipos.size() >= CAPACIDAD_BARRA:
-			_actualizar_barra_ui()
-			_finalizar_partida(false)
-			return
-
-	if actualizar_ui:
-		_actualizar_barra_ui()
-
-	# Victoria: se encontraron todos los pares y no queda nada en tablero ni barra.
-	if _pares_encontrados >= _total_pares \
-	and _cartas_tablero.is_empty() \
-	and _barra_tipos.is_empty():
+	# Victoria: tablero vacío y barra vacía (último combo roto sin fichas
+	# pendientes).
+	if _cartas_tablero.is_empty() and _barra_esta_vacia():
 		_finalizar_partida(true)
 
 # ============================================================================
@@ -1050,7 +1150,7 @@ func _disparar_smoke_puff(posicion: Vector3) -> void:
 # centro del slot correspondiente de la barra. La ficha se lanza en arco y
 # gira como una moneda al aire mientras se encoge para encajar en el espacio;
 # al terminar el vuelo se libera y se muestra el icono del slot.
-func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_pareja: bool = false) -> void:
+func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int) -> void:
 	if _slots.is_empty() or camara == null:
 		carta.queue_free()
 		return
@@ -1119,30 +1219,16 @@ func _animar_carta_a_barra(carta: CartaTablero, indice_slot: int, resolver_parej
 	tween.tween_property(carta, "scale", Vector3.ONE * escala_final, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_CUBIC) \
 		.set_ease(Tween.EASE_OUT)
-	var tipo := carta.tipo
 	tween.finished.connect(func() -> void:
 		carta.queue_free()
-		if resolver_pareja:
-			_disparar_smoke_puff(destino)
-			if audio_juego:
-				audio_juego.play("Points")
-			# La pareja ya se resolvió al seleccionar; aquí solo se refleja en
-			# la barra cuando la ficha termina su vuelo.
-			_actualizar_barra_ui()
-		else:
-			_revelar_ficha_en_barra(tipo)
-			if audio_juego:
-				audio_juego.play_select()
+		if audio_juego:
+			audio_juego.play_select()
+		# La ficha aterrizó: revelar su icono en el slot.
+		var idx := _slots_en_vuelo.find(indice_slot)
+		if idx != -1:
+			_slots_en_vuelo.remove_at(idx)
+		_actualizar_barra_ui()
 	)
-
-# Muestra el icono de la ficha que acaba de aterrizar en la barra. Si otra
-# ficha del mismo tipo sigue volando, el icono permanece oculto.
-func _revelar_ficha_en_barra(tipo: int) -> void:
-	var indice := _tipos_pendientes_visual.find(tipo)
-	if indice == -1:
-		return
-	_tipos_pendientes_visual.remove_at(indice)
-	_actualizar_barra_ui()
 
 # ============================================================================
 #  LIMPIEZA Y FIN DE PARTIDA
