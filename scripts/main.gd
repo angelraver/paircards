@@ -27,10 +27,14 @@ extends Node3D
 # Radio máximo de cada capa, en múltiplos del diámetro de la ficha. Recortar
 # la red hexagonal con este radio produce una grilla circular.
 const RADIO_MAX_CAPA: float = 2.1
-const LAYER_COUNT: int = 5                # Capas totales (1 = superior).
-const TIPOS_FICHA: int = 24               # 24 fichas de astronomía.
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
 const TIEMPO_COMBO: float = 2.0           # Ventana de tiempo (segundos) para seguir el combo.
+
+# Rutas de configuración de niveles y tipos de fichas.
+const RUTA_NIVELES: String = "res://data/niveles.json"
+const RUTA_VALORES: String = "res://data/valores.json"
+const RUTA_CARPETA_FICHAS: String = "res://assets/images/astronomia/"
+const CAPAS_POR_DEFECTO: int = 5
 
 # Slots de la barra y render 3D de la ficha que muestran. Las fichas
 # acumuladas y sus placeholders se dibujan un 30% más grandes.
@@ -42,9 +46,9 @@ const TAMANO_CAMARA_ICONO: float = 0.14
 # Altura de la barra inferior, en píxeles lógicos de la pantalla.
 const ALTO_BARRA: float = 200.0
 
-# Oscurecimiento de las fichas bloqueadas. La capa 1 se queda en 10% y las
-# capas 2-5 llevan 10% extra: 30%, 40%, 50% y 60%. Índice 0 = capa 1.
-const OSCURIDAD_POR_CAPA: Array[float] = [0.10, 0.30, 0.40, 0.50, 0.60]
+# Oscurecimiento base de fichas bloqueadas. Si un nivel tiene más capas que
+# valores definidos, las capas extra usan el último valor de la lista.
+const OSCURIDAD_BASE_CAPAS: Array[float] = [0.10, 0.30, 0.40, 0.50, 0.60]
 
 # --- Constantes geométricas -------------------------------------------------
 # Altura de la superficie del piso (CSGBox3D "Piso" de main.tscn).
@@ -100,35 +104,7 @@ const ESCALON_CAIDA_POR_CAPA: float = 0.12
 # Intervalo de inicio entre cada ficha (caída una por una).
 const ESPACIO_ENTRE_FICHAS: float = 0.05
 
-# Texturas de las fichas. El orden de esta lista define el tipo de cada ficha.
-const RUTA_CARPETA_FICHAS: String = "res://assets/images/astronomia/"
-const NOMBRES_FICHA: Array[String] = [
-	"cometa",
-	"cruz",
-	"cuadrante",
-	"cuartocreciente",
-	"cuartomenguante",
-	"eclipselunar",
-	"eclipsesolar",
-	"ejetiempo",
-	"esferaarmilar",
-	"jupiter",
-	"lente",
-	"lunallena",
-	"lunaroja",
-	"marte",
-	"meridiano",
-	"orion",
-	"osamayor",
-	"pleyades",
-	"polar",
-	"saturno",
-	"sol",
-	"triangulo",
-	"venus",
-	"zodiaco",
-]
-
+var _fichas_config: Dictionary = {}
 const SMOKE_PUFF_2D: PackedScene = preload(
 	"res://crisp_juice_fx/fx2d/elements/smoke_puff_2d.tscn"
 )
@@ -222,6 +198,14 @@ class FichaTablero extends Node3D:
 var nivel_actual: int = 1
 var ctrl_resultados: ControladorResultados
 
+# Configuración cargada desde data/niveles.json y data/valores.json.
+var _niveles_config: Dictionary = {}
+var _valores_config: Dictionary = {}
+var _capas_nivel: int = CAPAS_POR_DEFECTO
+var _slots_nivel: int = CAPACIDAD_BARRA
+var _tipos_nivel: Array[int] = []
+var _fichas_n_nivel: int = 0
+
 var _fichas_tablero: Array[FichaTablero] = []   # Sólo fichas aún en el tablero.
 var _texturas: Array[Texture2D] = []            # Cache de las 20 texturas.
 
@@ -260,6 +244,7 @@ var _total_pares: int = 0
 var _barra_ui: Control = null
 var _barra_viewport: SubViewport = null
 var _barra_sprite: Sprite3D = null
+var _barra_slots_box: HBoxContainer = null
 var _capa_efectos: Control = null
 var _slots: Array[Panel] = []
 var _slots_texturas: Array[TextureRect] = []
@@ -274,9 +259,11 @@ func _ready() -> void:
 	randomize()
 
 	nivel_actual = save_manager.nivel_actual_seleccionado
+	_cargar_configuracion()
 
 	# Ficha 3D, texturas, barra inferior y capa de efectos visuales.
 	_preparar_ficha()
+	_configurar_nivel(nivel_actual)
 	_cargar_texturas()
 	_crear_barra_ui()
 	_crear_capa_efectos()
@@ -297,15 +284,71 @@ func _ready() -> void:
 	if boton_pausa and not boton_pausa.is_connected("pressed", _on_boton_pausa_pressed):
 		boton_pausa.pressed.connect(_on_boton_pausa_pressed)
 
-	_preparar_reparto()
 	_cargar_nivel(nivel_actual)
 
 # ============================================================================
-#  CARGA DE RECURSOS
+#  CARGA DE RECURSOS Y CONFIGURACIÓN
 # ============================================================================
+func _cargar_json(ruta: String) -> Dictionary:
+	if not FileAccess.file_exists(ruta):
+		push_error("No se encontró el archivo de configuración: %s" % ruta)
+		return {}
+	var archivo := FileAccess.open(ruta, FileAccess.READ)
+	if archivo == null:
+		push_error("No se pudo abrir el archivo de configuración: %s" % ruta)
+		return {}
+	var texto := archivo.get_as_text()
+	var datos = JSON.parse_string(texto)
+	if datos is Dictionary:
+		return datos
+	push_error("El archivo de configuración no es un objeto JSON válido: %s" % ruta)
+	return {}
+
+func _cargar_configuracion() -> void:
+	_niveles_config = _cargar_json(RUTA_NIVELES)
+	_valores_config = _cargar_json(RUTA_VALORES)
+
+func _configurar_nivel(n: int) -> void:
+	_fichas_config.clear()
+	_tipos_nivel.clear()
+	_capas_nivel = CAPAS_POR_DEFECTO
+	_slots_nivel = CAPACIDAD_BARRA
+	_fichas_n_nivel = 0
+
+	var mapa_fichas: Dictionary = _valores_config.get("fichas", {})
+	var nivel_cfg: Variant = _niveles_config.get(str(n), _niveles_config.get(n, {}))
+	if not (nivel_cfg is Dictionary):
+		nivel_cfg = {}
+
+	_capas_nivel = maxi(int(nivel_cfg.get("capas", CAPAS_POR_DEFECTO)), 1)
+	_slots_nivel = clampi(int(nivel_cfg.get("slots", CAPACIDAD_BARRA)), 1, CAPACIDAD_BARRA)
+	_fichas_n_nivel = maxi(int(nivel_cfg.get("fichas_n", 0)), 0)
+
+	var tipos_cfg: Array = nivel_cfg.get("fichas_t", [])
+	for clave in tipos_cfg:
+		var tipo_id := str(clave)
+		if not mapa_fichas.has(tipo_id):
+			push_error("Tipo de ficha desconocido en nivel %d: %s" % [n, tipo_id])
+			continue
+		var nombre: String = str(mapa_fichas[tipo_id])
+		var indice := _tipos_nivel.size() + 1
+		_tipos_nivel.append(indice)
+		_fichas_config[indice] = nombre
+
+	if _tipos_nivel.is_empty():
+		# Fallback: usar todos los tipos definidos en valores.json.
+		var claves: Array = mapa_fichas.keys()
+		claves.sort()
+		for clave in claves:
+			var nombre: String = str(mapa_fichas[clave])
+			var indice := _tipos_nivel.size() + 1
+			_tipos_nivel.append(indice)
+			_fichas_config[indice] = nombre
+
 func _cargar_texturas() -> void:
 	_texturas.clear()
-	for nombre in NOMBRES_FICHA:
+	for indice in _tipos_nivel:
+		var nombre: String = str(_fichas_config.get(indice, ""))
 		var ruta := RUTA_CARPETA_FICHAS + nombre + ".png"
 		var textura := load(ruta) as Texture2D
 		if textura == null:
@@ -421,12 +464,19 @@ func _crear_entorno_ficha() -> Environment:
 # ============================================================================
 func _cargar_nivel(n: int) -> void:
 	_juego_terminado = false
+	nivel_actual = n
+
+	_configurar_nivel(n)
+	_cargar_texturas()
+	if _barra_ui == null or _slots.size() != _slots_nivel:
+		_crear_barra_ui()
+	_preparar_reparto()
 
 	# Limpieza de estado anterior (reinicio).
 	_barra_tipos.clear()
 	_barra_conteo.clear()
 	_barra_icono_oculto.clear()
-	for _i in range(CAPACIDAD_BARRA):
+	for _i in range(_slots_nivel):
 		_barra_tipos.append(0)
 		_barra_conteo.append(0)
 		_barra_icono_oculto.append(false)
@@ -453,11 +503,12 @@ func _cargar_nivel(n: int) -> void:
 	_animar_entrada_fichas()
 
 # Calcula cuántas fichas caben en cada capa y ajusta el total a un número par.
+# Si el nivel define fichas_n, se limita el reparto a esa cantidad (par).
 func _preparar_reparto() -> void:
 	_fichas_por_capa.clear()
 	var total := 0
 
-	for capa in range(1, LAYER_COUNT + 1):
+	for capa in range(1, _capas_nivel + 1):
 		var capacidad := _capacidad_capa(capa)
 		_fichas_por_capa.append(capacidad)
 		total += capacidad
@@ -465,21 +516,41 @@ func _preparar_reparto() -> void:
 	# Las parejas exigen un total par. Si la suma de capacidades es impar,
 	# se deja una celda vacía en la capa inferior (la menos visible).
 	if total % 2 != 0:
-		_fichas_por_capa[LAYER_COUNT - 1] -= 1
+		_fichas_por_capa[_capas_nivel - 1] -= 1
 		total -= 1
 
-	_total_fichas = total
-	_total_pares = total / 2
-	print("Reparto: capas=", _fichas_por_capa, " total=", _total_fichas, " pares=", _total_pares)
+	var objetivo := total
+	if _fichas_n_nivel > 0:
+		objetivo = mini(_fichas_n_nivel, total)
+	if objetivo % 2 != 0:
+		objetivo -= 1
+	objetivo = maxi(objetivo, 0)
+
+	# Quita fichas desde las capas inferiores hasta alcanzar fichas_n.
+	var sobrantes := total - objetivo
+	for i in range(_fichas_por_capa.size() - 1, -1, -1):
+		if sobrantes <= 0:
+			break
+		var quitar := mini(sobrantes, _fichas_por_capa[i])
+		_fichas_por_capa[i] -= quitar
+		sobrantes -= quitar
+
+	_total_fichas = objetivo
+	_total_pares = _total_fichas / 2
+	print("Reparto nivel ", nivel_actual, ": capas=", _capas_nivel, " fichas_n=", _fichas_n_nivel, " por_capa=", _fichas_por_capa, " total=", _total_fichas, " pares=", _total_pares)
 
 # Crea las parejas necesarias para llenar las grillas y las reparte entre capas.
 # Cada capa elige celdas distintas al azar de su red hexagonal recortada.
 func _generar_fichas() -> void:
+	if _tipos_nivel.is_empty():
+		push_error("El nivel %d no tiene tipos de ficha configurados." % nivel_actual)
+		return
+
 	var tipos: Array[int] = []
 
 	# Cada pareja se agrega dos veces para que siempre haya match.
 	for _i in range(_total_pares):
-		var tipo := randi_range(1, TIPOS_FICHA)
+		var tipo: int = _tipos_nivel[randi() % _tipos_nivel.size()]
 		tipos.append(tipo)
 		tipos.append(tipo)
 
@@ -488,7 +559,7 @@ func _generar_fichas() -> void:
 
 	var indice_tipo: int = 0
 
-	for capa in range(1, LAYER_COUNT + 1):
+	for capa in range(1, _capas_nivel + 1):
 		var celdas := _generar_celdas(capa)
 
 		# Se eligen celdas distintas para evitar dos fichas en la misma celda.
@@ -509,14 +580,14 @@ func _crear_ficha(tipo: int, capa: int, celda: Vector2i) -> void:
 	if textura == null:
 		return
 
-	var ficha := FICHA_ESCENA.instantiate() as Node3D
+	var nodo_ficha := FICHA_ESCENA.instantiate() as Node3D
 	var material_cara: ShaderMaterial = null
-	if ficha != null:
-		material_cara = _configurar_visual_ficha(ficha, textura)
-	if ficha == null or material_cara == null:
+	if nodo_ficha != null:
+		material_cara = _configurar_visual_ficha(nodo_ficha, textura)
+	if nodo_ficha == null or material_cara == null:
 		push_error("No se pudo instanciar la malla de ficha.glb")
-		if ficha:
-			ficha.free()
+		if nodo_ficha:
+			nodo_ficha.free()
 		return
 
 	var ficha := FichaTablero.new()
@@ -526,7 +597,7 @@ func _crear_ficha(tipo: int, capa: int, celda: Vector2i) -> void:
 		capa,
 		celda,
 		textura,
-		ficha,
+		nodo_ficha,
 		material_cara,
 		DIAMETRO_FICHA,
 		GROSOR_FICHA,
@@ -550,12 +621,12 @@ func _posicion_mundo(celda: Vector2i, capa: int) -> Vector3:
 		CENTRO_TABLERO.z + plano.y
 	)
 
-# Altura de la cara superior de cada capa. La capa 1 es la superior; la 5,
-# la inferior. La capa inferior se apoya sobre el piso.
+# Altura de la cara superior de cada capa. La capa 1 es la superior; la capa
+# inferior (última del nivel) se apoya sobre el piso.
 func _y_para_capa(capa: int) -> float:
 	return ALTURA_PISO \
 		+ GROSOR_FICHA \
-		+ float(LAYER_COUNT - capa) * SEPARACION_CAPAS
+		+ float(_capas_nivel - capa) * SEPARACION_CAPAS
 
 # Convierte coordenadas axiales de la red hexagonal a un punto del plano XZ.
 # La unidad es un diámetro de ficha.
@@ -668,8 +739,8 @@ func _aplicar_estado_visual(ficha: FichaTablero) -> void:
 	var brillo := 1.0
 	if not ficha.libre:
 		# Las bloqueadas se oscurecen según la capa a la que pertenecen.
-		var indice := clampi(ficha.capa - 1, 0, OSCURIDAD_POR_CAPA.size() - 1)
-		brillo = 1.0 - OSCURIDAD_POR_CAPA[indice]
+		var indice := clampi(ficha.capa - 1, 0, OSCURIDAD_BASE_CAPAS.size() - 1)
+		brillo = 1.0 - OSCURIDAD_BASE_CAPAS[indice]
 
 	ficha.material.set_shader_parameter("brillo", brillo)
 
@@ -916,54 +987,85 @@ func _iniciar_timer_combo() -> void:
 # Se renderiza en un quad 3D apoyado en el piso para que las fichas queden
 # siempre por encima de ella.
 func _crear_barra_ui() -> void:
+	# Crea la infraestructura 3D de la barra una vez y (re)construye los slots
+	# según la cantidad configurada para el nivel actual.
+	var entorno_ficha := _crear_entorno_ficha()
+	var textura_inicial: Texture2D = null
+	if not _texturas.is_empty():
+		textura_inicial = _texturas[0]
+
+	if _barra_ui == null or not is_instance_valid(_barra_ui):
+		_barra_ui = Control.new()
+		_barra_ui.name = "BarraRecoleccion"
+		_barra_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_barra_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+		# Fondo semitransparente.
+		var fondo := ColorRect.new()
+		fondo.name = "Fondo"
+		fondo.color = Color(0.02, 0.02, 0.04, 0.62)
+		fondo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		fondo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_barra_ui.add_child(fondo)
+
+		# Línea superior decorativa.
+		var linea := ColorRect.new()
+		linea.name = "Linea"
+		linea.color = Color(0.95, 0.78, 0.25, 0.9)
+		linea.anchor_left = 0.0
+		linea.anchor_top = 0.0
+		linea.anchor_right = 1.0
+		linea.anchor_bottom = 0.0
+		linea.offset_bottom = 3.0
+		linea.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_barra_ui.add_child(linea)
+
+		# Contenedor horizontal centrado para los espacios de la barra.
+		_barra_slots_box = HBoxContainer.new()
+		_barra_slots_box.name = "Slots"
+		_barra_slots_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		_barra_slots_box.alignment = BoxContainer.ALIGNMENT_CENTER
+		_barra_slots_box.add_theme_constant_override("separation", 12)
+		_barra_slots_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_barra_ui.add_child(_barra_slots_box)
+
+		# La barra se dibuja en un quad 3D sobre el piso, alineado con el
+		# rectángulo inferior de la pantalla.
+		_barra_viewport = SubViewport.new()
+		_barra_viewport.name = "BarraViewport"
+		_barra_viewport.transparent_bg = true
+		_barra_viewport.disable_3d = true
+		_barra_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+		add_child(_barra_viewport)
+		_barra_viewport.add_child(_barra_ui)
+
+		_barra_sprite = Sprite3D.new()
+		_barra_sprite.name = "Barra3D"
+		_barra_sprite.texture = _barra_viewport.get_texture()
+		_barra_sprite.shaded = false
+		_barra_sprite.double_sided = true
+		_barra_sprite.flip_h = true
+		_barra_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
+		_barra_sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(_barra_sprite)
+		_actualizar_barra_3d()
+		if not get_viewport().size_changed.is_connected(_actualizar_barra_3d):
+			get_viewport().size_changed.connect(_actualizar_barra_3d)
+	else:
+		# Infraestructura existente: solo se reconstruyen los slots si cambia la cantidad.
+		_barra_slots_box = _barra_ui.get_node_or_null("Slots") as HBoxContainer
+
+	# Reconstruir slots para el nivel actual.
+	for hijo in _barra_slots_box.get_children():
+		_barra_slots_box.remove_child(hijo)
+		hijo.queue_free()
 	_slots.clear()
 	_slots_texturas.clear()
 	_slots_viewports.clear()
 	_slots_fichas.clear()
 	_slots_materiales.clear()
 
-	var entorno_ficha := _crear_entorno_ficha()
-	var textura_inicial: Texture2D = null
-	if not _texturas.is_empty():
-		textura_inicial = _texturas[0]
-
-	_barra_ui = Control.new()
-	_barra_ui.name = "BarraRecoleccion"
-	_barra_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	# Dentro de su SubViewport la barra ocupa todo el rectángulo.
-	_barra_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	# Fondo semitransparente.
-	var fondo := ColorRect.new()
-	fondo.name = "Fondo"
-	fondo.color = Color(0.02, 0.02, 0.04, 0.62)
-	fondo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	fondo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_barra_ui.add_child(fondo)
-
-	# Línea superior decorativa.
-	var linea := ColorRect.new()
-	linea.name = "Linea"
-	linea.color = Color(0.95, 0.78, 0.25, 0.9)
-	linea.anchor_left = 0.0
-	linea.anchor_top = 0.0
-	linea.anchor_right = 1.0
-	linea.anchor_bottom = 0.0
-	linea.offset_bottom = 3.0
-	linea.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_barra_ui.add_child(linea)
-
-	# Contenedor horizontal centrado para los 5 espacios.
-	var caja := HBoxContainer.new()
-	caja.name = "Slots"
-	caja.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	caja.alignment = BoxContainer.ALIGNMENT_CENTER
-	caja.add_theme_constant_override("separation", 12)
-	caja.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_barra_ui.add_child(caja)
-
-	for _i in range(CAPACIDAD_BARRA):
+	for _i in range(_slots_nivel):
 		var slot := Panel.new()
 		slot.custom_minimum_size = TAMANO_SLOT_BARRA
 		slot.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -1038,36 +1140,12 @@ func _crear_barra_ui() -> void:
 			ficha.free()
 			ficha = null
 
-		caja.add_child(slot)
+		_barra_slots_box.add_child(slot)
 		_slots.append(slot)
 		_slots_texturas.append(icono)
 		_slots_viewports.append(viewport)
 		_slots_fichas.append(ficha)
 		_slots_materiales.append(material_ficha)
-
-	# La barra se dibuja en un quad 3D sobre el piso, alineado con el
-	# rectángulo inferior de la pantalla. Al estar por debajo de todas las
-	# fichas, éstas ya no quedan tapadas al llegar a los slots.
-	_barra_viewport = SubViewport.new()
-	_barra_viewport.name = "BarraViewport"
-	_barra_viewport.transparent_bg = true
-	_barra_viewport.disable_3d = true
-	_barra_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	add_child(_barra_viewport)
-	_barra_viewport.add_child(_barra_ui)
-
-	_barra_sprite = Sprite3D.new()
-	_barra_sprite.name = "Barra3D"
-	_barra_sprite.texture = _barra_viewport.get_texture()
-	_barra_sprite.shaded = false
-	_barra_sprite.double_sided = true
-	_barra_sprite.flip_h = true
-	_barra_sprite.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR
-	_barra_sprite.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_barra_sprite)
-	_actualizar_barra_3d()
-	if not get_viewport().size_changed.is_connected(_actualizar_barra_3d):
-		get_viewport().size_changed.connect(_actualizar_barra_3d)
 
 	_actualizar_barra_ui()
 

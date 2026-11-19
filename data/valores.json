@@ -1,0 +1,28 @@
+{
+  "fichas": {
+    "a": "cometa",
+	"b": "cruz",
+	"c": "cuadrante",
+	"d": "cuartocreciente",
+	"e": "cuartomenguante",
+	"f": "eclipselunar",
+	"g": "eclipsesolar",
+	"h": "ejetiempo",
+	"i": "esferaarmilar",
+	"j": "jupiter",
+	"k": "lente",
+	"l": "lunallena",
+	"m": "lunaroja",
+	"n": "marte",
+	"o": "meridiano",
+	"p": "orion",
+	"q": "osamayor",
+	"r": "pleyades",
+	"s": "polar",
+	"t": "saturno",
+	"u": "sol",
+	"v": "triangulo",
+	"w": "venus",
+	"x": "zodiaco"
+  }
+}
