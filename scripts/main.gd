@@ -206,6 +206,18 @@ var _slots_nivel: int = CAPACIDAD_BARRA
 var _tipos_nivel: Array[int] = []
 var _fichas_n_nivel: int = 0
 
+# Patrón de distribución de fichas (configurable por nivel).
+var _patron_tipo: String = "circulos"
+var _patron_radio: float = RADIO_MAX_CAPA
+var _patron_offset_impar: Vector2 = Vector2.ZERO
+var _patron_offset_par: Vector2 = DESPLAZAMIENTO_INTERCALADO
+var _patron_celdas_impar: Array[Vector2i] = []
+var _patron_celdas_par: Array[Vector2i] = []
+# Offset de centrado por capa (plano XZ). Centra cualquier patrón explícito
+# (triángulos, formas arbitrarias) alrededor del origen del tablero. Los
+# círculos ya tienen centroide en (0,0) por su fórmula, así que no varían.
+var _patron_centro: Array[Vector2] = []
+
 var _fichas_tablero: Array[FichaTablero] = []   # Sólo fichas aún en el tablero.
 var _texturas: Array[Texture2D] = []            # Cache de las 20 texturas.
 
@@ -323,6 +335,44 @@ func _configurar_nivel(n: int) -> void:
 	_capas_nivel = maxi(int(nivel_cfg.get("capas", CAPAS_POR_DEFECTO)), 1)
 	_slots_nivel = clampi(int(nivel_cfg.get("slots", CAPACIDAD_BARRA)), 1, CAPACIDAD_BARRA)
 	_fichas_n_nivel = maxi(int(nivel_cfg.get("fichas_n", 0)), 0)
+
+	# Patrón de distribución: por defecto "circulos" (hexagonal circular intercalado).
+	_patron_tipo = "circulos"
+	_patron_radio = RADIO_MAX_CAPA
+	_patron_offset_impar = Vector2.ZERO
+	_patron_offset_par = DESPLAZAMIENTO_INTERCALADO
+	_patron_celdas_impar.clear()
+	_patron_celdas_par.clear()
+	var patron_cfg: Variant = nivel_cfg.get("patron", "circulos")
+	if patron_cfg is String:
+		_patron_tipo = str(patron_cfg)
+	elif patron_cfg is Dictionary:
+		_patron_tipo = str(patron_cfg.get("tipo", "circulos"))
+		_patron_radio = float(patron_cfg.get("radio", RADIO_MAX_CAPA))
+		var off_i: Variant = patron_cfg.get("offset_impar", null)
+		if off_i is Array and off_i.size() >= 2:
+			_patron_offset_impar = Vector2(float(off_i[0]), float(off_i[1]))
+		var off_p: Variant = patron_cfg.get("offset_par", null)
+		if off_p is Array and off_p.size() >= 2:
+			_patron_offset_par = Vector2(float(off_p[0]), float(off_p[1]))
+		_patron_celdas_impar = _parsear_celdas_patron(patron_cfg.get("celdas_impar", []))
+		_patron_celdas_par = _parsear_celdas_patron(patron_cfg.get("celdas_par", patron_cfg.get("celdas", [])))
+
+	# Centroide de centrado por capa (sobre celdas CRUDAS, sin offset de
+	# intercalado). Los círculos ya están centrados por su fórmula; los
+	# patrones explícitos se centran primero y luego se aplica el offset de
+	# intercalado para que queden en los huecos sin perder el centro.
+	_patron_centro.clear()
+	for _capa in range(1, _capas_nivel + 1):
+		var celdas := _generar_celdas(_capa)
+		if celdas.is_empty():
+			_patron_centro.append(Vector2.ZERO)
+			continue
+		var centro := Vector2.ZERO
+		for celda in celdas:
+			centro += _axial_a_plano(celda)
+		centro /= float(celdas.size())
+		_patron_centro.append(-centro)
 
 	var tipos_cfg: Array = nivel_cfg.get("fichas_t", [])
 	for clave in tipos_cfg:
@@ -612,9 +662,14 @@ func _crear_ficha(tipo: int, capa: int, celda: Vector2i) -> void:
 
 # Convierte una celda axial (q, r) y una capa a coordenadas 3D. Las capas
 # pares suman el desplazamiento de intercalado: su red cae en los huecos
-# triangulares de la capa superior y deja el epicentro vacío.
+# triangulares de la capa superior y deja el epicentro vacío. Además se aplica
+# el centrado de capa (_patron_centro) para que patrones explícitos queden
+# centrados en el tablero sin desplazarse de la pantalla.
 func _posicion_mundo(celda: Vector2i, capa: int) -> Vector3:
-	var plano := (_axial_a_plano(celda) + _desplazamiento_capa(capa)) * SEPARACION_FICHAS
+	var centrado := Vector2.ZERO
+	if capa - 1 < _patron_centro.size():
+		centrado = _patron_centro[capa - 1]
+	var plano := (_axial_a_plano(celda) + _desplazamiento_capa(capa) + centrado) * SEPARACION_FICHAS
 	return Vector3(
 		CENTRO_TABLERO.x + plano.x,
 		_y_para_capa(capa),
@@ -636,26 +691,71 @@ func _axial_a_plano(celda: Vector2i) -> Vector2:
 		float(celda.y) * SQRT3 * 0.5
 	)
 
-# Las capas impares llevan una ficha en el epicentro; las pares se desplazan
-# al centro del hueco triangular que dejan tres fichas contiguas.
-func _desplazamiento_capa(capa: int) -> Vector2:
-	return Vector2.ZERO if capa % 2 == 1 else DESPLAZAMIENTO_INTERCALADO
+# ============================================================================
+#  PATRÓN DE DISTRIBUCIÓN DE FICHAS
+# ----------------------------------------------------------------------------
+#  Define qué celdas axiales (q,r) existen en cada capa y el desplazamiento
+#  de la red por capa para que las capas se intercalen (una ficha superior
+#  tapa parcialmente a las inferiores sin coincidir centros).
+#
+#  Formatos soportados en niveles.json -> "patron":
+#   - "circulos" (por defecto) o {"tipo":"circulos","radio":2.1}
+#       Fórmula: grilla hexagonal recortada a un círculo de radio R (en
+#       diámetros). Capas impares centradas, pares desplazadas al hueco
+#       triangular. Simple de ajustar cambiando el radio.
+#   - {"tipo":"celdas","celdas_impar":[[q,r],...],"celdas_par":[[q,r],...],
+#      "offset_impar":[x,y],"offset_par":[x,y]}
+#       Arrays explícitos de celdas por paridad de capa: forma más directa y
+#       general de "dibujar" mapas/disposiciones arbitrarias.
+#
+#  Para nuevos patrones basta agregar un tipo y su generador de celdas/offset.
+# ============================================================================
+func _parsear_celdas_patron(datos: Variant) -> Array[Vector2i]:
+	var celdas: Array[Vector2i] = []
+	if not (datos is Array):
+		return celdas
+	for item in datos:
+		if item is Array and item.size() >= 2:
+			celdas.append(Vector2i(int(item[0]), int(item[1])))
+		elif item is Dictionary:
+			celdas.append(Vector2i(int(item.get("q", 0)), int(item.get("r", 0))))
+	return celdas
 
-# Celdas de una capa: todas las posiciones de la red hexagonal cuyo centro
-# cae dentro del radio de la grilla circular.
+# Desplazamiento de la red para la capa según el patrón activo.
+func _desplazamiento_capa(capa: int) -> Vector2:
+	match _patron_tipo:
+		"circulos":
+			return Vector2.ZERO if capa % 2 == 1 else DESPLAZAMIENTO_INTERCALADO
+		"celdas", "manual":
+			return _patron_offset_impar if capa % 2 == 1 else _patron_offset_par
+		_:
+			return Vector2.ZERO if capa % 2 == 1 else DESPLAZAMIENTO_INTERCALADO
+
+# Celdas válidas de la capa según el patrón activo.
 func _generar_celdas(capa: int) -> Array[Vector2i]:
+	match _patron_tipo:
+		"circulos":
+			return _celdas_circulos(capa)
+		"celdas", "manual":
+			var base := _patron_celdas_impar if capa % 2 == 1 else _patron_celdas_par
+			return base.duplicate()
+		_:
+			return _celdas_circulos(capa)
+
+# Patrón "circulos": grilla hexagonal recortada a un radio circular.
+func _celdas_circulos(capa: int) -> Array[Vector2i]:
 	var celdas: Array[Vector2i] = []
 	var desplazamiento := _desplazamiento_capa(capa)
-	var rango := ceili(RADIO_MAX_CAPA) + 2
+	var rango := ceili(_patron_radio) + 2
 	for r in range(-rango, rango + 1):
 		for q in range(-rango, rango + 1):
 			var celda := Vector2i(q, r)
 			var plano := _axial_a_plano(celda) + desplazamiento
-			if plano.length() <= RADIO_MAX_CAPA + 0.0001:
+			if plano.length() <= _patron_radio + 0.0001:
 				celdas.append(celda)
 	return celdas
 
-# Capacidad total de una capa según su red hexagonal recortada.
+# Capacidad total de una capa según el patrón activo.
 func _capacidad_capa(capa: int) -> int:
 	return _generar_celdas(capa).size()
 
@@ -753,7 +853,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _animando_entrada:
 		return
 	if panel_resultados and panel_resultados.visible:
-		return
+		return	
 
 	if event is InputEventScreenTouch:
 		if event.pressed:
