@@ -75,16 +75,27 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 ```
 
 ### Niveles — `data/niveles.json`
-Definición por id de nivel (string). Campos usados por `main.gd`:
-- `capas` (int): número de capas del tablero (>=1). Capa 1 = superior.
-- `slots` (int): cantidad de espacios en la barra inferior (1..5, centrados horizontalmente).
-- `fichas_n` (int): cantidad objetivo de fichas a colocar (se ajusta a par y al máximo posible por capacidad).
-- `fichas_t` (Array): claves de tipos permitidos para el nivel.
+Definición por id de nivel (string). Campos usados por `scripts/main.gd`:
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `capas` | int | Número de capas del tablero (>=1). Capa 1 = superior. |
+| `slots` | int | Cantidad de espacios en la barra inferior (1..5, centrados horizontalmente). |
+| `fichas_n` | int | Cantidad objetivo de fichas a colocar (se ajusta a par y al máximo posible por capacidad). |
+| `fichas_t` | Array[str] | Claves de tipos permitidos para el nivel (mapeadas en `valores.json`). |
+| `patron` | str\|dict | Patrón de distribución de fichas por capa. Ver sección 6. |
 
 Ejemplo actual:
 ```json
 {
-  "1": { "capas": 3, "slots": 2, "fichas_n": 64, "fichas_t": ["a","b","c","d","e","f"] }
+  "1": { "capas": 3, "slots": 2, "fichas_n": 64, "fichas_t": ["a","b","c","d","e","f"],
+         "patron": { "tipo": "circulos", "radio": 2.1,
+                     "offset_impar": [0, 0], "offset_par": [0.5, 0.28867513459481287] } },
+  "2": { "capas": 6, "slots": 3, "fichas_n": 60, "fichas_t": ["a","b","c","d","e","f","g"],
+         "patron": { "tipo": "celdas",
+                     "offset_impar": [0, 0], "offset_par": [0.5, 0.28867513459481287],
+                     "celdas_impar": [[0,0],[-1,1],[0,1],[-2,2],[-1,2],[0,2],[-3,3],[-2,3],[-1,3],[0,3]],
+                     "celdas_par": [[1,0],[0,1],[1,1],[-1,2],[0,2],[1,2],[-2,3],[-1,3],[0,3],[1,3]] } }
 }
 ```
 
@@ -99,18 +110,54 @@ Textura final: `res://assets/images/astronomia/<nombre>.png`.
 - `data/textos.json`: textos globales/localizados del proyecto.
 - `data/juego_textos.json`: textos del juego (p.ej. títulos de nivel) cargados con `prefijo_texto` (`juego_`).
 
-## 6. Mecánicas de juego (`scripts/main.gd`)
+## 6. Sistema de niveles y armado del tablero (`scripts/main.gd`)
 
-Nodo raíz de partida (`extends Node3D`). Carga config, genera nivel y gestiona input, barra y fin de partida.
+### Patrón de distribución (`patron`)
+Define qué celdas axiales `(q,r)` existen en cada capa y el desplazamiento por capa para que las capas se intercalen. Se configura en `niveles.json` bajo `patron` y se lee en `_configurar_nivel`.
 
-### Generación del tablero
-- **Modelo de ficha:** `res://assets/models/ficha.glb` + shader `res://shaders/ficha_cara.gdshader` (textura en cara superior). Clase interna `FichaTablero` (tipo, capa, celda axial, estado libre, colisión cilíndrica para raycast).
-- **Grilla:** red hexagonal recortada por radio circular (`RADIO_MAX_CAPA`). Capas impares centradas en epicentro; capas pares desplazadas al hueco triangular (`DESPLAZAMIENTO_INTERCALADO`) para intercalarse.
-- **Reparto:** calcula capacidad por capa, limita a `fichas_n` (par) quitando desde capas inferiores si hace falta, genera parejas aleatorias con tipos de `fichas_t`, baraja y asigna a celdas aleatorias por capa.
-- **Entrada:** fichas caen desde altura inicial con animación escalonada (capas inferiores primero).
+Formatos soportados:
+
+**`"circulos"` (fórmula, simple para tamaños simétricos)**
+```json
+"patron": "circulos"
+// o parametrizado:
+"patron": { "tipo": "circulos", "radio": 2.1,
+            "offset_impar": [0, 0], "offset_par": [0.5, 0.28867513459481287] }
+```
+Genera una grilla hexagonal recortada a un círculo de radio `R` (en diámetros) y aplica el intercalado triangular entre capas (impares centradas, pares desplazadas al hueco triangular).
+
+**`"celdas"` (arrays explícitos, más simple y general para dibujar cualquier forma)**
+```json
+"patron": {
+  "tipo": "celdas",
+  "offset_impar": [0, 0],
+  "offset_par": [0.5, 0.28867513459481287],
+  "celdas_impar": [[q,r], ...],   // celdas de capas impares
+  "celdas_par": [[q,r], ...]      // celdas de capas pares
+}
+```
+Cada celda es `[q,r]` (o `{"q":..,"r":..}`). Se listan exactamente qué posiciones existen por paridad de capa. Es la forma más directa de “dibujar” disposiciones arbitrarias (triángulos, pirámides, cruces, formas raras) sin inventar fórmulas. Para mantener el intercalado/tapado parcial entre capas hay que usar el offset par al hueco triangular (`[0.5, sqrt(3)/6]`).
+
+**Centrado automático:** el código calcula el centroide de las celdas crudas por capa y aplica un offset de centrado (`_patron_centro`) en `_posicion_mundo`. Los círculos ya tienen centroide en (0,0) por su fórmula; los patrones explícitos quedan centrados en el origen sin desplazarse de pantalla.
+
+### Funciones clave en `main.gd`
+- `_cargar_json(ruta)`: lee y parsea un JSON de configuración.
+- `_cargar_configuracion()`: carga `niveles.json` y `valores.json`.
+- `_configurar_nivel(n)`: resuelve `capas`, `slots`, `fichas_n`, `fichas_t`, `patron` para el nivel `n` y llena `_tipos_nivel`, `_fichas_config`, `_patron_*`.
+- `_cargar_texturas()`: carga las texturas PNG de los tipos del nivel desde `assets/images/astronomia/`.
+- `_preparar_reparto()`: calcula capacidad por capa mediante `_capacidad_capa(capa)`, limita a `fichas_n` (par) quitando desde capas inferiores si hace falta.
+- `_generar_fichas()`: genera parejas de tipos aleatorios, baraja y asigna a celdas aleatorias por capa usando `_generar_celdas(capa)`.
+- `_crear_ficha(tipo, capa, celda)`: instancia `assets/models/ficha.glb`, aplica shader y textura, coloca en el mundo y crea colisión cilíndrica.
+
+### Posición en el mundo
+`_posicion_mundo(celda, capa)` convierte coordenadas axiales a plano XZ:
+```
+plano = (_axial_a_plano(celda) + _desplazamiento_capa(capa) + _patron_centro[capa-1]) * SEPARACION_FICHAS
+```
+donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == DIAMETRO_FICHA` (vecinas se tocan).
 
 ### Visibilidad y selección
-- **Libre:** una ficha es seleccionable si ninguna ficha de capa superior (número de capa menor) se superpone en plano XZ (comparación de distancia entre centros de círculos del mismo diámetro).
+- **Libre:** una ficha es seleccionable si ninguna ficha de capa superior (número de capa menor) se superpone en plano XZ (distancia entre centros < diámetro).
 - **Feedback:** fichas bloqueadas se oscurecen según capa (`OSCURIDAD_BASE_CAPAS`).
 - **Input:** tap/click → raycast (`CAPA_COLISION_FICHAS`) → selecciona ficha libre si no hay animación de entrada, pausa o panel de resultados.
 
@@ -128,9 +175,6 @@ Nodo raíz de partida (`extends Node3D`). Carga config, genera nivel y gestiona 
 - **Victoria:** tablero vacío y barra vacía.
 - **Derrota:** se intenta colocar un tipo nuevo sin slot libre.
 - Muestra mensaje breve y abre `panel_resultados` vía `ControladorResultados`.
-
-### Nodos relevantes en `main.tscn` (referenciados por `main.gd`)
-`BoardElements` (contenedor fichas), `Camera3D`, `UI/LevelNumber`, `UI/LevelTitle`, `UI/PanelResultados`, `UI/BotonPausa`, `UI/PanelPausa`, `AudioJuego` (escena `juego_audio_manager.tscn`), y luces (`DirectionalLight3D`, `SunLight`) usadas para iconos 3D de la barra.
 
 ## 7. Audio
 
@@ -165,12 +209,12 @@ Nodo raíz de partida (`extends Node3D`). Carga config, genera nivel y gestiona 
 ├── export_presets.cfg
 ├── data/
 │   ├── games.json
-│   ├── niveles.json
-│   ├── valores.json
-│   ├── textos.json
-│   └── juego_textos.json
+│   ├── niveles.json      ← definición de niveles y patrones
+│   ├── valores.json      ← mapeo tipo → nombre de textura
+│   ├── textos.json       ← textos globales es/en/pt
+│   └── juego_textos.json ← textos del juego (prefijo juego_)
 ├── scripts/
-│   ├── main.gd                    # lógica principal de la partida
+│   ├── main.gd                    # lógica principal: generación de tablero, patrones, combo, barra
 │   ├── juego_audio_manager.gd
 │   ├── game_audio_base.gd
 │   ├── controlador_resultados.gd
@@ -200,5 +244,6 @@ Nodo raíz de partida (`extends Node3D`). Carga config, genera nivel y gestiona 
 - La generación y reglas de partida viven en `scripts/main.gd`; los parámetros de nivel vienen de `data/niveles.json` y el mapeo de tipos/texturas de `data/valores.json`.
 - Para agregar/modificar niveles, mantener claves consistentes entre `fichas_t` (niveles) y `fichas` (valores) y asegurar textura en `assets/images/astronomia/`.
 - `slots` en nivel controla la dificultad/capacidad de la barra (1..5) y la UI se adapta dinámicamente.
+- `patron` en nivel controla la forma del tablero: `"circulos"` para variantes circulares rápidas, `"celdas"` (arrays axiales por paridad + offsets) como formato universal de mapa.
 - Puntos flotantes en partida se crean instanciando `scenes/puntos_flotantes.tscn` desde `main.gd`; SFX del juego pasan por `juego_audio_manager` (`GameAudioBase`).
 - Validar cambios en Godot 4.7 (no hay linter/typecheck de GDScript configurado en este entorno).
