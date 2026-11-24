@@ -1,0 +1,8 @@
+
+- el juego consiste no solo en juntar pares sino en sumar combos de coincidencias de fichas.
+- al juntar un par de fichas vemos +2, luego +3, +4, +5, +6 y luego cuando la ventana de coincidencias se cierra desaparecen y suman un valor multiplicado por el combo.
+-  cada combo computado tiene que tener un nombre +3 FANTASTICO, +4 IMPRESIONANTE, +5 etc
+- muchos niveles cada uno con un tablero creativo.
+
+
+

@@ -1,12 +1,14 @@
 [gd_scene format=3 uid="uid://ov0lifr7f0e5"]
 
-[ext_resource type="Texture2D" uid="uid://c3rjnhgi4wkls" path="res://assets/images/ui/button_gen.webp" id="1_eq4ny"]
-[ext_resource type="FontFile" uid="uid://c88bn63w71r7a" path="res://assets/fonts/carnivalee_freakshow.ttf" id="2_mxd4b"]
+[ext_resource type="Texture2D" uid="uid://cxhagnm8e8jrk" path="res://assets/images/ui/button_gen.webp" id="1_eq4ny"]
+[ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="2_mxd4b"]
 [ext_resource type="Script" uid="uid://bqnck5q1ji4bv" path="res://scripts/slot_nivel.gd" id="6_mxd4b"]
 
 [node name="SlotNivel" type="Control" unique_id=1697595032]
 layout_mode = 3
 anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 script = ExtResource("6_mxd4b")
 
 [node name="BotonNivel" type="TextureButton" parent="." unique_id=356528276]
@@ -22,14 +24,14 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -21.0
-offset_top = -46.5
-offset_right = 21.0
-offset_bottom = 32.5
+offset_left = -33.0
+offset_top = -41.5
+offset_right = 27.0
+offset_bottom = 37.5
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("2_mxd4b")
-theme_override_font_sizes/font_size = 70
+theme_override_font_sizes/font_size = 60
 text = "41"
 horizontal_alignment = 1
 vertical_alignment = 1

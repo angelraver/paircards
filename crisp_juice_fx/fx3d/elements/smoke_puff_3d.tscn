@@ -1,0 +1,126 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="Script" path="res://crisp_juice_fx/scripts/crisp_fx_3d.gd" id="1"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/puff.png" id="2"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/disc.png" id="3"]
+
+[sub_resource type="Curve" id="Curve_1"]
+max_value = 1.1
+_data = [Vector2(0.0, 0.2), 5.66667, 5.66667, 0, 0, Vector2(0.15, 1.05), 1.4, 1.4, 0, 0, Vector2(0.5, 0.9), -1.23529, -1.23529, 0, 0, Vector2(1.0, 0.0), -1.8, -1.8, 0, 0]
+point_count = 4
+
+[sub_resource type="CurveTexture" id="CurveTexture_2"]
+curve = SubResource("Curve_1")
+
+[sub_resource type="Gradient" id="Gradient_3"]
+offsets = PackedFloat32Array(0.0, 0.5, 1.0)
+colors = PackedColorArray(1.0, 1.0, 1.0, 1.0, 0.941176, 0.933333, 0.964706, 1.0, 0.862745, 0.847059, 0.909804, 1.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_4"]
+gradient = SubResource("Gradient_3")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_5"]
+emission_shape = 1
+emission_sphere_radius = 0.12
+direction = Vector3(0.0, 1.0, 0.0)
+spread = 180.0
+initial_velocity_min = 1.6
+initial_velocity_max = 2.6
+angular_velocity_min = -60.0
+angular_velocity_max = 60.0
+gravity = Vector3(0.0, 0.5, 0.0)
+damping_min = 5.0
+damping_max = 6.0
+angle_min = 0.0
+angle_max = 360.0
+scale_min = 0.55
+scale_max = 0.85
+scale_curve = SubResource("CurveTexture_2")
+color_ramp = SubResource("GradientTexture1D_4")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_texture = ExtResource("2")
+disable_receive_shadows = true
+billboard_mode = 3
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_7"]
+size = Vector2(1.0, 1.0)
+
+[sub_resource type="Curve" id="Curve_8"]
+_data = [Vector2(0.0, 1.0), -1.0, -1.0, 0, 0, Vector2(1.0, 0.0), -1.0, -1.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_9"]
+curve = SubResource("Curve_8")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_10"]
+direction = Vector3(0.0, 1.0, 0.0)
+spread = 180.0
+initial_velocity_min = 2.5
+initial_velocity_max = 3.5
+gravity = Vector3(0.0, 0.0, 0.0)
+damping_min = 4.0
+damping_max = 5.0
+scale_min = 0.07
+scale_max = 0.11
+scale_curve = SubResource("CurveTexture_9")
+color = Color(0.956863, 0.94902, 0.980392, 1.0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_11"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+vertex_color_is_srgb = true
+albedo_texture = ExtResource("3")
+disable_receive_shadows = true
+billboard_mode = 3
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_12"]
+size = Vector2(1.0, 1.0)
+
+[node name="SmokePuff" type="Node3D"]
+script = ExtResource("1")
+metadata/fx_key_color = Color(0.784314, 0.768627, 0.839216, 1.0)
+metadata/view = 2.4
+metadata/demo_y = 0.4
+metadata/demo_motion = ""
+metadata/frame_y = 0.0
+metadata/best_t = 0.233
+
+[node name="Puffs" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 9
+lifetime = 0.75
+one_shot = true
+explosiveness = 1.0
+fixed_fps = 60
+local_coords = true
+visibility_aabb = AABB(-3, -3, -3, 6, 6, 6)
+cast_shadow = 0
+material_override = SubResource("StandardMaterial3D_6")
+draw_order = 3
+process_material = SubResource("ParticleProcessMaterial_5")
+draw_pass_1 = SubResource("QuadMesh_7")
+
+[node name="Bits" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 6
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+fixed_fps = 60
+local_coords = true
+visibility_aabb = AABB(-3, -3, -3, 6, 6, 6)
+cast_shadow = 0
+material_override = SubResource("StandardMaterial3D_11")
+draw_order = 3
+process_material = SubResource("ParticleProcessMaterial_10")
+draw_pass_1 = SubResource("QuadMesh_12")

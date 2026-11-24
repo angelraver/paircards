@@ -19,7 +19,7 @@ const TITLE_BGM: AudioStream = preload("res://assets/sounds/themes/main_theme.og
 const THEME_PATHS := {
 	"tincanalley": "res://assets/sounds/themes/tincanalley.ogg",
 	"whackamole": "res://assets/sounds/themes/whackamole.ogg",
-	"plinko": "res://assets/sounds/themes/plinko.ogg",
+	"juego": "res://assets/sounds/themes/juego.ogg",
 	"ringtoss": "res://assets/sounds/themes/ringtoss.ogg",
 	"duckshoot": "res://assets/sounds/themes/duckshoot.ogg",
 }

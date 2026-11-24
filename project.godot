@@ -10,10 +10,10 @@ config_version=5
 
 [application]
 
-config/name="Pari Cards"
+config/name="Pair Cards"
 run/main_scene="uid://cokb2wqhdfvfb"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="uid://chtg7qgkso4gc"
+config/icon="uid://crspjtxgrtpp"
 
 [autoload]
 
@@ -33,7 +33,7 @@ window/handheld/orientation=1
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/inapp_update/plugin.cfg")
+enabled=PackedStringArray()
 
 [physics]
 

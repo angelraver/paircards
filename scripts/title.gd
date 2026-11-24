@@ -72,7 +72,7 @@ func _on_imagen_juegos_pressed() -> void:
 	_press_feedback(
 		$ImagenJuegos,
 		func():
-			save_manager.juego_actual_seleccionado = "plinko"
+			save_manager.juego_actual_seleccionado = "juego"
 			get_tree().change_scene_to_file("res://scenes/seleccion_niveles.tscn")
 	)
 

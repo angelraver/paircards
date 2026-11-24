@@ -1,0 +1,171 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="Script" path="res://crisp_juice_fx/scripts/crisp_fx_2d.gd" id="1"]
+[ext_resource type="Shader" path="res://crisp_juice_fx/shaders/flash_2d.gdshader" id="2"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/white.png" id="3"]
+[ext_resource type="Shader" path="res://crisp_juice_fx/shaders/ring_2d.gdshader" id="4"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/spark.png" id="5"]
+[ext_resource type="Texture2D" path="res://crisp_juice_fx/textures/soft_dot.png" id="6"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+resource_local_to_scene = true
+shader = ExtResource("2")
+shader_parameter/color_edge = Color(1.0, 0.956863, 0.690196, 1.0)
+shader_parameter/size_start = 0.7
+shader_parameter/glow_amount = 0.9
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_2"]
+resource_local_to_scene = true
+shader = ExtResource("2")
+shader_parameter/spikes = 4
+shader_parameter/spike_depth = 0.9
+shader_parameter/spike_sharpness = 2.6
+shader_parameter/hardness = 0.85
+shader_parameter/color_edge = Color(1.0, 0.878431, 0.4, 1.0)
+shader_parameter/outline_color = Color(1.0, 0.690196, 0.188235, 1.0)
+shader_parameter/size_start = 0.25
+shader_parameter/glow_amount = 0.5
+shader_parameter/spin = 0.25
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3"]
+resource_local_to_scene = true
+shader = ExtResource("2")
+shader_parameter/spikes = 4
+shader_parameter/spike_depth = 0.88
+shader_parameter/spike_sharpness = 2.4
+shader_parameter/hardness = 0.85
+shader_parameter/color_edge = Color(1.0, 0.878431, 0.4, 1.0)
+shader_parameter/outline_color = Color(1.0, 0.690196, 0.188235, 1.0)
+shader_parameter/size_start = 0.25
+shader_parameter/glow_amount = 0.3
+shader_parameter/rotation_degrees = 45.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_4"]
+resource_local_to_scene = true
+shader = ExtResource("4")
+shader_parameter/color = Color(1.0, 0.913725, 0.627451, 1.0)
+shader_parameter/color_inner = Color(1.0, 1.0, 1.0, 1.0)
+shader_parameter/radius_start = 0.2
+shader_parameter/radius_end = 0.92
+shader_parameter/thickness = 0.14
+shader_parameter/glow_amount = 0.5
+
+[sub_resource type="Curve" id="Curve_5"]
+_data = [Vector2(0.0, 1.0), -0.8, -0.8, 0, 0, Vector2(1.0, 0.2), -0.8, -0.8, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_6"]
+curve = SubResource("Curve_5")
+
+[sub_resource type="Gradient" id="Gradient_7"]
+offsets = PackedFloat32Array(0.0, 0.5, 1.0)
+colors = PackedColorArray(1.0, 1.0, 1.0, 1.0, 1.0, 0.847059, 0.290196, 1.0, 1.0, 0.603922, 0.235294, 0.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_8"]
+gradient = SubResource("Gradient_7")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_9"]
+particle_flag_disable_z = true
+particle_flag_align_y = true
+direction = Vector3(0.0, -1.0, 0.0)
+spread = 180.0
+initial_velocity_min = 600.0
+initial_velocity_max = 1000.0
+gravity = Vector3(0.0, 0.0, 0.0)
+damping_min = 1500.0
+damping_max = 1800.0
+scale_min = 0.328125
+scale_max = 0.484375
+scale_curve = SubResource("CurveTexture_6")
+color_ramp = SubResource("GradientTexture1D_8")
+
+[sub_resource type="Gradient" id="Gradient_10"]
+offsets = PackedFloat32Array(0.0, 0.5, 1.0)
+colors = PackedColorArray(1.0, 1.0, 1.0, 1.0, 1.0, 0.847059, 0.290196, 1.0, 1.0, 0.603922, 0.235294, 0.0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_11"]
+gradient = SubResource("Gradient_10")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_12"]
+particle_flag_disable_z = true
+direction = Vector3(0.0, -1.0, 0.0)
+spread = 180.0
+initial_velocity_min = 200.0
+initial_velocity_max = 450.0
+gravity = Vector3(0.0, 0.0, 0.0)
+damping_min = 600.0
+damping_max = 800.0
+scale_min = 0.140625
+scale_max = 0.234375
+color_ramp = SubResource("GradientTexture1D_11")
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_13"]
+blend_mode = 1
+
+[node name="HitImpact" type="Node2D"]
+script = ExtResource("1")
+metadata/fx_key_color = Color(1.0, 0.847059, 0.290196, 1.0)
+metadata/view = 2.2
+metadata/demo_y = 1.0
+metadata/demo_motion = ""
+metadata/frame_y = 0.0
+metadata/best_t = 0.033
+metadata/bounds2d = [-116.0, -98.7, 113.6, 104.4]
+
+[node name="Core" type="Sprite2D" parent="."]
+texture = ExtResource("3")
+position = Vector2(0.0, 0.0)
+scale = Vector2(7.5, 7.5)
+material = SubResource("ShaderMaterial_1")
+visible = false
+metadata/fx_duration = 0.16
+
+[node name="Star" type="Sprite2D" parent="."]
+texture = ExtResource("3")
+position = Vector2(0.0, 0.0)
+scale = Vector2(11.875, 11.875)
+material = SubResource("ShaderMaterial_2")
+visible = false
+metadata/fx_duration = 0.2
+
+[node name="Star2" type="Sprite2D" parent="."]
+texture = ExtResource("3")
+position = Vector2(0.0, 0.0)
+scale = Vector2(7.5, 7.5)
+material = SubResource("ShaderMaterial_3")
+visible = false
+metadata/fx_duration = 0.17
+
+[node name="Ring" type="Sprite2D" parent="."]
+texture = ExtResource("3")
+position = Vector2(0.0, 0.0)
+scale = Vector2(10.0, 10.0)
+material = SubResource("ShaderMaterial_4")
+visible = false
+metadata/fx_duration = 0.28
+
+[node name="Sparks" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 10
+lifetime = 0.32
+one_shot = true
+explosiveness = 1.0
+fixed_fps = 60
+local_coords = true
+visibility_rect = Rect2(-200.0, -200.0, 400.0, 400.0)
+process_material = SubResource("ParticleProcessMaterial_9")
+texture = ExtResource("5")
+draw_order = 1
+
+[node name="Dots" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 8
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+fixed_fps = 60
+local_coords = true
+visibility_rect = Rect2(-200.0, -200.0, 400.0, 400.0)
+process_material = SubResource("ParticleProcessMaterial_12")
+texture = ExtResource("6")
+material = SubResource("CanvasItemMaterial_13")
