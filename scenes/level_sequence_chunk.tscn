@@ -1,0 +1,26 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://cydeim2jh5jb4" path="res://scripts/level_sequence_chunk.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://cvqe20io8red4" path="res://assets/images/levelstree.webp" id="2_artwork"]
+
+[node name="LevelSequenceChunk" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+custom_minimum_size = Vector2(557, 842)
+offset_right = 557.0
+offset_bottom = 842.0
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="Ilustracion" type="TextureRect" parent="."]
+layout_mode = 0
+offset_right = 557.0
+offset_bottom = 842.0
+mouse_filter = 2
+texture = ExtResource("2_artwork")
+
+[node name="ContenedorSlots" type="Control" parent="."]
+layout_mode = 0
+offset_right = 557.0
+offset_bottom = 842.0
+mouse_filter = 2

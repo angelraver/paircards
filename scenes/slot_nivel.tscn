@@ -7,6 +7,8 @@
 [node name="SlotNivel" type="Control" unique_id=1697595032]
 layout_mode = 3
 anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 script = ExtResource("6_mxd4b")
 
 [node name="BotonNivel" type="TextureButton" parent="." unique_id=356528276]
