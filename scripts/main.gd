@@ -925,6 +925,7 @@ func _seleccionar_ficha(ficha: FichaTablero) -> void:
 		return
 
 	var tipo := ficha.tipo
+	var es_ultima_ficha: bool = _fichas_tablero.size() == 1
 
 	# Si esa cara ya espera en la barra (combo activo o ficha solitaria),
 	# la ficha viaja a su coincidencia y se (re)abre la ventana de 2 segundos.
@@ -973,7 +974,7 @@ func _seleccionar_ficha(ficha: FichaTablero) -> void:
 
 	# La ficha 3D seleccionada vuela hasta la barra. Se quita del tablero de
 	# inmediato para que no pueda volver a seleccionarse mientras está en el aire.
-	_animar_ficha_a_barra(ficha, _combo_slot, puntos_ganados)
+	_animar_ficha_a_barra(ficha, _combo_slot, puntos_ganados, es_ultima_ficha)
 
 	if main_audio:
 		main_audio.play_select()
@@ -1053,8 +1054,8 @@ func _romper_combo() -> void:
 	_combo_slot = -1
 	_combo_contador = 0
 
-	# Victoria: tablero vacío y barra vacía.
-	if _fichas_tablero.is_empty() and _barra_esta_vacia():
+	# Victoria: tablero vacío, aunque queden fichas huérfanas en la barra.
+	if _fichas_tablero.is_empty():
 		_finalizar_partida(true)
 
 # Se dispara cuando se agotan los 2 segundos de ventana del combo.
@@ -1333,9 +1334,8 @@ func _agregar_a_barra(tipo: int) -> void:
 		_barra_tipos[_combo_slot] = tipo
 	_actualizar_barra_ui()
 
-	# Victoria: tablero vacío y barra vacía (último combo roto sin fichas
-	# pendientes).
-	if _fichas_tablero.is_empty() and _barra_esta_vacia():
+	# Victoria: tablero vacío, aunque queden fichas huérfanas en la barra.
+	if _fichas_tablero.is_empty():
 		_finalizar_partida(true)
 
 # ============================================================================
@@ -1417,7 +1417,7 @@ func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int, con_signo:
 # gira como una moneda al aire mientras se encoge para encajar en el espacio;
 # al terminar el vuelo se libera, se muestra el icono del slot y, si corresponde,
 # se disparan los puntos de la coincidencia.
-func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados: int = 0) -> void:
+func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados: int = 0, es_ultima_ficha: bool = false) -> void:
 	if _slots.is_empty() or camara == null:
 		ficha.queue_free()
 		return
@@ -1501,8 +1501,12 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 		# Los puntos se muestran al llegar la ficha a su destino.
 		if puntos_ganados > 0:
 			_mostrar_puntos_flotantes_en_slot(indice_slot, puntos_ganados)
-		# Al mostrarse en la barra, se (re)abre la ventana de 2 segundos del combo activo.
-		if _combo_activo and _combo_slot == indice_slot:
+		if es_ultima_ficha and not _juego_terminado:
+			if _combo_activo and _combo_slot == indice_slot and _combo_contador >= 2:
+				_romper_combo()
+			else:
+				_finalizar_partida(true)
+		elif _combo_activo and _combo_slot == indice_slot:
 			_iniciar_timer_combo()
 	)
 

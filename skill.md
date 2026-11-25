@@ -166,7 +166,8 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 ### Barra inferior y combo
 - **Barra:** renderizada como quad 3D sobre el piso (SubViewport + Sprite3D) con fondo/UI 2D y slots centrados (`HBoxContainer`, `ALIGNMENT_CENTER`). Cantidad de slots = `slots` del nivel (dinámico, 1..5).
 - **Al seleccionar ficha libre:** vuela a la barra (salto + trayectoria en arco + rotación). Si su tipo ya existe en algún slot, se acumula en ese slot (reinicia ventana de combo de 2s al aterrizar y pasa a ser el slot activo). Si es tipo nuevo, ocupa un slot libre (o derrota si no hay libres). Slots con ficha en vuelo pueden ocultar icono hasta aterrizar.
-- **Ventana de combo:** `TIEMPO_COMBO = 2.0s`, se inicia/reinicia al aterrizar una ficha en el slot activo. Si expira con vuelo pendiente al slot activo, la resolución se difiere.
+- **Última ficha del tablero:** no se activa la ventana de combo. Si hay fichas iguales esperando en un slot, al aterrizar se suma a ellas y el grupo desaparece de inmediato (humo + valor del combo). Si no hay coincidencia, va a un slot libre y el nivel termina con esa ficha huérfana en la barra.
+- **Ventana de combo:** `TIEMPO_COMBO = 2.0s`, se inicia/reinicia al aterrizar una ficha en el slot activo, salvo en la última ficha del tablero. Si expira con vuelo pendiente al slot activo, la resolución se difiere.
 - **Resolución:**
   - Acumulación `>= 2` en el slot: desaparece al expirar la ventana sin nueva coincidencia o al romperse el combo por seleccionar otra cara; muestra humo y total de puntos.
   - Acumulación `1` (solitaria): permanece en su slot.
@@ -174,7 +175,7 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 - **Puntos flotantes:** instancia `scenes/puntos_flotantes.tscn` en capa de efectos; muestra `+N` al aterrizar una acumulación (`N = contador-1`) y el total al desaparecer el grupo.
 
 ### Fin de partida
-- **Victoria:** tablero vacío y barra vacía.
+- **Victoria:** tablero vacío, aunque queden fichas huérfanas en la barra.
 - **Derrota:** se intenta colocar un tipo nuevo sin slot libre.
 - Muestra mensaje breve y abre `panel_resultados` vía `ControladorResultados`.
 
