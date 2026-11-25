@@ -2,6 +2,7 @@
   "1": {
     "capas": 1,
     "slots": 2,
+    "score": 0,
     "fichas_n": 12,
     "fichas_t": ["a", "b", "c"],
     "patron": {
@@ -14,6 +15,7 @@
   "2": {
     "capas": 2,
     "slots": 2,
+    "score": 0,
     "fichas_n": 18,
     "fichas_t": ["a", "b", "c"],
     "patron": {
@@ -26,6 +28,7 @@
   "3": {
     "capas": 2,
     "slots": 3,
+    "score": 0,
     "fichas_n": 24,
     "fichas_t": ["a", "b", "c", "d"],
     "patron": {
@@ -39,6 +42,7 @@
   "4": {
     "capas": 3,
     "slots": 3,
+    "score": 0,
     "fichas_n": 30,
     "fichas_t": ["a", "b", "c", "d", "e"],
     "patron": {
@@ -51,6 +55,7 @@
   "5": {
     "capas": 3,
     "slots": 3,
+    "score": 0,
     "fichas_n": 36,
     "fichas_t": ["a", "b", "c", "d", "e"],
     "patron": {
@@ -64,6 +69,7 @@
   "6": {
     "capas": 4,
     "slots": 4,
+    "score": 0,
     "fichas_n": 44,
     "fichas_t": ["a", "b", "c", "d", "e", "f"],
     "patron": {
@@ -76,6 +82,7 @@
   "7": {
     "capas": 4,
     "slots": 4,
+    "score": 0,
     "fichas_n": 50,
     "fichas_t": ["a", "b", "c", "d", "e", "f", "g"],
     "patron": {
@@ -89,6 +96,7 @@
   "8": {
     "capas": 5,
     "slots": 4,
+    "score": 0,
     "fichas_n": 56,
     "fichas_t": ["a", "b", "c", "d", "e", "f", "g", "h"],
     "patron": {
@@ -101,6 +109,7 @@
   "9": {
     "capas": 5,
     "slots": 5,
+    "score": 0,
     "fichas_n": 60,
     "fichas_t": ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
     "patron": {
@@ -114,6 +123,7 @@
   "10": {
     "capas": 6,
     "slots": 5,
+    "score": 0,
     "fichas_n": 64,
     "fichas_t": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
     "patron": {
@@ -126,6 +136,7 @@
   "111": {
     "capas": 3,
     "slots": 2,
+    "score": 0,
     "fichas_n": 64,
     "fichas_t": ["a", "b", "c", "d", "e", "f"],
     "patron": {
@@ -138,6 +149,7 @@
   "211": {
     "capas": 6,
     "slots": 3,
+    "score": 0,
     "fichas_n": 60,
     "fichas_t": ["a", "b", "c", "d", "e", "f", "g"],
     "patron": {
@@ -151,6 +163,7 @@
   "311": {
     "capas": 6,
     "slots": 3,
+    "score": 0,
     "fichas_n": 60,
     "fichas_t": ["a", "b", "c", "d", "e", "f", "g"],
     "patron": {

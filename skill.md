@@ -81,6 +81,7 @@ Definición por id de nivel (string). Campos usados por `scripts/main.gd`. El se
 |-------|------|-------------|
 | `capas` | int | Número de capas del tablero (>=1). Capa 1 = superior. |
 | `slots` | int | Cantidad de espacios en la barra inferior (1..5, centrados horizontalmente). |
+| `score` | int | Puntaje base del nivel (actualmente `0` en todos). |
 | `fichas_n` | int | Cantidad objetivo de fichas a colocar (se ajusta a par y al máximo posible por capacidad). |
 | `fichas_t` | Array[str] | Claves de tipos permitidos para el nivel (mapeadas en `valores.json`). |
 | `patron` | str\|dict | Patrón de distribución de fichas por capa. Ver sección 6. |
@@ -88,10 +89,10 @@ Definición por id de nivel (string). Campos usados por `scripts/main.gd`. El se
 Ejemplo actual:
 ```json
 {
-  "1": { "capas": 3, "slots": 2, "fichas_n": 64, "fichas_t": ["a","b","c","d","e","f"],
+  "1": { "capas": 3, "slots": 2, "score": 0, "fichas_n": 64, "fichas_t": ["a","b","c","d","e","f"],
          "patron": { "tipo": "circulos", "radio": 2.1,
                      "offset_impar": [0, 0], "offset_par": [0.5, 0.28867513459481287] } },
-  "2": { "capas": 6, "slots": 3, "fichas_n": 60, "fichas_t": ["a","b","c","d","e","f","g"],
+  "2": { "capas": 6, "slots": 3, "score": 0, "fichas_n": 60, "fichas_t": ["a","b","c","d","e","f","g"],
          "patron": { "tipo": "celdas",
                      "offset_impar": [0, 0], "offset_par": [0.5, 0.28867513459481287],
                      "celdas_impar": [[0,0],[-1,1],[0,1],[-2,2],[-1,2],[0,2],[-3,3],[-2,3],[-1,3],[0,3]],
