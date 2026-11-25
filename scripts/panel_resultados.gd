@@ -8,9 +8,14 @@ signal reiniciar_solicitado
 @onready var level_title: Label = $FondoPanel/LevelTitle
 @onready var boton_ok: TextureButton = $FondoPanel/BotonOk
 @onready var boton_reiniciar: TextureButton = $FondoPanel/BotonReiniciar
+@onready var moneda1: TextureRect = $FondoPanel/moneda1
+@onready var moneda2: TextureRect = $FondoPanel/moneda2
+@onready var moneda3: TextureRect = $FondoPanel/moneda3
+@onready var label_puntaje_final: Label = $FondoPanel/LabelPuntajeFinal
 
 func _ready() -> void:
 	visible = false
+	_ocultar_monedas()
 
 	# Conectar botones
 	if boton_ok:
@@ -18,16 +23,39 @@ func _ready() -> void:
 	if boton_reiniciar:
 		boton_reiniciar.pressed.connect(_on_boton_reiniciar_pressed)
 
-func mostrar(nivel_id: int, puntaje: int = 0, nivel_superado: bool = false) -> void:
+func mostrar(nivel_id: int, puntaje: int = 0, nivel_superado: bool = false, score_objetivo: int = 0) -> void:
 	if visible:
 		return
 	visible = true
+	_ocultar_monedas()
 
 	if level_title:
 		level_title.text = "Nivel %d" % [nivel_id]
+	if label_puntaje_final:
+		label_puntaje_final.text = "%d / %d" % [maxi(puntaje, 0), maxi(score_objetivo, 0)]
 
 	if nivel_superado:
 		save_manager.registrar_puntaje_nivel(nivel_id, puntaje)
+		_actualizar_monedas(puntaje, score_objetivo)
+
+func _ocultar_monedas() -> void:
+	if moneda1:
+		moneda1.visible = false
+	if moneda2:
+		moneda2.visible = false
+	if moneda3:
+		moneda3.visible = false
+
+func _actualizar_monedas(puntaje: int, score_objetivo: int) -> void:
+	if score_objetivo <= 0:
+		return
+	var puntos: int = maxi(puntaje, 0)
+	if moneda1:
+		moneda1.visible = puntos * 3 > score_objetivo
+	if moneda2:
+		moneda2.visible = puntos * 3 > score_objetivo * 2
+	if moneda3:
+		moneda3.visible = puntos >= score_objetivo
 
 func _on_boton_reiniciar_pressed() -> void:
 	audio_manager.play_ok1()

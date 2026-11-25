@@ -1563,7 +1563,7 @@ func _finalizar_partida(victoria: bool) -> void:
 
 func mostrar_panel_resultados(nivel_superado: bool = false) -> void:
 	if ctrl_resultados:
-		ctrl_resultados.mostrar(nivel_actual, _puntaje_nivel, nivel_superado)
+		ctrl_resultados.mostrar(nivel_actual, _puntaje_nivel, nivel_superado, _score_nivel)
 
 func reiniciar_nivel() -> void:
 	_cargar_nivel(nivel_actual)

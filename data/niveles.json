@@ -2,7 +2,7 @@
   "1": {
     "capas": 1,
     "slots": 2,
-    "score": 0,
+    "score": 10,
     "fichas_n": 12,
     "fichas_t": ["a", "b", "c"],
     "patron": {
@@ -15,7 +15,7 @@
   "2": {
     "capas": 2,
     "slots": 2,
-    "score": 0,
+    "score": 100,
     "fichas_n": 18,
     "fichas_t": ["a", "b", "c"],
     "patron": {
@@ -28,7 +28,7 @@
   "3": {
     "capas": 2,
     "slots": 3,
-    "score": 0,
+    "score": 30,
     "fichas_n": 24,
     "fichas_t": ["a", "b", "c", "d"],
     "patron": {

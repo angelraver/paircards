@@ -94,6 +94,7 @@ horizontal_alignment = 1
 autowrap_mode = 2
 
 [node name="moneda1" type="TextureRect" parent="FondoPanel" unique_id=1567809496]
+visible = false
 layout_mode = 0
 offset_left = 133.74997
 offset_top = 372.99997
@@ -102,6 +103,7 @@ offset_bottom = 542.0
 texture = ExtResource("7_sg6qk")
 
 [node name="moneda2" type="TextureRect" parent="FondoPanel" unique_id=715964349]
+visible = false
 layout_mode = 0
 offset_left = 318.75003
 offset_top = 371.74997
@@ -110,9 +112,22 @@ offset_bottom = 540.75
 texture = ExtResource("7_sg6qk")
 
 [node name="moneda3" type="TextureRect" parent="FondoPanel" unique_id=1745471913]
+visible = false
 layout_mode = 0
 offset_left = 502.50006
 offset_top = 372.99997
 offset_right = 668.50006
 offset_bottom = 542.0
 texture = ExtResource("7_sg6qk")
+
+[node name="LabelPuntajeFinal" type="Label" parent="FondoPanel" unique_id=749574160]
+layout_mode = 0
+offset_left = 261.25
+offset_top = 636.74994
+offset_right = 550.25
+offset_bottom = 692.74994
+theme_override_colors/font_color = Color(0.2, 0, 0, 1)
+theme_override_fonts/font = ExtResource("8_at4u4")
+theme_override_font_sizes/font_size = 45
+text = "0000 / 0000"
+horizontal_alignment = 1
