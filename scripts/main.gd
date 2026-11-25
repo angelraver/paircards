@@ -188,7 +188,7 @@ class FichaTablero extends Node3D:
 @onready var ui_level_number: UILevelNumber = $UI/LevelNumber as UILevelNumber
 @onready var ui_level_title: Label = $UI/LevelTitle
 @onready var panel_resultados: PanelResultados = $UI/PanelResultados as PanelResultados
-@onready var audio_juego = $AudioJuego
+@onready var main_audio: MainAudio = $MainAudio as MainAudio
 @onready var boton_pausa: TextureButton = $UI/BotonPausa
 @onready var panel_pausa: PanelPausa = $UI/PanelPausa as PanelPausa
 
@@ -792,8 +792,8 @@ func _ordenar_entrada_ficha(a, b) -> int:
 
 func _on_entrada_ficha_terminada() -> void:
 	_pendientes_entrada -= 1
-	if audio_juego != null:
-		audio_juego.play_drop()
+	if main_audio != null:
+		main_audio.play_drop()
 	if _pendientes_entrada <= 0:
 		_animando_entrada = false
 		_actualizar_visibilidad()
@@ -965,8 +965,8 @@ func _seleccionar_ficha(ficha: FichaTablero) -> void:
 	# inmediato para que no pueda volver a seleccionarse mientras está en el aire.
 	_animar_ficha_a_barra(ficha, _combo_slot, puntos_ganados)
 
-	if audio_juego:
-		audio_juego.play_select()
+	if main_audio:
+		main_audio.play_select()
 
 	_fichas_tablero.erase(ficha)
 	ficha.libre = false
@@ -1474,8 +1474,8 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 	tween.finished.connect(func() -> void:
 		if is_instance_valid(ficha):
 			ficha.queue_free()
-		if audio_juego:
-			audio_juego.play_select()
+		if main_audio:
+			main_audio.play_select()
 		# La ficha aterrizó: revelar su icono en el slot.
 		var idx := _slots_en_vuelo.find(indice_slot)
 		if idx != -1:

@@ -56,7 +56,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 | `premios.tscn` | `premios.gd` | Galería de premios. |
 | `premio_desbloqueado.tscn` | `premio_desbloqueado.gd` | Pantalla de premio desbloqueado. |
 | `audio_manager.tscn` | `audio_manager.gd` | Contenedor/escena del audio global. |
-| `juego_audio_manager.tscn` | `juego_audio_manager.gd` | Audio SFX específico del juego (instancia en `main.tscn`). |
+| `main_audio.tscn` | `main_audio.gd` | Audio SFX específico de la partida (instancia en `main.tscn`). |
 | `austral_animated_logo.tscn` | `austral_animated_logo.gd` | Animación de logo. |
 
 ## 5. Datos y configuración
@@ -179,7 +179,7 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 ## 7. Audio
 
 - **Global (`audio_manager.gd`):** controla BGM y SFX habilitados (persistidos), reproduce SFX comunes (`ok1`, `start`, `welldone`, `prize`, `pop`, `fail`) y gestiona temas BGM (`ensure_title_bgm`, `ensure_game_bgm`).
-- **Juego (`juego_audio_manager.gd`, `extends GameAudioBase`):** crea dinámicamente players para `drop1..drop4` y `select` (`assets/sounds/`), expone `play_drop()`, `play_select()`, `play_selected()`. Respeta `sfx_enabled` vía `GameAudioBase`.
+- **Partida (`main_audio.gd`, `class_name MainAudio`):** crea dinámicamente players para `drop1..drop4`, `select` y `selected` (`assets/sounds/`), agrupa por prefijo y expone `play_drop()`, `play_select()`, `play_selected()`. Respeta `audio_manager.sfx_enabled`.
 - **Pausa:** `panel_pausa.gd` pausa el árbol (`SceneTree.paused`) sin cortar la música (BGM en `PROCESS_MODE_ALWAYS`).
 
 ## 8. Controladores y utilidades reutilizables
@@ -188,7 +188,6 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 |--------|------------|-----|
 | `controlador_resultados.gd` | `ControladorResultados` | Orquesta `PanelResultados`: reset/mostrar, ocultar-restaurar HUD, conexión de reinicio, actualización de nivel. |
 | `panel_resultados.gd` | `PanelResultados` | UI de fin de nivel, señal `reiniciar_solicitado`, navegación OK. |
-| `game_audio_base.gd` | `GameAudioBase` | Agrupa `AudioStreamPlayer` por prefijo numérico y reproduce respetando SFX habilitado. |
 | `panel_pausa.gd` | `PanelPausa` | Lógica de pausa. |
 | `ui_level_number.gd` | `UILevelNumber` | Muestra número de nivel. |
 | `slot_nivel.gd` | `SlotNivel` (según escena/script) | Representación de nivel en selector. |
@@ -215,8 +214,7 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 │   └── juego_textos.json ← textos del juego (prefijo juego_)
 ├── scripts/
 │   ├── main.gd                    # lógica principal: generación de tablero, patrones, combo, barra
-│   ├── juego_audio_manager.gd
-│   ├── game_audio_base.gd
+│   ├── main_audio.gd
 │   ├── controlador_resultados.gd
 │   ├── panel_resultados.gd / panel_pausa.gd
 │   ├── save_manager.gd / audio_manager.gd / game_manager.gd
@@ -227,7 +225,7 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 │   ├── main.tscn, title.tscn, seleccion_niveles.tscn, slot_nivel.tscn
 │   ├── panel_resultados.tscn, panel_pausa.tscn, puntos_flotantes.tscn
 │   ├── options.tscn, premios.tscn, premio_desbloqueado.tscn
-│   ├── audio_manager.tscn, juego_audio_manager.tscn, ui_level_number.tscn
+│   ├── audio_manager.tscn, main_audio.tscn, ui_level_number.tscn
 │   └── austral_animated_logo.tscn
 ├── shaders/                       # ficha_cara.gdshader, efectos visuales
 ├── assets/
@@ -245,5 +243,5 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 - Para agregar/modificar niveles, mantener claves consistentes entre `fichas_t` (niveles) y `fichas` (valores) y asegurar textura en `assets/images/astronomia/`.
 - `slots` en nivel controla la dificultad/capacidad de la barra (1..5) y la UI se adapta dinámicamente.
 - `patron` en nivel controla la forma del tablero: `"circulos"` para variantes circulares rápidas, `"celdas"` (arrays axiales por paridad + offsets) como formato universal de mapa.
-- Puntos flotantes en partida se crean instanciando `scenes/puntos_flotantes.tscn` desde `main.gd`; SFX del juego pasan por `juego_audio_manager` (`GameAudioBase`).
+- Puntos flotantes en partida se crean instanciando `scenes/puntos_flotantes.tscn` desde `main.gd`; SFX de la partida pasan por `main_audio` (`MainAudio`).
 - Validar cambios en Godot 4.7 (no hay linter/typecheck de GDScript configurado en este entorno).

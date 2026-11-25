@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://b08dalc26x27u" path="res://scenes/ui_level_number.tscn" id="3_levelnum"]
 [ext_resource type="PackedScene" uid="uid://cmgyjw5107ww2" path="res://scenes/panel_resultados.tscn" id="4_panel"]
 [ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="8_ever"]
-[ext_resource type="PackedScene" uid="uid://2tqs8i44pxnp" path="res://scenes/juego_audio_manager.tscn" id="10_audio"]
+[ext_resource type="PackedScene" uid="uid://2tqs8i44pxnp" path="res://scenes/main_audio.tscn" id="10_audio"]
 [ext_resource type="Texture2D" uid="uid://nhlbu7eikdwe" path="res://assets/images/ui/button_pause.webp" id="11_pausebtn"]
 [ext_resource type="PackedScene" uid="uid://epau5a222r3y" path="res://scenes/panel_pausa.tscn" id="12_pausa"]
 
@@ -88,6 +88,6 @@ texture_normal = ExtResource("11_pausebtn")
 [node name="PanelPausa" parent="UI" unique_id=307070112 instance=ExtResource("12_pausa")]
 visible = false
 
-[node name="AudioJuego" parent="." unique_id=776893109 instance=ExtResource("10_audio")]
+[node name="MainAudio" parent="." unique_id=776893109 instance=ExtResource("10_audio")]
 
 [connection signal="pressed" from="UI/BotonPausa" to="." method="_on_boton_pausa_pressed"]
