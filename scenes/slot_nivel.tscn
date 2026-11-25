@@ -45,6 +45,7 @@ offset_right = 12.0
 offset_bottom = 134.0
 
 [node name="moneda1" type="TextureRect" parent="ContenedorMonedas" unique_id=2029475587]
+visible = false
 layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
@@ -52,6 +53,7 @@ scale = Vector2(0.3, 0.3)
 texture = ExtResource("4_ofd8a")
 
 [node name="moneda2" type="TextureRect" parent="ContenedorMonedas" unique_id=13304351]
+visible = false
 layout_mode = 0
 offset_left = 52.0
 offset_top = 6.0
@@ -61,6 +63,7 @@ scale = Vector2(0.3, 0.3)
 texture = ExtResource("4_ofd8a")
 
 [node name="moneda3" type="TextureRect" parent="ContenedorMonedas" unique_id=753278639]
+visible = false
 layout_mode = 0
 offset_left = 103.999985
 offset_top = 1.0

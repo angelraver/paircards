@@ -7,6 +7,7 @@ const RUTA_GAMES_JSON: String = "res://data/games.json"
 var idioma_actual: String = "es"
 var configuracion_juegos: Dictionary = {}
 var textos_locales: Dictionary = {}
+var _niveles_por_ruta: Dictionary = {}
 
 func _ready() -> void:
 	cargar_configuracion_juegos()
@@ -15,6 +16,7 @@ func _ready() -> void:
 
 func cargar_configuracion_juegos() -> void:
 	configuracion_juegos.clear()
+	_niveles_por_ruta.clear()
 	
 	if not FileAccess.file_exists(RUTA_GAMES_JSON):
 		print("ERROR: No se encontró el archivo de juegos en: ", RUTA_GAMES_JSON)
@@ -56,6 +58,23 @@ func _cargar_archivo_texto(ruta: String, prefijo: String) -> void:
 
 func obtener_config_juego_actual() -> Dictionary:
 	return configuracion_juegos.get(save_manager.juego_actual_seleccionado, {})
+
+func obtener_score_nivel(id_nivel: int) -> int:
+	var config: Dictionary = obtener_config_juego_actual()
+	var ruta: String = str(config.get("ruta_niveles_json", ""))
+	if ruta == "" or not FileAccess.file_exists(ruta):
+		return 0
+	if not _niveles_por_ruta.has(ruta):
+		var datos: Variant = JSON.parse_string(FileAccess.get_file_as_string(ruta))
+		if datos is Dictionary:
+			_niveles_por_ruta[ruta] = datos
+		else:
+			_niveles_por_ruta[ruta] = {}
+	var niveles: Dictionary = _niveles_por_ruta[ruta]
+	var nivel_cfg: Variant = niveles.get(str(id_nivel), niveles.get(id_nivel, {}))
+	if not (nivel_cfg is Dictionary):
+		return 0
+	return maxi(int((nivel_cfg as Dictionary).get("score", 0)), 0)
 
 func obtener_texto(clave: String, texto_defecto: String = "") -> String:
 	var clave_str = str(clave)

@@ -36,7 +36,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 |----------|--------|---------------------------|
 | `save_manager` | `scripts/save_manager.gd` | Progreso y opciones en un solo juego: `levels` → `{ "1": { "hi": 0 } }`. Estado de sesión (`nivel_actual_seleccionado`, página de niveles). API: `registrar_puntaje_nivel`, `obtener_puntaje_nivel`, `es_nivel_desbloqueado`, `contar_ribbons_azules`, `obtener_total_niveles`, `guardar_a_disco`, opciones audio/idioma. |
 | `audio_manager` | `scripts/audio_manager.gd` | BGM y SFX globales. `music_enabled`/`sfx_enabled`, `play_bgm`, `play_start/welldone/prize/ok1/pop/fail`, `ensure_title_bgm`, `ensure_game_bgm(id)`, cache de themes (`assets/sounds/themes/`). |
-| `game_manager` | `scripts/game_manager.gd` | Config/localización. Carga `data/games.json`, gestiona idioma (`idioma_actual`, `idioma_cambiado`), carga textos globales y por juego, `obtener_texto`, `obtener_titulo_nivel`, `obtener_config_juego_actual`. |
+| `game_manager` | `scripts/game_manager.gd` | Config/localización. Carga `data/games.json`, gestiona idioma (`idioma_actual`, `idioma_cambiado`), carga textos globales y por juego, `obtener_texto`, `obtener_titulo_nivel`, `obtener_config_juego_actual`, `obtener_score_nivel`. |
 | `EfectosUI` | autoload configurado en proyecto | Autoload de efectos UI (configurado por UID en `project.godot`). |
 | `InAppUpdate` | autoload configurado en proyecto | Autoload de actualización in-app (configurado por UID). |
 
@@ -46,7 +46,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 |--------|--------|-----|
 | `title.tscn` | `title.gd` | Hub inicial/carrusel y acceso a juegos, premios y opciones. |
 | `seleccion_niveles.tscn` | `seleccion_niveles.gd` | Selector de niveles data-driven: lee `ruta_niveles_json` de `games.json` y construye las secuencias desde las claves numéricas de `niveles.json`. |
-| `slot_nivel.tscn` | `slot_nivel.gd` | Slot de nivel (estado bloqueado/desbloqueado, ribbons). |
+| `slot_nivel.tscn` | `slot_nivel.gd` | Slot de nivel (bloqueado/desbloqueado) con `moneda1`..`moneda3` según `hi` guardado vs `score` del nivel. |
 | `main.tscn` | `main.gd` | Partida: tablero 3D, barra, HUD, pausa y resultados. |
 | `panel_pausa.tscn` | `panel_pausa.gd` | Pausa en partida (toggles música/SFX, home). |
 | `panel_resultados.tscn` | `panel_resultados.gd` | Fin de nivel; señal `reiniciar_solicitado`. `LabelPuntajeFinal` muestra `puntaje / score`; `moneda1`..`moneda3` según el mismo cálculo. OK navega a premio desbloqueado o selección de niveles. |
@@ -193,13 +193,14 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 | `panel_pausa.gd` | `PanelPausa` | Lógica de pausa. |
 | `ui_level_number.gd` | `UILevelNumber` | Muestra número de nivel. |
 | `ui_puntaje.gd` | `UIPuntaje` | Muestra puntaje actual, meta del nivel e hi-score (`establecer_*`). |
-| `slot_nivel.gd` | `SlotNivel` (según escena/script) | Representación de nivel en selector. |
+| `slot_nivel.gd` | `SlotNivel` (según escena/script) | Representación de nivel en selector; calcula monedas desde `save_manager.obtener_puntaje_nivel` y `game_manager.obtener_score_nivel`. |
 | `fondo_dinamico.gd`, `logo_script.gd`, `label.gd` | — | Soporte visual/UI en pantallas. |
 
 ## 9. Progresión, ribbons y premios
 
 - **Puntaje en partida:** al cerrarse un combo con `n >= 2` fichas se suma `1+2+...+(n-1)` al puntaje global; ese mismo total es el número flotante que aparece con el humo. `ui_puntaje.tscn` muestra el total en `Label`, `/ score` (de `niveles.json`) en `Max` y el `hi` guardado en `HiNumber` (`0` si no existe).
 - **Resultado por nivel:** `LabelPuntajeFinal` muestra siempre `"puntaje / score"` (p. ej. `10 / 30`). Las monedas solo aparecen al superar el nivel: `moneda1` si `puntaje > score/3`, `moneda2` si `puntaje > 2*score/3`, `moneda3` si `puntaje >= score`. Son acumulativas; con `score <= 0` permanecen ocultas.
+- **Monedas en el selector:** `slot_nivel.tscn` aplica la misma comparación usando el `hi` de `save_manager` para ese nivel. El `score` se obtiene con `game_manager.obtener_score_nivel(nivel)` desde `ruta_niveles_json`.
 - **Progreso por nivel:** `user://progreso.json` usa `levels` (sin `games`); cada nivel superado crea `"n": { "hi": max_puntos }`. Al mostrarse `panel_resultados` tras una victoria se llama a `save_manager.registrar_puntaje_nivel(nivel, puntos)`.
 - **Desbloqueo:** nivel 1 siempre disponible; nivel `n` se desbloquea si existe el nodo `n-1` en `levels`.
 - **Ribbons azules:** uno por nivel superado (nodo presente en `levels`), usado para el cálculo de premios.
