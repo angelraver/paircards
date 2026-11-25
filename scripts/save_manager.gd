@@ -12,13 +12,15 @@ const LISTA_PREMIOS: Array[String] = [
 ]
 
 var datos_progreso: Dictionary = {}
-var juego_actual_seleccionado: String = "tincanalley"
+var juego_actual_seleccionado: String = "juego"
 var nivel_actual_seleccionado: int = 1
-var pagina_niveles_por_juego: Dictionary = {}
+var pagina_niveles: int = 1
 var premio_recien_desbloqueado: String = ""
+
 
 func _ready() -> void:
 	cargar_progreso()
+
 
 func cargar_progreso() -> void:
 	if not FileAccess.file_exists(RUTA_GUARDADO):
@@ -26,183 +28,191 @@ func cargar_progreso() -> void:
 		guardar_a_disco()
 		return
 
-	var archivo = FileAccess.open(RUTA_GUARDADO, FileAccess.READ)
-	if archivo:
-		var texto = archivo.get_as_text()
-		archivo.close()
-		var resultado = JSON.parse_string(texto)
-		if resultado is Dictionary:
-			datos_progreso = resultado
-		else:
-			_inicializar_estructura_vacia()
+	var archivo := FileAccess.open(RUTA_GUARDADO, FileAccess.READ)
+	if archivo == null:
+		_inicializar_estructura_vacia()
+		return
+
+	var resultado: Variant = JSON.parse_string(archivo.get_as_text())
+	archivo.close()
+	if resultado is Dictionary:
+		datos_progreso = resultado
 	else:
 		_inicializar_estructura_vacia()
+	_normalizar_estructura()
+
 
 func _inicializar_estructura_vacia() -> void:
 	datos_progreso = {
 		"opciones": {
+			"idioma": "es",
 			"musica": true,
 			"sfx": true,
-			"idioma": "es"
+			"music_enabled": true,
+			"sfx_enabled": true
 		},
-		"games": {}
+		"levels": {}
 	}
 
-func guardar_a_disco() -> void:
-	var archivo = FileAccess.open(RUTA_GUARDADO, FileAccess.WRITE)
-	if archivo:
-		var json_texto = JSON.stringify(datos_progreso, "\t")
-		archivo.store_string(json_texto)
-		archivo.close()
 
-# --- REGISTRO Y CONSULTA DE PROGRESO DE NIVELES ---
-# --- ESTADO DEL SELECTOR DE NIVELES ---
-
-func obtener_pagina_niveles(id_game: String = "") -> int:
-	if id_game == "":
-		id_game = juego_actual_seleccionado
-
-	return int(pagina_niveles_por_juego.get(id_game, 1))
-
-func guardar_pagina_niveles(pagina: int, id_game: String = "") -> void:
-	if id_game == "":
-		id_game = juego_actual_seleccionado
-
-	pagina_niveles_por_juego[id_game] = maxi(pagina, 1)
-
-func registrar_puntaje_nivel(numero_nivel: int, nuevo_puntaje: int, puntaje_maximo: int, id_game: String = "") -> bool:
-	if id_game == "": id_game = juego_actual_seleccionado
-	
-	var clave = str(numero_nivel)
-	var puntaje_previo = obtener_puntaje_nivel(numero_nivel, id_game)
-	var premios_antes = calcular_cantidad_premios_desbloqueados()
-
-	if nuevo_puntaje > puntaje_previo:
-		var dict_juego = _obtener_dict_game(id_game)
-		dict_juego[clave] = {
-			"score": nuevo_puntaje,
-			"max": puntaje_maximo
-		}
+func _normalizar_estructura() -> void:
+	_obtener_opciones()
+	_obtener_levels()
+	if datos_progreso.has("games"):
+		_migrar_games_a_levels()
+		datos_progreso.erase("games")
 		guardar_a_disco()
 
-		var premios_despues = calcular_cantidad_premios_desbloqueados()
 
-		if premios_despues > premios_antes and premios_despues <= LISTA_PREMIOS.size():
-			premio_recien_desbloqueado = LISTA_PREMIOS[premios_despues - 1]
+func _migrar_games_a_levels() -> void:
+	var juegos: Variant = datos_progreso.get("games", {})
+	if not (juegos is Dictionary):
+		return
 
-		return true
-	return false
+	var levels: Dictionary = _obtener_levels()
+	for id_juego in (juegos as Dictionary).keys():
+		var niveles: Variant = (juegos as Dictionary)[id_juego]
+		if not (niveles is Dictionary):
+			continue
+		for clave in (niveles as Dictionary).keys():
+			var info: Variant = (niveles as Dictionary)[clave]
+			if info is Dictionary:
+				levels[str(clave)] = {"hi": int((info as Dictionary).get("score", 0))}
 
-func obtener_puntaje_nivel(numero_nivel: int, id_game: String = "") -> int:
-	if id_game == "": id_game = juego_actual_seleccionado
-	var clave = str(numero_nivel)
-	var dict_juego = _obtener_dict_game(id_game)
-	if dict_juego.has(clave):
-		return int(dict_juego[clave].get("score", 0))
-	return 0
 
-func obtener_maximo_nivel(numero_nivel: int, id_game: String = "") -> int:
-	if id_game == "": id_game = juego_actual_seleccionado
-	var clave = str(numero_nivel)
-	var dict_juego = _obtener_dict_game(id_game)
-	if dict_juego.has(clave):
-		return int(dict_juego[clave].get("max", 0))
-	return 0
+func guardar_a_disco() -> void:
+	var archivo := FileAccess.open(RUTA_GUARDADO, FileAccess.WRITE)
+	if archivo == null:
+		return
+	archivo.store_string(JSON.stringify(datos_progreso, "\t"))
+	archivo.close()
 
-func es_nivel_desbloqueado(numero_nivel: int, id_game: String = "") -> bool:
-	if id_game == "": id_game = juego_actual_seleccionado
-	if numero_nivel == 1:
-		return true
 
-	var clave_anterior = str(numero_nivel - 1)
-	var dict_juego = _obtener_dict_game(id_game)
-	
-	if not dict_juego.has(clave_anterior):
+func _obtener_opciones() -> Dictionary:
+	if not datos_progreso.has("opciones") or not (datos_progreso["opciones"] is Dictionary):
+		datos_progreso["opciones"] = {}
+	return datos_progreso["opciones"]
+
+
+func _obtener_levels() -> Dictionary:
+	if not datos_progreso.has("levels") or not (datos_progreso["levels"] is Dictionary):
+		datos_progreso["levels"] = {}
+	return datos_progreso["levels"]
+
+
+func obtener_pagina_niveles() -> int:
+	return pagina_niveles
+
+
+func guardar_pagina_niveles(pagina: int) -> void:
+	pagina_niveles = maxi(pagina, 1)
+
+
+func registrar_puntaje_nivel(numero_nivel: int, nuevo_puntaje: int = 0) -> bool:
+	if numero_nivel < 1:
 		return false
 
-	var datos_prev = dict_juego[clave_anterior]
-	var score_prev = float(datos_prev.get("score", 0))
-	var max_prev = float(datos_prev.get("max", 1))
+	var clave: String = str(numero_nivel)
+	var levels: Dictionary = _obtener_levels()
+	var premios_antes: int = calcular_cantidad_premios_desbloqueados()
+	var es_nuevo: bool = not levels.has(clave)
+	var hi_previo: int = 0
+	if not es_nuevo and levels[clave] is Dictionary:
+		hi_previo = int((levels[clave] as Dictionary).get("hi", 0))
 
-	return (score_prev / max_prev) >= (1.0 / 3.0)
+	var hi_actual: int = maxi(hi_previo, maxi(nuevo_puntaje, 0))
+	if not es_nuevo and hi_actual == hi_previo:
+		return false
 
-func _obtener_dict_game(id_game: String) -> Dictionary:
-	if not datos_progreso.has("games"):
-		datos_progreso["games"] = {}
-	if not datos_progreso["games"].has(id_game):
-		datos_progreso["games"][id_game] = {}
-	return datos_progreso["games"][id_game]
+	levels[clave] = {"hi": hi_actual}
+	guardar_a_disco()
 
-# --- RECOMPENSAS Y RIBBONS GLOBALES ---
+	var premios_despues: int = calcular_cantidad_premios_desbloqueados()
+	if premios_despues > premios_antes and premios_despues <= LISTA_PREMIOS.size():
+		premio_recien_desbloqueado = LISTA_PREMIOS[premios_despues - 1]
+	return true
 
-func contar_ribbons_azules() -> int:
-	var conteo: int = 0
-	var games = datos_progreso.get("games", {})
-	
-	for nombre_juego in games:
-		var niveles = games[nombre_juego]
-		if niveles is Dictionary:
-			for clave in niveles.keys():
-				var info = niveles[clave]
-				var score = int(info.get("score", 0))
-				var max_score = int(info.get("max", 0))
-				if max_score > 0 and score >= max_score:
-					conteo += 1
-	return conteo
 
-func obtener_total_niveles_game(id_game: String) -> int:
-	var config = game_manager.configuracion_juegos.get(id_game, {})
-	var ruta = config.get("ruta_niveles_json", "")
-	if ruta != "" and FileAccess.file_exists(ruta):
-		var texto = FileAccess.get_file_as_string(ruta)
-		var datos = JSON.parse_string(texto)
-		if datos is Dictionary:
-			return datos.keys().size()
+func obtener_puntaje_nivel(numero_nivel: int) -> int:
+	var levels: Dictionary = _obtener_levels()
+	var clave: String = str(numero_nivel)
+	if levels.has(clave) and levels[clave] is Dictionary:
+		return int((levels[clave] as Dictionary).get("hi", 0))
 	return 0
 
+
+func obtener_maximo_nivel(numero_nivel: int) -> int:
+	return obtener_puntaje_nivel(numero_nivel)
+
+
+func es_nivel_desbloqueado(numero_nivel: int) -> bool:
+	if numero_nivel <= 1:
+		return true
+	return _obtener_levels().has(str(numero_nivel - 1))
+
+
+func contar_ribbons_azules() -> int:
+	return _obtener_levels().size()
+
+
+func obtener_total_niveles() -> int:
+	var config: Dictionary = game_manager.obtener_config_juego_actual() as Dictionary
+	var ruta: String = str(config.get("ruta_niveles_json", ""))
+	if ruta == "" or not FileAccess.file_exists(ruta):
+		return 0
+
+	var datos: Variant = JSON.parse_string(FileAccess.get_file_as_string(ruta))
+	if not (datos is Dictionary):
+		return 0
+
+	var total: int = 0
+	for clave in (datos as Dictionary).keys():
+		var texto_clave: String = str(clave)
+		if texto_clave.is_valid_int() and int(texto_clave) >= 1:
+			total += 1
+	return total
+
+
+func obtener_total_niveles_game(_id_game: String = "") -> int:
+	return obtener_total_niveles()
+
+
 func obtener_total_niveles_globales() -> int:
-	var total_acumulado: int = 0
-	for id_juego in game_manager.configuracion_juegos.keys():
-		total_acumulado += obtener_total_niveles_game(id_juego)
-		
-	return max(total_acumulado, 18)
+	return obtener_total_niveles()
+
 
 func calcular_cantidad_premios_desbloqueados() -> int:
-	var azules = contar_ribbons_azules()
-	var total_niveles = obtener_total_niveles_globales()
-	var cantidad_premios = LISTA_PREMIOS.size()
+	var azules: int = contar_ribbons_azules()
+	var total_niveles: int = obtener_total_niveles()
+	var cantidad_premios: int = LISTA_PREMIOS.size()
 	var cantidad_desbloqueada: int = 0
 
 	for i in range(cantidad_premios):
-		var numero_premio = i + 1
+		var numero_premio: int = i + 1
 		var requeridas: int = int(ceil(float(numero_premio) * float(total_niveles) / float(cantidad_premios)))
 		if azules >= requeridas:
 			cantidad_desbloqueada += 1
 
 	return cantidad_desbloqueada
 
-# --- GESTIÓN DE CONFIGURACIÓN Y PREFERENCIAS GLOBALES ---
 
 func obtener_opcion_audio(clave: String, valor_defecto: bool = true) -> bool:
-	if datos_progreso.has("opciones") and datos_progreso["opciones"] is Dictionary:
-		return datos_progreso["opciones"].get(clave, valor_defecto)
+	var opciones: Dictionary = _obtener_opciones()
+	if opciones.has(clave):
+		return bool(opciones[clave])
 	return valor_defecto
 
+
 func guardar_opcion_audio(clave: String, valor: bool) -> void:
-	if not datos_progreso.has("opciones") or not (datos_progreso["opciones"] is Dictionary):
-		datos_progreso["opciones"] = {}
-		
-	datos_progreso["opciones"][clave] = valor
+	_obtener_opciones()[clave] = valor
 	guardar_a_disco()
 
+
 func obtener_idioma_guardado() -> String:
-	if datos_progreso.has("opciones") and datos_progreso["opciones"] is Dictionary:
-		return datos_progreso["opciones"].get("idioma", "es")
-	return "es"
+	var opciones: Dictionary = _obtener_opciones()
+	return str(opciones.get("idioma", "es"))
+
 
 func guardar_idioma(nuevo_idioma: String) -> void:
-	if not datos_progreso.has("opciones") or not (datos_progreso["opciones"] is Dictionary):
-		datos_progreso["opciones"] = {}
-		
-	datos_progreso["opciones"]["idioma"] = nuevo_idioma
+	_obtener_opciones()["idioma"] = nuevo_idioma
 	guardar_a_disco()

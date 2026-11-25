@@ -17,7 +17,7 @@ class_name ControladorResultados
 ##       ctrl_resultados.reset() # o al_iniciar_nivel()
 ##       ...
 ##   func mostrar_panel_resultados():
-##       ctrl_resultados.mostrar(nivel_actual, puntaje_nivel, puntaje_maximo_nivel)
+##       ctrl_resultados.mostrar(nivel_actual, puntaje_nivel, nivel_superado)
 
 @export var panel_resultados: PanelResultados
 @export var hud_a_ocultar: Array[CanvasItem]
@@ -67,7 +67,7 @@ func al_iniciar_nivel() -> void:
 	reset()
 
 ## Guard + ocultar HUD + mostrar PanelResultados.
-func mostrar(nivel_actual: int) -> void:
+func mostrar(nivel_actual: int, puntaje: int = 0, nivel_superado: bool = false) -> void:
 	if not panel_resultados:
 		return
 	if _mostrado:
@@ -76,7 +76,7 @@ func mostrar(nivel_actual: int) -> void:
 	for n in hud_a_ocultar:
 		if is_instance_valid(n):
 			n.visible = false
-	panel_resultados.mostrar(nivel_actual)
+	panel_resultados.mostrar(nivel_actual, puntaje, nivel_superado)
 
 
 func actualizar_nivel(nivel: int) -> void:

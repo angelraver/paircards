@@ -18,7 +18,7 @@ func _ready() -> void:
 	if boton_reiniciar:
 		boton_reiniciar.pressed.connect(_on_boton_reiniciar_pressed)
 
-func mostrar(nivel_id: int) -> void:
+func mostrar(nivel_id: int, puntaje: int = 0, nivel_superado: bool = false) -> void:
 	if visible:
 		return
 	visible = true
@@ -26,8 +26,8 @@ func mostrar(nivel_id: int) -> void:
 	if level_title:
 		level_title.text = "Nivel %d" % [nivel_id]
 
-	# Guardado de progreso centralizado
-	#save_manager.registrar_puntaje_nivel(nivel_id, puntaje, puntaje_maximo, id_juego)
+	if nivel_superado:
+		save_manager.registrar_puntaje_nivel(nivel_id, puntaje)
 
 func _on_boton_reiniciar_pressed() -> void:
 	audio_manager.play_ok1()

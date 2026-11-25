@@ -34,7 +34,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 
 | Autoload | Script | Responsabilidad principal |
 |----------|--------|---------------------------|
-| `save_manager` | `scripts/save_manager.gd` | Progreso y opciones. Estado de sesión (`juego_actual_seleccionado`, `nivel_actual_seleccionado`, página de niveles). API: `registrar_puntaje_nivel`, `obtener_puntaje_nivel`, `obtener_maximo_nivel`, `es_nivel_desbloqueado`, `contar_ribbons_azules`, `obtener_total_niveles_game`, `guardar_a_disco`, opciones audio/idioma. |
+| `save_manager` | `scripts/save_manager.gd` | Progreso y opciones en un solo juego: `levels` → `{ "1": { "hi": 0 } }`. Estado de sesión (`nivel_actual_seleccionado`, página de niveles). API: `registrar_puntaje_nivel`, `obtener_puntaje_nivel`, `es_nivel_desbloqueado`, `contar_ribbons_azules`, `obtener_total_niveles`, `guardar_a_disco`, opciones audio/idioma. |
 | `audio_manager` | `scripts/audio_manager.gd` | BGM y SFX globales. `music_enabled`/`sfx_enabled`, `play_bgm`, `play_start/welldone/prize/ok1/pop/fail`, `ensure_title_bgm`, `ensure_game_bgm(id)`, cache de themes (`assets/sounds/themes/`). |
 | `game_manager` | `scripts/game_manager.gd` | Config/localización. Carga `data/games.json`, gestiona idioma (`idioma_actual`, `idioma_cambiado`), carga textos globales y por juego, `obtener_texto`, `obtener_titulo_nivel`, `obtener_config_juego_actual`. |
 | `EfectosUI` | autoload configurado en proyecto | Autoload de efectos UI (configurado por UID en `project.godot`). |
@@ -195,9 +195,9 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 
 ## 9. Progresión, ribbons y premios
 
-- **Progreso por nivel:** `save_manager` guarda score/max por juego y nivel en `user://progreso.json`.
-- **Desbloqueo:** nivel 1 siempre disponible; nivel `n` se desbloquea si `score(n-1)/max(n-1) >= 1/3`.
-- **Ribbons (por desempeño):** amarilla ≥ 1/3, roja ≥ 2/3, azul = 100% (`score >= max`), con conteo global de azules.
+- **Progreso por nivel:** `user://progreso.json` usa `levels` (sin `games`); cada nivel superado crea `"n": { "hi": max_puntos }`. Al mostrarse `panel_resultados` tras una victoria se llama a `save_manager.registrar_puntaje_nivel(nivel, puntos)`.
+- **Desbloqueo:** nivel 1 siempre disponible; nivel `n` se desbloquea si existe el nodo `n-1` en `levels`.
+- **Ribbons azules:** uno por nivel superado (nodo presente en `levels`), usado para el cálculo de premios.
 - **Premios:** lista global de 18 premios; desbloqueo progresivo según ribbons azules/totales (cálculo en `save_manager`), con pantalla de premio desbloqueado cuando corresponde.
 
 ## 10. Estructura de archivos (resumen)

@@ -37,11 +37,8 @@ func establecer_ribbons(cantidad: int) -> void:
 func configurar(numero_nivel: int) -> void:
 	nivel_id = numero_nivel
 
-	# Consultamos el estado usando el ID del juego actualmente activo
-	var id_juego: String = save_manager.juego_actual_seleccionado
-	var desbloqueado: bool = save_manager.es_nivel_desbloqueado(numero_nivel, id_juego)
+	var desbloqueado: bool = save_manager.es_nivel_desbloqueado(numero_nivel)
 
-	# El slot completo siempre debe estar visible si el nivel existe en el JSON
 	visible = true
 
 	if not desbloqueado:

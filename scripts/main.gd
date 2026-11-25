@@ -196,6 +196,7 @@ class FichaTablero extends Node3D:
 #  ESTADO DEL JUEGO
 # ============================================================================
 var nivel_actual: int = 1
+var _puntaje_nivel: int = 0
 var ctrl_resultados: ControladorResultados
 
 # Configuración cargada desde data/niveles.json y data/valores.json.
@@ -515,6 +516,7 @@ func _crear_entorno_ficha() -> Environment:
 func _cargar_nivel(n: int) -> void:
 	_juego_terminado = false
 	nivel_actual = n
+	_puntaje_nivel = 0
 
 	_configurar_nivel(n)
 	_cargar_texturas()
@@ -1485,6 +1487,7 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 		_actualizar_barra_ui()
 		# Los puntos se muestran al llegar la ficha a su destino.
 		if puntos_ganados > 0:
+			_puntaje_nivel += puntos_ganados
 			_mostrar_puntos_flotantes_en_slot(indice_slot, puntos_ganados)
 		# Al mostrarse en la barra, se (re)abre la ventana de 2 segundos del combo activo.
 		if _combo_activo and _combo_slot == indice_slot:
@@ -1542,11 +1545,11 @@ func _finalizar_partida(victoria: bool) -> void:
 
 	if ui_level_title:
 		ui_level_title.visible = false
-	mostrar_panel_resultados()
+	mostrar_panel_resultados(victoria)
 
-func mostrar_panel_resultados() -> void:
+func mostrar_panel_resultados(nivel_superado: bool = false) -> void:
 	if ctrl_resultados:
-		ctrl_resultados.mostrar(nivel_actual)
+		ctrl_resultados.mostrar(nivel_actual, _puntaje_nivel, nivel_superado)
 
 func reiniciar_nivel() -> void:
 	_cargar_nivel(nivel_actual)
