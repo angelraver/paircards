@@ -45,7 +45,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 | Escena | Script | Rol |
 |--------|--------|-----|
 | `title.tscn` | `title.gd` | Hub inicial/carrusel y acceso a juegos, premios y opciones. |
-| `seleccion_niveles.tscn` | `seleccion_niveles.gd` | Selector de niveles data-driven (lee `games.json`/config del juego). |
+| `seleccion_niveles.tscn` | `seleccion_niveles.gd` | Selector de niveles data-driven: lee `ruta_niveles_json` de `games.json` y construye las secuencias desde las claves numéricas de `niveles.json`. |
 | `slot_nivel.tscn` | `slot_nivel.gd` | Slot de nivel (estado bloqueado/desbloqueado, ribbons). |
 | `main.tscn` | `main.gd` | Partida: tablero 3D, barra, HUD, pausa y resultados. |
 | `panel_pausa.tscn` | `panel_pausa.gd` | Pausa en partida (toggles música/SFX, home). |
@@ -75,7 +75,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 ```
 
 ### Niveles — `data/niveles.json`
-Definición por id de nivel (string). Campos usados por `scripts/main.gd`:
+Definición por id de nivel (string). Campos usados por `scripts/main.gd`. El selector (`seleccion_niveles.gd`) cuenta las claves numéricas y solo expone niveles en umbrales `9`, `17`, `25`, ...: con 10..16 solo muestra 9, con 18..24 solo 17, con 25 muestra 25. Cada secuencia aporta 9 slots, pero comparte el primer slot con la anterior (8 nuevos por secuencia).
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|

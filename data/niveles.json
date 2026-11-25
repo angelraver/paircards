@@ -1,5 +1,129 @@
 {
-  "12": {
+  "1": {
+    "capas": 1,
+    "slots": 2,
+    "fichas_n": 12,
+    "fichas_t": ["a", "b", "c"],
+    "patron": {
+      "tipo": "circulos",
+      "radio": 2.4,
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287]
+    }
+  },
+  "2": {
+    "capas": 2,
+    "slots": 2,
+    "fichas_n": 18,
+    "fichas_t": ["a", "b", "c"],
+    "patron": {
+      "tipo": "circulos",
+      "radio": 2.2,
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287]
+    }
+  },
+  "3": {
+    "capas": 2,
+    "slots": 3,
+    "fichas_n": 24,
+    "fichas_t": ["a", "b", "c", "d"],
+    "patron": {
+      "tipo": "celdas",
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287],
+      "celdas_impar": [[0, 0], [-1, 1], [0, 1], [-2, 2], [-1, 2], [0, 2]],
+      "celdas_par": [[0, 0], [-1, 1], [0, 1], [-2, 2], [-1, 2], [0, 2]]
+    }
+  },
+  "4": {
+    "capas": 3,
+    "slots": 3,
+    "fichas_n": 30,
+    "fichas_t": ["a", "b", "c", "d", "e"],
+    "patron": {
+      "tipo": "circulos",
+      "radio": 2.1,
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287]
+    }
+  },
+  "5": {
+    "capas": 3,
+    "slots": 3,
+    "fichas_n": 36,
+    "fichas_t": ["a", "b", "c", "d", "e"],
+    "patron": {
+      "tipo": "celdas",
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287],
+      "celdas_impar": [[0, 0], [1, -1], [0, -1], [2, -2], [1, -2], [0, -2]],
+      "celdas_par": [[-1, 0], [0, -1], [-1, -1], [1, -2], [0, -2], [-1, -2]]
+    }
+  },
+  "6": {
+    "capas": 4,
+    "slots": 4,
+    "fichas_n": 44,
+    "fichas_t": ["a", "b", "c", "d", "e", "f"],
+    "patron": {
+      "tipo": "circulos",
+      "radio": 2.0,
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287]
+    }
+  },
+  "7": {
+    "capas": 4,
+    "slots": 4,
+    "fichas_n": 50,
+    "fichas_t": ["a", "b", "c", "d", "e", "f", "g"],
+    "patron": {
+      "tipo": "celdas",
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287],
+      "celdas_impar": [[0, 0], [-1, 1], [0, 1], [-2, 2], [-1, 2], [0, 2], [-3, 3], [-2, 3], [-1, 3], [0, 3]],
+      "celdas_par": [[1, 0], [0, 1], [1, 1], [-1, 2], [0, 2], [1, 2], [-2, 3], [-1, 3], [0, 3], [1, 3]]
+    }
+  },
+  "8": {
+    "capas": 5,
+    "slots": 4,
+    "fichas_n": 56,
+    "fichas_t": ["a", "b", "c", "d", "e", "f", "g", "h"],
+    "patron": {
+      "tipo": "circulos",
+      "radio": 1.95,
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287]
+    }
+  },
+  "9": {
+    "capas": 5,
+    "slots": 5,
+    "fichas_n": 60,
+    "fichas_t": ["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+    "patron": {
+      "tipo": "celdas",
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287],
+      "celdas_impar": [[0, 0], [1, -1], [0, -1], [2, -2], [1, -2], [0, -2], [3, -3], [2, -3], [1, -3], [0, -3]],
+      "celdas_par": [[-1, 0], [0, -1], [-1, -1], [1, -2], [0, -2], [-1, -2], [2, -3], [1, -3], [0, -3], [-1, -3]]
+    }
+  },
+  "10": {
+    "capas": 6,
+    "slots": 5,
+    "fichas_n": 64,
+    "fichas_t": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"],
+    "patron": {
+      "tipo": "circulos",
+      "radio": 1.9,
+      "offset_impar": [0, 0],
+      "offset_par": [0.5, 0.28867513459481287]
+    }
+  },
+  "111": {
     "capas": 3,
     "slots": 2,
     "fichas_n": 64,
@@ -11,7 +135,7 @@
       "offset_par": [0.5, 0.28867513459481287]
     }
   },
-  "2": {
+  "211": {
     "capas": 6,
     "slots": 3,
     "fichas_n": 60,
@@ -24,7 +148,7 @@
       "celdas_par": [[1,0],[0,1],[1,1],[-1,2],[0,2],[1,2],[-2,3],[-1,3],[0,3],[1,3]]
     }
   },
-  "1": {
+  "311": {
     "capas": 6,
     "slots": 3,
     "fichas_n": 60,

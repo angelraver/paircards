@@ -11,8 +11,11 @@ const PUNTERO_NINGUNO: int = -2
 const PUNTERO_RATON: int = -1
 const ESCENA_CHUNK: PackedScene = preload("res://scenes/level_sequence_chunk.tscn")
 
-@export var total_sequences: int = 3
 @export var initial_sequence_index: int = 0
+
+var total_sequences: int = 1
+var _niveles_disponibles: Array[int] = []
+var _niveles_visibles: Array[int] = []
 @export var base_step_y: float = 159.17
 @export var direccion_scroll: DireccionScroll = DireccionScroll.ABAJO_ARRIBA
 @export var friction: float = 5.0
@@ -190,9 +193,50 @@ func _calcular_exceso(y: float) -> float:
 	return 0.0
 
 
+func _actualizar_niveles() -> void:
+	var config: Dictionary = game_manager.obtener_config_juego_actual() as Dictionary
+	var ruta: String = str(config.get("ruta_niveles_json", ""))
+	_niveles_disponibles = _leer_niveles(ruta)
+
+	var conteo: int = _niveles_disponibles.size()
+	var visibles: int = conteo
+	if conteo >= LevelSequenceChunk.NIVELES_POR_CHUNK:
+		var secuencias: int = 1 + (conteo - LevelSequenceChunk.NIVELES_POR_CHUNK) / LevelSequenceChunk.NIVELES_NETOS
+		visibles = LevelSequenceChunk.NIVELES_POR_CHUNK + (secuencias - 1) * LevelSequenceChunk.NIVELES_NETOS
+
+	_niveles_visibles.clear()
+	for i in range(mini(visibles, conteo)):
+		_niveles_visibles.append(_niveles_disponibles[i])
+
+	total_sequences = maxi(1, 1 + maxi(0, _niveles_visibles.size() - LevelSequenceChunk.NIVELES_POR_CHUNK) / LevelSequenceChunk.NIVELES_NETOS)
+
+
+func _leer_niveles(ruta: String) -> Array[int]:
+	var resultado: Array[int] = []
+	if ruta == "" or not FileAccess.file_exists(ruta):
+		return resultado
+
+	var datos: Variant = JSON.parse_string(FileAccess.get_file_as_string(ruta))
+	if not (datos is Dictionary):
+		return resultado
+
+	for clave in (datos as Dictionary).keys():
+		var texto_clave: String = str(clave)
+		if not texto_clave.is_valid_int():
+			continue
+		var numero: int = int(texto_clave)
+		if numero >= 1:
+			resultado.append(numero)
+
+	resultado.sort()
+	return resultado
+
+
 func _recalcular_layout() -> void:
 	if content_container == null:
 		return
+
+	_actualizar_niveles()
 
 	var tam_viewport: Vector2 = get_viewport_rect().size
 	_scale_factor = maxf(tam_viewport.x / ANCHO_BASE_CHUNK, 0.01)
@@ -200,7 +244,7 @@ func _recalcular_layout() -> void:
 	var solapamiento: float = clampf(base_step_y, 0.0, ALTO_BASE_CHUNK - 1.0) * _scale_factor
 	_step_y = maxf(_chunk_height - solapamiento, 1.0)
 
-	var cantidad: int = maxi(1, total_sequences)
+	var cantidad: int = total_sequences
 	_asegurar_chunks(cantidad)
 	_posicionar_chunks(cantidad, tam_viewport.x)
 	_calcular_limites(cantidad, tam_viewport.y)
@@ -232,8 +276,12 @@ func _posicionar_chunks(cantidad: int, ancho_viewport: float) -> void:
 	var x_chunk: float = (ancho_viewport - ANCHO_BASE_CHUNK * _scale_factor) * 0.5
 	for i in range(cantidad):
 		var chunk: LevelSequenceChunk = _chunks[i]
-		var primer_nivel: int = i * LevelSequenceChunk.NIVELES_NETOS + 1
-		chunk.configurar(i, _scale_factor, primer_nivel, i > 0)
+		var desde: int = i * LevelSequenceChunk.NIVELES_NETOS
+		var hasta: int = mini(desde + LevelSequenceChunk.NIVELES_POR_CHUNK, _niveles_visibles.size())
+		var niveles_chunk: Array[int] = []
+		for j in range(desde, hasta):
+			niveles_chunk.append(_niveles_visibles[j])
+		chunk.configurar(i, _scale_factor, niveles_chunk, i > 0)
 		chunk.position = Vector2(x_chunk, _posicion_local(i))
 
 

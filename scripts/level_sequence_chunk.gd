@@ -32,7 +32,7 @@ signal level_selected(level_number: int)
 
 var indice_secuencia: int = -1
 var factor_escala: float = 1.0
-var primer_nivel: int = 1
+var niveles_chunk: Array[int] = []
 var ocultar_nodo_inicial: bool = false
 
 var _slots: Array[SlotNivel] = []
@@ -40,15 +40,16 @@ var _slots: Array[SlotNivel] = []
 
 func _ready() -> void:
 	_asegurar_slots()
-	configurar(indice_secuencia, factor_escala, primer_nivel, ocultar_nodo_inicial)
+	configurar(indice_secuencia, factor_escala, [], ocultar_nodo_inicial)
 
 
-func configurar(indice: int, escala: float, nivel_inicial: int = -1, ocultar_inicial: bool = false) -> void:
+func configurar(indice: int, escala: float, niveles: Array[int] = [], ocultar_inicial: bool = false) -> void:
 	indice_secuencia = indice
 	factor_escala = maxf(escala, 0.01)
 
 	var indice_valido: int = maxi(indice, 0)
-	primer_nivel = nivel_inicial if nivel_inicial >= 1 else indice_valido * NIVELES_NETOS + 1
+	niveles_chunk.clear()
+	niveles_chunk.append_array(niveles)
 	ocultar_nodo_inicial = ocultar_inicial or indice_valido > 0
 
 	var tamano_base: Vector2 = Vector2(ANCHO_BASE, ALTO_BASE)
@@ -103,10 +104,14 @@ func _posicionar_slots() -> void:
 	var escala_slot: float = maxf(slot_scale, 0.01)
 	for i in range(_slots.size()):
 		var slot: SlotNivel = _slots[i]
-		var numero_nivel: int = primer_nivel + i
-		var es_compartido: bool = i == 0 and ocultar_nodo_inicial
+		var tiene_nivel: bool = i < niveles_chunk.size()
+		var es_compartido: bool = i == 0 and ocultar_nodo_inicial and tiene_nivel
+		var debe_mostrarse: bool = tiene_nivel and not es_compartido
 
-		slot.configurar_nivel(numero_nivel)
+		if tiene_nivel:
+			slot.configurar_nivel(niveles_chunk[i])
+		else:
+			slot.boton_nivel.disabled = true
 		slot.custom_minimum_size = Vector2(slot_size, slot_size)
 		slot.size = Vector2(slot_size, slot_size)
 		slot.pivot_offset = Vector2.ZERO
@@ -119,11 +124,9 @@ func _posicionar_slots() -> void:
 		)
 		var tamano_efectivo: Vector2 = slot.size * escala_slot
 		slot.position = objetivo - tamano_efectivo * 0.5
-		slot.visible = not es_compartido
+		slot.visible = debe_mostrarse
 		slot.z_index = 10
-		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE if es_compartido else Control.MOUSE_FILTER_STOP
-		if es_compartido:
-			slot.boton_nivel.disabled = true
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE if not debe_mostrarse else Control.MOUSE_FILTER_STOP
 
 
 func _posicion_normalizada(indice: int) -> Vector2:
