@@ -34,15 +34,11 @@ func establecer_hi_score(nuevo_hi: int) -> void:
 
 func actualizar_ui() -> void:
 	if label:
-		# Sin ceros a la izquierda, muestra el número tal cual
 		label.text = str(puntaje_actual)
 	if label_max:
-		# Meta del nivel: "/ 1000" (oculto si el nivel aún no tiene máximo).
-		label_max.visible = puntaje_maximo > 0
-		if puntaje_maximo > 0:
-			label_max.text = "/ %d" % puntaje_maximo
+		label_max.visible = true
+		label_max.text = "/ %d" % puntaje_maximo
 	if hi_score:
-		# Muestra HI solo si hay un puntaje guardado previo, sin ceros a la izquierda
-		hi_score.visible = puntaje_hi > 0
-	if label_hi_num and puntaje_hi > 0:
+		hi_score.visible = true
+	if label_hi_num:
 		label_hi_num.text = str(puntaje_hi)

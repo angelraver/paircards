@@ -52,6 +52,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
 | `panel_resultados.tscn` | `panel_resultados.gd` | Fin de nivel; señal `reiniciar_solicitado`. OK navega a premio desbloqueado o selección de niveles. |
 | `puntos_flotantes.tscn` | — | Label flotante animado usado para mostrar puntos en partida. |
 | `ui_level_number.tscn` | `ui_level_number.gd` | Indicador de nivel (`establecer_nivel`). |
+| `ui_puntaje.tscn` | `ui_puntaje.gd` | HUD de puntos: actual, `/ score` del nivel e `hi` guardado. |
 | `options.tscn` | `options.gd` | Opciones (música, SFX, idioma). |
 | `premios.tscn` | `premios.gd` | Galería de premios. |
 | `premio_desbloqueado.tscn` | `premio_desbloqueado.gd` | Pantalla de premio desbloqueado. |
@@ -191,11 +192,13 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 | `panel_resultados.gd` | `PanelResultados` | UI de fin de nivel, señal `reiniciar_solicitado`, navegación OK. |
 | `panel_pausa.gd` | `PanelPausa` | Lógica de pausa. |
 | `ui_level_number.gd` | `UILevelNumber` | Muestra número de nivel. |
+| `ui_puntaje.gd` | `UIPuntaje` | Muestra puntaje actual, meta del nivel e hi-score (`establecer_*`). |
 | `slot_nivel.gd` | `SlotNivel` (según escena/script) | Representación de nivel en selector. |
 | `fondo_dinamico.gd`, `logo_script.gd`, `label.gd` | — | Soporte visual/UI en pantallas. |
 
 ## 9. Progresión, ribbons y premios
 
+- **Puntaje en partida:** al cerrarse un combo con `n >= 2` fichas se suma `1+2+...+(n-1)` al puntaje global; ese mismo total es el número flotante que aparece con el humo. `ui_puntaje.tscn` muestra el total en `Label`, `/ score` (de `niveles.json`) en `Max` y el `hi` guardado en `HiNumber` (`0` si no existe).
 - **Progreso por nivel:** `user://progreso.json` usa `levels` (sin `games`); cada nivel superado crea `"n": { "hi": max_puntos }`. Al mostrarse `panel_resultados` tras una victoria se llama a `save_manager.registrar_puntaje_nivel(nivel, puntos)`.
 - **Desbloqueo:** nivel 1 siempre disponible; nivel `n` se desbloquea si existe el nodo `n-1` en `levels`.
 - **Ribbons azules:** uno por nivel superado (nodo presente en `levels`), usado para el cálculo de premios.

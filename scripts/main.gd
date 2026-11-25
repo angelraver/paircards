@@ -186,6 +186,7 @@ class FichaTablero extends Node3D:
 @onready var camara: Camera3D = $Camera3D
 
 @onready var ui_level_number: UILevelNumber = $UI/LevelNumber as UILevelNumber
+@onready var ui_puntaje: UIPuntaje = $UI/Puntaje as UIPuntaje
 @onready var ui_level_title: Label = $UI/LevelTitle
 @onready var panel_resultados: PanelResultados = $UI/PanelResultados as PanelResultados
 @onready var main_audio: MainAudio = $MainAudio as MainAudio
@@ -206,6 +207,7 @@ var _capas_nivel: int = CAPAS_POR_DEFECTO
 var _slots_nivel: int = CAPACIDAD_BARRA
 var _tipos_nivel: Array[int] = []
 var _fichas_n_nivel: int = 0
+var _score_nivel: int = 0
 
 # Patrón de distribución de fichas (configurable por nivel).
 var _patron_tipo: String = "circulos"
@@ -288,7 +290,7 @@ func _ready() -> void:
 	add_child(ctrl_resultados)
 	ctrl_resultados.configurar(
 		panel_resultados,
-		[ui_level_number, boton_pausa, _barra_ui],
+		[ui_level_number, ui_puntaje, boton_pausa, _barra_ui],
 		ui_level_number,
 		reiniciar_nivel
 	)
@@ -327,6 +329,7 @@ func _configurar_nivel(n: int) -> void:
 	_capas_nivel = CAPAS_POR_DEFECTO
 	_slots_nivel = CAPACIDAD_BARRA
 	_fichas_n_nivel = 0
+	_score_nivel = 0
 
 	var mapa_fichas: Dictionary = _valores_config.get("fichas", {})
 	var nivel_cfg: Variant = _niveles_config.get(str(n), _niveles_config.get(n, {}))
@@ -336,6 +339,7 @@ func _configurar_nivel(n: int) -> void:
 	_capas_nivel = maxi(int(nivel_cfg.get("capas", CAPAS_POR_DEFECTO)), 1)
 	_slots_nivel = clampi(int(nivel_cfg.get("slots", CAPACIDAD_BARRA)), 1, CAPACIDAD_BARRA)
 	_fichas_n_nivel = maxi(int(nivel_cfg.get("fichas_n", 0)), 0)
+	_score_nivel = maxi(int(nivel_cfg.get("score", 0)), 0)
 
 	# Patrón de distribución: por defecto "circulos" (hexagonal circular intercalado).
 	_patron_tipo = "circulos"
@@ -519,6 +523,10 @@ func _cargar_nivel(n: int) -> void:
 	_puntaje_nivel = 0
 
 	_configurar_nivel(n)
+	if ui_puntaje:
+		ui_puntaje.establecer_puntaje(0)
+		ui_puntaje.establecer_maximo(_score_nivel)
+		ui_puntaje.establecer_hi_score(save_manager.obtener_puntaje_nivel(n))
 	_cargar_texturas()
 	if _barra_ui == null or _slots.size() != _slots_nivel:
 		_crear_barra_ui()
@@ -1008,8 +1016,12 @@ func _romper_combo() -> void:
 		_fichas_en_vuelo.clear()
 		while _slots_en_vuelo.has(_combo_slot):
 			_slots_en_vuelo.erase(_combo_slot)
-		# Sumatoria acumulada y efecto de humo al desaparecer.
-		_mostrar_puntos_flotantes_en_slot(_combo_slot, _combo_contador, false)
+		var combo_acumulado: int = int(_combo_contador * (_combo_contador - 1) / 2)
+		_puntaje_nivel += combo_acumulado
+		if ui_puntaje:
+			ui_puntaje.establecer_puntaje(_puntaje_nivel)
+		# paycombo
+		_mostrar_puntos_flotantes_en_slot(_combo_slot, combo_acumulado, false)
 		if _combo_slot >= 0 and _combo_slot < _slots.size() and camara != null:
 			var slot := _slots[_combo_slot]
 			var rect_slot := slot.get_global_rect()
@@ -1360,6 +1372,7 @@ func _disparar_smoke_puff(posicion: Vector3) -> void:
 	fx.fx_scale = ESCALA_SMOKE_PUFF
 	_capa_efectos.add_child(fx)
 	fx.global_position = camara.unproject_position(posicion)
+	# paycombo
 	fx.play()
 
 # Muestra un texto flotante sobre el slot indicado de la barra.
@@ -1487,7 +1500,6 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 		_actualizar_barra_ui()
 		# Los puntos se muestran al llegar la ficha a su destino.
 		if puntos_ganados > 0:
-			_puntaje_nivel += puntos_ganados
 			_mostrar_puntos_flotantes_en_slot(indice_slot, puntos_ganados)
 		# Al mostrarse en la barra, se (re)abre la ventana de 2 segundos del combo activo.
 		if _combo_activo and _combo_slot == indice_slot:
@@ -1546,6 +1558,8 @@ func _finalizar_partida(victoria: bool) -> void:
 	if ui_level_title:
 		ui_level_title.visible = false
 	mostrar_panel_resultados(victoria)
+	if ui_puntaje:
+		ui_puntaje.establecer_hi_score(save_manager.obtener_puntaje_nivel(nivel_actual))
 
 func mostrar_panel_resultados(nivel_superado: bool = false) -> void:
 	if ctrl_resultados:
