@@ -1,2 +1,2 @@
-# paircards
-Cards pairing game
+# astralis
+pairing combo game

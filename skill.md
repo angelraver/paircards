@@ -112,10 +112,10 @@ Textura final: `res://assets/images/astronomia/<nombre>.png`.
 - `data/textos.json`: textos globales/localizados del proyecto.
 - `data/niveles_texto.json`: textos del juego (p.ej. títulos de nivel) cargados con `prefijo_texto` (`juego_`).
 
-## 6. Sistema de niveles y armado del tablero (`scripts/main.gd`)
+## 6. Sistema de niveles y armado del tablero (`scripts/main.gd` y auxiliares)
 
 ### Patrón de distribución (`patron`)
-Define qué celdas axiales `(q,r)` existen en cada capa y el desplazamiento por capa para que las capas se intercalen. Se configura en `niveles.json` bajo `patron` y se lee en `_configurar_nivel`.
+Define qué celdas axiales `(q,r)` existen en cada capa y el desplazamiento por capa para que las capas se intercalen. Se configura en `niveles.json` bajo `patron` y `_configurar_nivel` lo delega a `scripts/tablero_geometria.gd`.
 
 Formatos soportados:
 
@@ -140,26 +140,34 @@ Genera una grilla hexagonal recortada a un círculo de radio `R` (en diámetros)
 ```
 Cada celda es `[q,r]` (o `{"q":..,"r":..}`). Se listan exactamente qué posiciones existen por paridad de capa. Es la forma más directa de “dibujar” disposiciones arbitrarias (triángulos, pirámides, cruces, formas raras) sin inventar fórmulas. Para mantener el intercalado/tapado parcial entre capas hay que usar el offset par al hueco triangular (`[0.5, sqrt(3)/6]`).
 
-**Centrado automático:** el código calcula el centroide de las celdas crudas por capa y aplica un offset de centrado (`_patron_centro`) en `_posicion_mundo`. Los círculos ya tienen centroide en (0,0) por su fórmula; los patrones explícitos quedan centrados en el origen sin desplazarse de pantalla.
+**Centrado automático:** `TableroGeometria` calcula el centroide de las celdas crudas por capa y aplica un offset de centrado (`_patron_centro`) en `posicion_mundo`. Los círculos ya tienen centroide en (0,0) por su fórmula; los patrones explícitos quedan centrados en el origen sin desplazarse de pantalla.
 
 ### Funciones clave en `main.gd`
 - `_cargar_json(ruta)`: lee y parsea un JSON de configuración.
 - `_cargar_configuracion()`: carga `niveles.json` y `valores.json`.
-- `_configurar_nivel(n)`: resuelve `capas`, `slots`, `fichas_n`, `fichas_t`, `patron` para el nivel `n` y llena `_tipos_nivel`, `_fichas_config`, `_patron_*`.
+- `_configurar_nivel(n)`: resuelve `capas`, `slots`, `fichas_n`, `fichas_t` para el nivel `n`, llena `_tipos_nivel`/`_fichas_config` y configura `TableroGeometria`.
 - `_cargar_texturas()`: carga las texturas PNG de los tipos del nivel desde `assets/images/astronomia/`.
-- `_preparar_reparto()`: calcula capacidad por capa mediante `_capacidad_capa(capa)`, limita a `fichas_n` (par) quitando desde capas inferiores si hace falta.
-- `_generar_fichas()`: genera parejas de tipos aleatorios, baraja y asigna a celdas aleatorias por capa usando `_generar_celdas(capa)`.
+- `_preparar_reparto()`: calcula capacidad por capa mediante `TableroGeometria.capacidad_capa(capa)`, limita a `fichas_n` (par) quitando desde capas inferiores si hace falta.
+- `_generar_fichas()`: genera parejas de tipos aleatorios, baraja y asigna a celdas aleatorias por capa usando `TableroGeometria.generar_celdas(capa)`.
 - `_crear_ficha(tipo, capa, celda)`: instancia `assets/models/ficha.glb`, aplica shader y textura, coloca en el mundo y crea colisión cilíndrica.
 
+### Detalles internos de `main.gd`
+- `scripts/ficha_tablero.gd` (`FichaTablero`): nodo 3D con la malla del GLB, un `StaticBody3D` + `CylinderShape3D` y `set_meta("ficha", self)` para recuperarla desde el raycast. Guarda `tipo`, `capa`, `celda`, `textura`, `material`, `libre`.
+- Texturas: se cargan una vez por nivel en `_texturas` y se aplican a la cara superior con `shaders/ficha_cara.gdshader`. Los iconos de la barra se renderizan en `SubViewport` con entorno transparente; las fichas acumuladas y sus placeholders usan `ESCALA_FICHAS_BARRA = 1.3`.
+- `scripts/tablero_geometria.gd` (`TableroGeometria`): `RADIO_MAX_CAPA` se mide en diámetros de ficha; `DIAMETRO_FICHA = 0.132`, `GROSOR_FICHA = 0.022`, `SEPARACION_CAPAS = 0.026`, `SEPARACION_FICHAS == DIAMETRO_FICHA`. El intercalado es `(0.5, sqrt(3)/6)` (`DESPLAZAMIENTO_INTERCALADO`). El tablero se centra con `CENTRO_TABLERO`, `ALTURA_PISO = -0.04` y la barra 3D queda en `ALTURA_PISO + 0.002`.
+- Colisión: las fichas usan `CAPA_COLISION_FICHAS = 2` (bit 2) para que el raycast no choque con el piso ni con otros objetos.
+- Animaciones: entrada en cascada (`ALTURA_CAIDA_INICIAL = 4.0`, `DURACION_CAIDA = 0.7`, `ESCALON_CAIDA_POR_CAPA = 0.12`, `ESPACIO_ENTRE_FICHAS = 0.05`) con capas inferiores primero; selección con salto vertical corto y vuelo en arco con dos vueltas sobre X (`DURACION_VUELO = 1.1`).
+- `scripts/efectos_partida.gd` (`EfectosPartida`): al resolver un combo instancia `smoke_puff_2d` en 2D sobre el slot y un `puntos_flotantes.tscn` con la etiqueta y el total.
+
 ### Posición en el mundo
-`_posicion_mundo(celda, capa)` convierte coordenadas axiales a plano XZ:
+`TableroGeometria.posicion_mundo(celda, capa)` convierte coordenadas axiales a plano XZ:
 ```
 plano = (_axial_a_plano(celda) + _desplazamiento_capa(capa) + _patron_centro[capa-1]) * SEPARACION_FICHAS
 ```
 donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == DIAMETRO_FICHA` (vecinas se tocan).
 
 ### Visibilidad y selección
-- **Libre:** una ficha es seleccionable si ninguna ficha de capa superior (número de capa menor) se superpone en plano XZ (distancia entre centros < diámetro).
+- **Libre:** `scripts/tablero_visibilidad.gd` (`TableroVisibilidad`) marca una ficha como seleccionable si ninguna ficha de capa superior (número de capa menor) se superpone en plano XZ (distancia entre centros < diámetro).
 - **Feedback:** fichas bloqueadas se oscurecen según capa (`OSCURIDAD_BASE_CAPAS`).
 - **Input:** tap/click → raycast (`CAPA_COLISION_FICHAS`) → selecciona ficha libre si no hay animación de entrada, pausa o panel de resultados.
 
@@ -172,12 +180,14 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
   - Acumulación `>= 2` en el slot: desaparece al expirar la ventana sin nueva coincidencia o al romperse el combo por seleccionar otra cara; muestra humo y total de puntos.
   - Acumulación `1` (solitaria): permanece en su slot.
   - Cambiar de cara/foco rompe el combo activo previo (resolviéndolo según regla anterior).
-- **Puntos flotantes:** instancia `scenes/puntos_flotantes.tscn` en capa de efectos; muestra `+N` al aterrizar una acumulación (`N = contador-1`) y el total al desaparecer el grupo.
+- **Puntos flotantes:** instancia `scenes/puntos_flotantes.tscn` en capa de efectos; muestra `+N` al aterrizar una acumulación (`N = contador-1`) y, al resolverse el combo, `ETIQUETA` en una línea y `PUNTOS` en la siguiente.
+- **Título en partida:** `scripts/titulo_partida.gd` (`TituloPartida`) rellena `$UI/LevelTitle` al cargar/reiniciar con `Nivel N\n<Título localizado>` usando `game_manager.obtener_titulo_nivel(...)`. Permanece 3s, se desvanece en 1s y luego se reutiliza para el mensaje breve de victoria/derrota.
 
 ### Fin de partida
 - **Victoria:** tablero vacío, aunque queden fichas huérfanas en la barra.
 - **Derrota:** se intenta colocar un tipo nuevo sin slot libre.
 - Muestra mensaje breve y abre `panel_resultados` vía `ControladorResultados`.
+- `panel_resultados.gd` rellena su `LevelTitle` con `N\n<Título localizado>` en el idioma vigente y lo refresca si cambia `idioma_cambiado`.
 
 ## 7. Audio
 
@@ -190,7 +200,8 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 | Script | class_name | Uso |
 |--------|------------|-----|
 | `controlador_resultados.gd` | `ControladorResultados` | Orquesta `PanelResultados`: reset/mostrar, ocultar-restaurar HUD, conexión de reinicio, actualización de nivel. |
-| `panel_resultados.gd` | `PanelResultados` | UI de fin de nivel, señal `reiniciar_solicitado`, navegación OK y cálculo de monedas por nivel. |
+| `combo_puntos.gd` | `ComboPuntos` | Configuración y cálculo puro de combos: tabla +2..+10, base 100, ventana 2.0s, etiquetas y verificación de reglas. |
+| `panel_resultados.gd` | `PanelResultados` | UI de fin de nivel, señal `reiniciar_solicitado`, navegación OK, cálculo de monedas y título localizado del nivel. |
 | `panel_pausa.gd` | `PanelPausa` | Lógica de pausa. |
 | `ui_level_number.gd` | `UILevelNumber` | Muestra número de nivel. |
 | `ui_puntaje.gd` | `UIPuntaje` | Muestra puntaje actual, meta del nivel e hi-score (`establecer_*`). |
@@ -199,7 +210,21 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 
 ## 9. Progresión, ribbons y premios
 
-- **Puntaje en partida:** al cerrarse un combo con `n >= 2` fichas se suma `1+2+...+(n-1)` al puntaje global; ese mismo total es el número flotante que aparece con el humo. `ui_puntaje.tscn` muestra el total en `Label`, `/ score` (de `niveles.json`) en `Max` y el `hi` guardado en `HiNumber` (`0` si no existe).
+- **Puntaje en partida:** `scripts/combo_puntos.gd` centraliza `BASE_PUNTOS_FICHA = 100`, `VENTANA_COMBO_SEG = 2.0` y `TABLA_COMBOS`. Al resolverse un combo en `_romper_combo()` se calcula `round(n * 100 * multiplicador)` y ese total se suma al puntaje global y aparece con el humo. Si `n > 10`, se mantienen el multiplicador y la etiqueta de `10`. `ui_puntaje.tscn` muestra el total en `Label`, `/ score` (de `niveles.json`) en `Max` y el `hi` guardado en `HiNumber` (`0` si no existe).
+
+  | Combo | Multiplicador | Etiqueta | Puntos |
+  |-------|---------------|----------|--------|
+  | 2 | 1.0 | PAR | 200 |
+  | 3 | 1.3 | TRÍO | 390 |
+  | 4 | 1.7 | CUARTETO | 680 |
+  | 5 | 2.2 | QUINTETO | 1100 |
+  | 6 | 2.8 | SEXTETO | 1680 |
+  | 7 | 3.5 | SÉPTIMO | 2450 |
+  | 8 | 4.4 | OCTETO | 3520 |
+  | 9 | 5.6 | NOVENO | 5040 |
+  | 10 | 7.2 | ASTRAL +10 | 7200 |
+
+  `ComboPuntos.verificar_reglas()` comprueba en debug que `2 => 200`, `10 => 7200` y que una espera mayor a `2.0s` deja la racha en `0`.
 - **Resultado por nivel:** `LabelPuntajeFinal` muestra siempre `"puntaje / score"` (p. ej. `10 / 30`). Las monedas solo aparecen al superar el nivel: `moneda1` si `puntaje > score/3`, `moneda2` si `puntaje > 2*score/3`, `moneda3` si `puntaje >= score`. Son acumulativas; con `score <= 0` permanecen ocultas.
 - **Monedas en el selector:** `slot_nivel.tscn` aplica la misma comparación usando el `hi` de `save_manager` para ese nivel. El `score` se obtiene con `game_manager.obtener_score_nivel(nivel)` desde `ruta_niveles_json`.
 - **Progreso por nivel:** `user://progreso.json` usa `levels` (sin `games`); cada nivel superado crea `"n": { "hi": max_puntos }`. Al mostrarse `panel_resultados` tras una victoria se llama a `save_manager.registrar_puntaje_nivel(nivel, puntos)`.
@@ -220,7 +245,13 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 │   ├── textos.json       ← textos globales es/en/pt
 │   └── niveles_texto.json ← textos del juego (prefijo juego_)
 ├── scripts/
-│   ├── main.gd                    # lógica principal: generación de tablero, patrones, combo, barra
+│   ├── main.gd                    # lógica principal: ciclo de vida, input, combo y coordinación
+│   ├── ficha_tablero.gd           # nodo FichaTablero (malla, colisión, metadatos)
+│   ├── tablero_geometria.gd       # patrones, celdas y posiciones del tablero
+│   ├── tablero_visibilidad.gd     # solapamiento y oscurecido de fichas
+│   ├── efectos_partida.gd         # humo y puntos flotantes
+│   ├── titulo_partida.gd          # título localizado y mensajes breves
+│   ├── combo_puntos.gd            # tabla de multiplicadores y cálculo de puntaje de combo
 │   ├── main_audio.gd
 │   ├── controlador_resultados.gd
 │   ├── panel_resultados.gd / panel_pausa.gd
@@ -246,9 +277,9 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 
 ## 11. Notas para agentes
 
-- La generación y reglas de partida viven en `scripts/main.gd`; los parámetros de nivel vienen de `data/niveles.json` y el mapeo de tipos/texturas de `data/valores.json`.
+- La coordinación de la partida vive en `scripts/main.gd`; geometría, visibilidad, efectos y título están en los auxiliares listados arriba. Los parámetros de nivel vienen de `data/niveles.json` y el mapeo de tipos/texturas de `data/valores.json`. `main.gd` conserva solo encabezados de sección: las reglas explicadas están en las secciones 6 y 9.
 - Para agregar/modificar niveles, mantener claves consistentes entre `fichas_t` (niveles) y `fichas` (valores) y asegurar textura en `assets/images/astronomia/`.
 - `slots` en nivel controla la dificultad/capacidad de la barra (1..5) y la UI se adapta dinámicamente.
 - `patron` en nivel controla la forma del tablero: `"circulos"` para variantes circulares rápidas, `"celdas"` (arrays axiales por paridad + offsets) como formato universal de mapa.
-- Puntos flotantes en partida se crean instanciando `scenes/puntos_flotantes.tscn` desde `main.gd`; SFX de la partida pasan por `main_audio` (`MainAudio`).
+- Puntos flotantes en partida se crean instanciando `scenes/puntos_flotantes.tscn` desde `scripts/efectos_partida.gd`; SFX de la partida pasan por `main_audio` (`MainAudio`).
 - Validar cambios en Godot 4.7 (no hay linter/typecheck de GDScript configurado en este entorno).

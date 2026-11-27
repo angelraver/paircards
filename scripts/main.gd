@@ -1,36 +1,9 @@
 extends Node3D
 
-# ============================================================================
-#  PARI CARDS - NIVEL 1
-# ----------------------------------------------------------------------------
-#  Juego de emparejar fichas 3D sobre un tablero con cámara fija y vista
-#  cenital. El tablero se genera proceduralmente en 5 capas (layers). Cada
-#  capa es una grilla circular recortada de una red hexagonal en la que las
-#  fichas se tocan entre sí. Las capas impares tienen una ficha en el
-#  epicentro; las pares se desplazan al hueco triangular, de modo que el
-#  epicentro queda vacío y cada capa se intercala con la anterior.
-#
-#  Cada ficha usa assets/models/ficha.glb como base genérica y recibe en su
-#  cara superior una textura de assets/images/astronomia.
-#
-#  Regla de visibilidad:
-#    Una ficha sólo puede tocarse si ninguna ficha de una capa superior
-#    (número de capa menor) se superpone a su área.
-#
-#  Barra inferior:
-#    5 espacios. Al tocar una ficha libre, ésta vuela a la barra. Si entra
-#    una ficha del mismo tipo que otra ya presente, ambas desaparecen.
-#    Si la barra llega a 5 fichas sin haber formado pareja, se pierde.
-# ============================================================================
-
-# --- Constantes de la grilla circular y capas -------------------------------
-# Radio máximo de cada capa, en múltiplos del diámetro de la ficha. Recortar
-# la red hexagonal con este radio produce una grilla circular.
 const RADIO_MAX_CAPA: float = 2.1
-const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
-const TIEMPO_COMBO: float = ComboPuntos.VENTANA_COMBO_SEG  # Ventana de tiempo (segundos) para seguir el combo.
+const CAPACIDAD_BARRA: int = 5
+const TIEMPO_COMBO: float = ComboPuntos.VENTANA_COMBO_SEG
 
-# Rutas de configuración de niveles y tipos de fichas.
 const RUTA_NIVELES: String = "res://data/niveles.json"
 const RUTA_VALORES: String = "res://data/valores.json"
 const RUTA_CARPETA_FICHAS: String = "res://assets/images/astronomia/"
@@ -39,148 +12,47 @@ const RUTA_TABLERO_TARDE: String = "res://assets/images/tablerotarde.webp"
 const RUTA_TABLERO_NOCHE: String = "res://assets/images/tableronoche.webp"
 const CAPAS_POR_DEFECTO: int = 5
 
-# Slots de la barra y render 3D de la ficha que muestran. Las fichas
-# acumuladas y sus placeholders se dibujan un 30% más grandes.
 const ESCALA_FICHAS_BARRA: float = 1.3
 const TAMANO_SLOT_BARRA := Vector2(96.0, 96.0) * ESCALA_FICHAS_BARRA
 const MARGEN_ICONO_BARRA: float = 3.0 * ESCALA_FICHAS_BARRA
 const TAMANO_CAMARA_ICONO: float = 0.14
 
-# Altura de la barra inferior, en píxeles lógicos de la pantalla.
 const ALTO_BARRA: float = 200.0
 
-# Oscurecimiento base de fichas bloqueadas. Si un nivel tiene más capas que
-# valores definidos, las capas extra usan el último valor de la lista.
 const OSCURIDAD_BASE_CAPAS: Array[float] = [0.10, 0.30, 0.40, 0.50, 0.60]
 
-# --- Constantes geométricas -------------------------------------------------
-# Altura de la superficie del piso (CSGBox3D "Piso" de main.tscn).
 const ALTURA_PISO: float = -0.04
 
-# La barra es un quad 3D apenas por encima del piso: así las fichas, que
-# siempre están más altas, quedan por delante y no las tapa.
 const ALTURA_BARRA_3D: float = ALTURA_PISO + 0.002
 
-# Ficha 3D genérica y shader que pinta su cara superior.
 const FICHA_ESCENA: PackedScene = preload("res://assets/models/ficha.glb")
 const SHADER_CARA: Shader = preload("res://shaders/ficha_cara.gdshader")
 
-# Diámetro y grosor de la ficha. La separación entre capas deja un pequeño
-# aire para que las fichas no se intersecten al apilarse.
 const DIAMETRO_FICHA: float = 0.132
 const GROSOR_FICHA: float = 0.022
 const SEPARACION_CAPAS: float = 0.026
 
-# Distancia entre los centros de fichas de una misma capa. Igual al diámetro
-# para que queden pegadas, formando un empaquetado hexagonal.
 const SEPARACION_FICHAS: float = DIAMETRO_FICHA
 
-# Raíz de 3, usada para la geometría de la red hexagonal.
 const SQRT3: float = 1.7320508075688772
 
-# Desplazamiento de la red de las capas pares, en unidades de diámetro: media
-# ficha en X y √3/6 en Y. Coincide con el centro del hueco triangular que
-# dejan tres fichas contiguas, así que el epicentro de la capa queda vacío.
 const DESPLAZAMIENTO_INTERCALADO := Vector2(0.5, 0.28867513459481287)
 
-# Duración del vuelo de una ficha desde el tablero hasta la barra.
 const DURACION_VUELO: float = 1.1
 
-# Pequeño salto vertical al seleccionar una ficha, antes de viajar a la barra.
 const ALTURA_SALTO_SELECCION: float = DIAMETRO_FICHA * 1.2
 const DURACION_SALTO: float = DURACION_VUELO * 0.18
 
-# Centro visual del tablero. Se desplaza ligeramente en Z para que la grilla
-# circular quede centrada entre el HUD superior y la barra inferior.
 const CENTRO_TABLERO := Vector3(0.0, 0.0, 0.16)
 
-# Capa de física exclusiva para las fichas (bit 2). Evita que el raycast
-# choque con el piso o con otros objetos de la escena.
 const CAPA_COLISION_FICHAS: int = 2
 
-# Altura inicial (por encima de todo) desde la que cada ficha cae a su lugar.
 const ALTURA_CAIDA_INICIAL: float = 4.0
-# Duración de la caída de cada ficha.
 const DURACION_CAIDA: float = 0.7
-# Escalón de retraso entre capas (capas inferiores caen primero).
 const ESCALON_CAIDA_POR_CAPA: float = 0.12
-# Intervalo de inicio entre cada ficha (caída una por una).
 const ESPACIO_ENTRE_FICHAS: float = 0.05
 
 var _fichas_config: Dictionary = {}
-const SMOKE_PUFF_2D: PackedScene = preload(
-	"res://crisp_juice_fx/fx2d/elements/smoke_puff_2d.tscn"
-)
-
-# Escala del humo al resolver una pareja. Al ser 2D, este valor controla
-# directamente el tamaño en pantalla del efecto.
-const ESCALA_SMOKE_PUFF: float = 1.0
-
-const PUNTOS_FLOTANTES_ESCENA: PackedScene = preload("res://scenes/puntos_flotantes.tscn")
-
-# ============================================================================
-#  CLASE INTERNA: FichaTablero
-# ----------------------------------------------------------------------------
-#  Nodo 3D que representa una ficha. Contiene:
-#    - La malla de assets/models/ficha.glb, cuya cara superior ya trae la
-#      textura de la ficha asignada por main.gd.
-#    - Un StaticBody3D con CylinderShape3D para poder seleccionarla con raycast.
-#    - Datos lógicos: tipo, capa, celda axial y estado de visibilidad.
-# ============================================================================
-class FichaTablero extends Node3D:
-	var tipo: int = 0
-	var capa: int = 0
-	var celda: Vector2i = Vector2i.ZERO
-	var textura: Texture2D = null
-	var material: ShaderMaterial = null
-	var cuerpo: StaticBody3D = null
-	var libre: bool = false
-
-	# Incorpora la ficha ya configurada y crea su caja de colisión.
-	# Recibe las medidas desde main.gd para que la clase interna no dependa
-	# de las constantes de la clase exterior.
-	func construir(
-		p_tipo: int,
-		p_capa: int,
-		p_celda: Vector2i,
-		p_textura: Texture2D,
-		p_ficha: Node3D,
-		p_material_cara: ShaderMaterial,
-		p_diametro: float,
-		p_grosor: float,
-		p_capa_colision: int
-	) -> void:
-		tipo = p_tipo
-		capa = p_capa
-		celda = p_celda
-		textura = p_textura
-		material = p_material_cara
-
-		# La ficha ya viene escalada y desplazada para que el centro de su
-		# cara superior coincida con el origen de este nodo.
-		add_child(p_ficha)
-
-		# --- Colisión para el raycast ----------------------------------------
-		cuerpo = StaticBody3D.new()
-		cuerpo.name = "Cuerpo"
-		cuerpo.collision_layer = p_capa_colision
-		cuerpo.collision_mask = 0
-
-		var forma := CollisionShape3D.new()
-		forma.name = "Forma"
-		var cilindro := CylinderShape3D.new()
-		# El cilindro ocupa el volumen de la ficha: de su base a la cara
-		# superior.
-		cilindro.radius = p_diametro * 0.5
-		cilindro.height = p_grosor
-		forma.shape = cilindro
-		forma.position = Vector3(0.0, -p_grosor * 0.5, 0.0)
-		cuerpo.add_child(forma)
-
-		# El cuerpo guarda una referencia a esta ficha para que el raycast
-		# pueda recuperarla desde el colisionador.
-		cuerpo.set_meta("ficha", self)
-		add_child(cuerpo)
 
 # ============================================================================
 #  NODOS DE LA ESCENA
@@ -202,10 +74,12 @@ class FichaTablero extends Node3D:
 # ============================================================================
 var nivel_actual: int = 1
 var _puntaje_nivel: int = 0
-var _tween_titulo: Tween
 var ctrl_resultados: ControladorResultados
+var _geometria: TableroGeometria
+var _visibilidad: TableroVisibilidad
+var _efectos: EfectosPartida
+var _titulo: TituloPartida
 
-# Configuración cargada desde data/niveles.json y data/valores.json.
 var _niveles_config: Dictionary = {}
 var _valores_config: Dictionary = {}
 var _capas_nivel: int = CAPAS_POR_DEFECTO
@@ -214,58 +88,36 @@ var _tipos_nivel: Array[int] = []
 var _fichas_n_nivel: int = 0
 var _score_nivel: int = 0
 
-# Patrón de distribución de fichas (configurable por nivel).
-var _patron_tipo: String = "circulos"
-var _patron_radio: float = RADIO_MAX_CAPA
-var _patron_offset_impar: Vector2 = Vector2.ZERO
-var _patron_offset_par: Vector2 = DESPLAZAMIENTO_INTERCALADO
-var _patron_celdas_impar: Array[Vector2i] = []
-var _patron_celdas_par: Array[Vector2i] = []
-# Offset de centrado por capa (plano XZ). Centra cualquier patrón explícito
-# (triángulos, formas arbitrarias) alrededor del origen del tablero. Los
-# círculos ya tienen centroide en (0,0) por su fórmula, así que no varían.
-var _patron_centro: Array[Vector2] = []
+var _fichas_tablero: Array[FichaTablero] = []
+var _texturas: Array[Texture2D] = []
 
-var _fichas_tablero: Array[FichaTablero] = []   # Sólo fichas aún en el tablero.
-var _texturas: Array[Texture2D] = []            # Cache de las 20 texturas.
-
-# Configuración de la ficha 3D, calculada una vez a partir del GLB.
 var _radio_ficha: float = 1.0
 var _escala_ficha: Vector3 = Vector3.ONE
 var _offset_ficha: Vector3 = Vector3.ZERO
 var _indice_cara_superior: int = 0
 
-# Barra: array de tamaño fijo (una entrada por slot). 0 = slot vacío.
 var _barra_tipos: Array[int] = []
-# Cantidad acumulada por slot (1 = solitaria, >=2 = puede desaparecer al cerrarse la ventana).
 var _barra_conteo: Array[int] = []
-# Oculta el icono del slot mientras su primera ficha aún está en vuelo.
 var _barra_icono_oculto: Array[bool] = []
-# Estado del combo activo.
 var _combo_activo: bool = false
 var _combo_tipo: int = 0
 var _combo_slot: int = -1
 var _combo_contador: int = 0
 var _timer_combo: Timer = null
-# Fichas que están volando hacia la barra y aún no han aterrizado.
 var _fichas_en_vuelo: Array[FichaTablero] = []
-# Slots de la barra que tienen una ficha en vuelo (su icono no se muestra hasta aterrizar).
 var _slots_en_vuelo: Array[int] = []
 var _juego_terminado: bool = false
 var _animando_entrada: bool = false
 var _pendientes_entrada: int = 0
 
-# Reparto calculado a partir de las capacidades de cada grilla.
 var _fichas_por_capa: Array[int] = []
 var _total_fichas: int = 0
 var _total_pares: int = 0
 
-# Nodos de UI creados por código para no exigir cambios en main.tscn.
 var _barra_ui: Control = null
 var _barra_viewport: SubViewport = null
 var _barra_sprite: Sprite3D = null
 var _barra_slots_box: HBoxContainer = null
-var _capa_efectos: Control = null
 var _slots: Array[Panel] = []
 var _slots_texturas: Array[TextureRect] = []
 var _slots_viewports: Array[SubViewport] = []
@@ -290,16 +142,24 @@ func _ready() -> void:
 	nivel_actual = save_manager.nivel_actual_seleccionado
 	_cargar_configuracion()
 
-	# Ficha 3D, texturas, barra inferior y capa de efectos visuales.
+	_geometria = TableroGeometria.new()
+	_visibilidad = TableroVisibilidad.new()
+	_visibilidad.configurar(DIAMETRO_FICHA, OSCURIDAD_BASE_CAPAS)
+
 	_preparar_ficha()
 	_configurar_nivel(nivel_actual)
 	_cargar_texturas()
 	_crear_barra_ui()
-	_crear_capa_efectos()
-	_preparar_titulo()
+
+	_efectos = EfectosPartida.new()
+	add_child(_efectos)
+	var ui_capa := $UI as CanvasLayer
+	_efectos.configurar(ui_capa, camara, _slots)
+
+	_titulo = TituloPartida.new()
+	_titulo.configurar(ui_level_title)
 	_crear_timer_combo()
 
-	# Controlador reutilizable de resultados (panel de fin de nivel).
 	ctrl_resultados = ControladorResultados.new()
 	add_child(ctrl_resultados)
 	ctrl_resultados.configurar(
@@ -309,7 +169,6 @@ func _ready() -> void:
 		reiniciar_nivel
 	)
 
-	# Conexión defensiva por si la escena ya trae la señal conectada.
 	if boton_pausa and not boton_pausa.is_connected("pressed", _on_boton_pausa_pressed):
 		boton_pausa.pressed.connect(_on_boton_pausa_pressed)
 
@@ -358,43 +217,7 @@ func _configurar_nivel(n: int) -> void:
 	_fichas_n_nivel = maxi(int(nivel_cfg.get("fichas_n", 0)), 0)
 	_score_nivel = maxi(int(nivel_cfg.get("score", 0)), 0)
 
-	# Patrón de distribución: por defecto "circulos" (hexagonal circular intercalado).
-	_patron_tipo = "circulos"
-	_patron_radio = RADIO_MAX_CAPA
-	_patron_offset_impar = Vector2.ZERO
-	_patron_offset_par = DESPLAZAMIENTO_INTERCALADO
-	_patron_celdas_impar.clear()
-	_patron_celdas_par.clear()
-	var patron_cfg: Variant = nivel_cfg.get("patron", "circulos")
-	if patron_cfg is String:
-		_patron_tipo = str(patron_cfg)
-	elif patron_cfg is Dictionary:
-		_patron_tipo = str(patron_cfg.get("tipo", "circulos"))
-		_patron_radio = float(patron_cfg.get("radio", RADIO_MAX_CAPA))
-		var off_i: Variant = patron_cfg.get("offset_impar", null)
-		if off_i is Array and off_i.size() >= 2:
-			_patron_offset_impar = Vector2(float(off_i[0]), float(off_i[1]))
-		var off_p: Variant = patron_cfg.get("offset_par", null)
-		if off_p is Array and off_p.size() >= 2:
-			_patron_offset_par = Vector2(float(off_p[0]), float(off_p[1]))
-		_patron_celdas_impar = _parsear_celdas_patron(patron_cfg.get("celdas_impar", []))
-		_patron_celdas_par = _parsear_celdas_patron(patron_cfg.get("celdas_par", patron_cfg.get("celdas", [])))
-
-	# Centroide de centrado por capa (sobre celdas CRUDAS, sin offset de
-	# intercalado). Los círculos ya están centrados por su fórmula; los
-	# patrones explícitos se centran primero y luego se aplica el offset de
-	# intercalado para que queden en los huecos sin perder el centro.
-	_patron_centro.clear()
-	for _capa in range(1, _capas_nivel + 1):
-		var celdas := _generar_celdas(_capa)
-		if celdas.is_empty():
-			_patron_centro.append(Vector2.ZERO)
-			continue
-		var centro := Vector2.ZERO
-		for celda in celdas:
-			centro += _axial_a_plano(celda)
-		centro /= float(celdas.size())
-		_patron_centro.append(-centro)
+	_geometria.configurar_nivel(_capas_nivel, nivel_cfg.get("patron", "circulos"))
 
 	var tipos_cfg: Array = nivel_cfg.get("fichas_t", [])
 	for clave in tipos_cfg:
@@ -408,7 +231,6 @@ func _configurar_nivel(n: int) -> void:
 		_fichas_config[indice] = nombre
 
 	if _tipos_nivel.is_empty():
-		# Fallback: usar todos los tipos definidos en valores.json.
 		var claves: Array = mapa_fichas.keys()
 		claves.sort()
 		for clave in claves:
@@ -433,8 +255,6 @@ func _textura_para_tipo(tipo: int) -> Texture2D:
 		return null
 	return _texturas[indice]
 
-# Lee la malla base de ficha.glb y calcula la escala, el desplazamiento y la
-# superficie que se usará como cara. Se ejecuta una sola vez por nivel.
 func _preparar_ficha() -> void:
 	var temporal := FICHA_ESCENA.instantiate()
 	var malla := _buscar_mesh_instance(temporal)
@@ -450,8 +270,6 @@ func _preparar_ficha() -> void:
 	var escala_y := GROSOR_FICHA / maxf(aabb.size.y, 0.0001)
 	_escala_ficha = Vector3(escala_xz, escala_y, escala_xz)
 
-	# El nodo de la ficha representa su cara superior: se baja la malla para
-	# que la tapa quede en y = 0 y el cuerpo crezca hacia abajo.
 	_offset_ficha = Vector3(
 		-aabb.get_center().x * escala_xz,
 		-aabb.end.y * escala_y,
@@ -470,8 +288,6 @@ func _buscar_mesh_instance(nodo: Node) -> MeshInstance3D:
 			return encontrada
 	return null
 
-# Busca la superficie de la cara superior. Primero intenta por el nombre del
-# material y, si el importador lo pierde, por la cantidad de normales +Y.
 func _indice_superficie_superior(malla: Mesh) -> int:
 	for i in range(malla.get_surface_count()):
 		var material := malla.surface_get_material(i)
@@ -503,9 +319,6 @@ func _crear_material_cara(textura: Texture2D) -> ShaderMaterial:
 	material.set_shader_parameter("brillo", 1.0)
 	return material
 
-# Configura una instancia de ficha.glb para que su cara superior muestre la
-# textura indicada. Devuelve el material de la cara para poder cambiar la
-# textura después (por ejemplo, en los iconos de la barra).
 func _configurar_visual_ficha(ficha: Node3D, textura: Texture2D) -> ShaderMaterial:
 	var malla := _buscar_mesh_instance(ficha)
 	if malla == null or malla.mesh == null:
@@ -520,8 +333,6 @@ func _configurar_visual_ficha(ficha: Node3D, textura: Texture2D) -> ShaderMateri
 		malla.set_surface_override_material(_indice_cara_superior, material)
 	return material
 
-# Entorno mínimo para renderizar los iconos 3D de la barra con fondo
-# transparente y una iluminación similar a la del tablero.
 func _crear_entorno_ficha() -> Environment:
 	var entorno := Environment.new()
 	entorno.background_mode = Environment.BG_CLEAR_COLOR
@@ -547,9 +358,10 @@ func _cargar_nivel(n: int) -> void:
 	_cargar_texturas()
 	if _barra_ui == null or _slots.size() != _slots_nivel:
 		_crear_barra_ui()
+		if _efectos != null:
+			_efectos.actualizar_slots(_slots)
 	_preparar_reparto()
 
-	# Limpieza de estado anterior (reinicio).
 	_barra_tipos.clear()
 	_barra_conteo.clear()
 	_barra_icono_oculto.clear()
@@ -567,9 +379,9 @@ func _cargar_nivel(n: int) -> void:
 		_timer_combo.stop()
 	_actualizar_barra_ui()
 	_limpiar_tablero()
-	_limpiar_efectos()
+	_efectos.limpiar()
 
-	_actualizar_titulo_nivel()
+	_titulo.actualizar_nivel(n)
 	if ctrl_resultados:
 		ctrl_resultados.reset()
 	if ui_level_number:
@@ -578,19 +390,15 @@ func _cargar_nivel(n: int) -> void:
 	_generar_fichas()
 	_animar_entrada_fichas()
 
-# Calcula cuántas fichas caben en cada capa y ajusta el total a un número par.
-# Si el nivel define fichas_n, se limita el reparto a esa cantidad (par).
 func _preparar_reparto() -> void:
 	_fichas_por_capa.clear()
 	var total := 0
 
 	for capa in range(1, _capas_nivel + 1):
-		var capacidad := _capacidad_capa(capa)
+		var capacidad := _geometria.capacidad_capa(capa)
 		_fichas_por_capa.append(capacidad)
 		total += capacidad
 
-	# Las parejas exigen un total par. Si la suma de capacidades es impar,
-	# se deja una celda vacía en la capa inferior (la menos visible).
 	if total % 2 != 0:
 		_fichas_por_capa[_capas_nivel - 1] -= 1
 		total -= 1
@@ -602,7 +410,6 @@ func _preparar_reparto() -> void:
 		objetivo -= 1
 	objetivo = maxi(objetivo, 0)
 
-	# Quita fichas desde las capas inferiores hasta alcanzar fichas_n.
 	var sobrantes := total - objetivo
 	for i in range(_fichas_por_capa.size() - 1, -1, -1):
 		if sobrantes <= 0:
@@ -615,8 +422,6 @@ func _preparar_reparto() -> void:
 	_total_pares = _total_fichas / 2
 	print("Reparto nivel ", nivel_actual, ": capas=", _capas_nivel, " fichas_n=", _fichas_n_nivel, " por_capa=", _fichas_por_capa, " total=", _total_fichas, " pares=", _total_pares)
 
-# Crea las parejas necesarias para llenar las grillas y las reparte entre capas.
-# Cada capa elige celdas distintas al azar de su red hexagonal recortada.
 func _generar_fichas() -> void:
 	if _tipos_nivel.is_empty():
 		push_error("El nivel %d no tiene tipos de ficha configurados." % nivel_actual)
@@ -624,21 +429,18 @@ func _generar_fichas() -> void:
 
 	var tipos: Array[int] = []
 
-	# Cada pareja se agrega dos veces para que siempre haya match.
 	for _i in range(_total_pares):
 		var tipo: int = _tipos_nivel[randi() % _tipos_nivel.size()]
 		tipos.append(tipo)
 		tipos.append(tipo)
 
-	# El orden aleatorio evita que las parejas queden juntas por capa.
 	tipos.shuffle()
 
 	var indice_tipo: int = 0
 
 	for capa in range(1, _capas_nivel + 1):
-		var celdas := _generar_celdas(capa)
+		var celdas := _geometria.generar_celdas(capa)
 
-		# Se eligen celdas distintas para evitar dos fichas en la misma celda.
 		celdas.shuffle()
 
 		var cantidad: int = _fichas_por_capa[capa - 1]
@@ -650,7 +452,6 @@ func _generar_fichas() -> void:
 			_crear_ficha(tipos[indice_tipo], capa, celdas[i])
 			indice_tipo += 1
 
-# Instancia una ficha, le asigna la textura de su tipo y la coloca en el mundo.
 func _crear_ficha(tipo: int, capa: int, celda: Vector2i) -> void:
 	var textura := _textura_para_tipo(tipo)
 	if textura == null:
@@ -681,126 +482,21 @@ func _crear_ficha(tipo: int, capa: int, celda: Vector2i) -> void:
 	)
 
 	contenedor_fichas.add_child(ficha)
-	# Posición inicial: X/Z finales, Y por encima de todo para la caída.
-	var pos_final := _posicion_mundo(celda, capa)
+	var pos_final := _geometria.posicion_mundo(celda, capa)
 	ficha.position = Vector3(pos_final.x, ALTURA_CAIDA_INICIAL, pos_final.z)
 	_fichas_tablero.append(ficha)
 
-# Convierte una celda axial (q, r) y una capa a coordenadas 3D. Las capas
-# pares suman el desplazamiento de intercalado: su red cae en los huecos
-# triangulares de la capa superior y deja el epicentro vacío. Además se aplica
-# el centrado de capa (_patron_centro) para que patrones explícitos queden
-# centrados en el tablero sin desplazarse de la pantalla.
-func _posicion_mundo(celda: Vector2i, capa: int) -> Vector3:
-	var centrado := Vector2.ZERO
-	if capa - 1 < _patron_centro.size():
-		centrado = _patron_centro[capa - 1]
-	var plano := (_axial_a_plano(celda) + _desplazamiento_capa(capa) + centrado) * SEPARACION_FICHAS
-	return Vector3(
-		CENTRO_TABLERO.x + plano.x,
-		_y_para_capa(capa),
-		CENTRO_TABLERO.z + plano.y
-	)
-
-# Altura de la cara superior de cada capa. La capa 1 es la superior; la capa
-# inferior (última del nivel) se apoya sobre el piso.
-func _y_para_capa(capa: int) -> float:
-	return ALTURA_PISO \
-		+ GROSOR_FICHA \
-		+ float(_capas_nivel - capa) * SEPARACION_CAPAS
-
-# Convierte coordenadas axiales de la red hexagonal a un punto del plano XZ.
-# La unidad es un diámetro de ficha.
-func _axial_a_plano(celda: Vector2i) -> Vector2:
-	return Vector2(
-		float(celda.x) + float(celda.y) * 0.5,
-		float(celda.y) * SQRT3 * 0.5
-	)
-
-# ============================================================================
-#  PATRÓN DE DISTRIBUCIÓN DE FICHAS
-# ----------------------------------------------------------------------------
-#  Define qué celdas axiales (q,r) existen en cada capa y el desplazamiento
-#  de la red por capa para que las capas se intercalen (una ficha superior
-#  tapa parcialmente a las inferiores sin coincidir centros).
-#
-#  Formatos soportados en niveles.json -> "patron":
-#   - "circulos" (por defecto) o {"tipo":"circulos","radio":2.1}
-#       Fórmula: grilla hexagonal recortada a un círculo de radio R (en
-#       diámetros). Capas impares centradas, pares desplazadas al hueco
-#       triangular. Simple de ajustar cambiando el radio.
-#   - {"tipo":"celdas","celdas_impar":[[q,r],...],"celdas_par":[[q,r],...],
-#      "offset_impar":[x,y],"offset_par":[x,y]}
-#       Arrays explícitos de celdas por paridad de capa: forma más directa y
-#       general de "dibujar" mapas/disposiciones arbitrarias.
-#
-#  Para nuevos patrones basta agregar un tipo y su generador de celdas/offset.
-# ============================================================================
-func _parsear_celdas_patron(datos: Variant) -> Array[Vector2i]:
-	var celdas: Array[Vector2i] = []
-	if not (datos is Array):
-		return celdas
-	for item in datos:
-		if item is Array and item.size() >= 2:
-			celdas.append(Vector2i(int(item[0]), int(item[1])))
-		elif item is Dictionary:
-			celdas.append(Vector2i(int(item.get("q", 0)), int(item.get("r", 0))))
-	return celdas
-
-# Desplazamiento de la red para la capa según el patrón activo.
-func _desplazamiento_capa(capa: int) -> Vector2:
-	match _patron_tipo:
-		"circulos":
-			return Vector2.ZERO if capa % 2 == 1 else DESPLAZAMIENTO_INTERCALADO
-		"celdas", "manual":
-			return _patron_offset_impar if capa % 2 == 1 else _patron_offset_par
-		_:
-			return Vector2.ZERO if capa % 2 == 1 else DESPLAZAMIENTO_INTERCALADO
-
-# Celdas válidas de la capa según el patrón activo.
-func _generar_celdas(capa: int) -> Array[Vector2i]:
-	match _patron_tipo:
-		"circulos":
-			return _celdas_circulos(capa)
-		"celdas", "manual":
-			var base := _patron_celdas_impar if capa % 2 == 1 else _patron_celdas_par
-			return base.duplicate()
-		_:
-			return _celdas_circulos(capa)
-
-# Patrón "circulos": grilla hexagonal recortada a un radio circular.
-func _celdas_circulos(capa: int) -> Array[Vector2i]:
-	var celdas: Array[Vector2i] = []
-	var desplazamiento := _desplazamiento_capa(capa)
-	var rango := ceili(_patron_radio) + 2
-	for r in range(-rango, rango + 1):
-		for q in range(-rango, rango + 1):
-			var celda := Vector2i(q, r)
-			var plano := _axial_a_plano(celda) + desplazamiento
-			if plano.length() <= _patron_radio + 0.0001:
-				celdas.append(celda)
-	return celdas
-
-# Capacidad total de una capa según el patrón activo.
-func _capacidad_capa(capa: int) -> int:
-	return _generar_celdas(capa).size()
-
-# Anima la entrada de todas las fichas: caen desde ALTURA_CAIDA_INICIAL hasta
-# su posición final. Las capas inferiores (número de capa mayor) empiezan a
-# caer primero, y las superiores se van "enterrando" sobre ellas al terminar.
-# Las fichas caen una por una con un pequeño intervalo entre inicio y otro.
 func _animar_entrada_fichas() -> void:
 	_animando_entrada = true
 	_pendientes_entrada = 0
 
-	# Lista ordenada: capas inferiores primero, aleatorio dentro de cada capa.
 	var todas_fichas: Array = _fichas_tablero.duplicate()
 	todas_fichas.sort_custom(Callable(self, "_ordenar_entrada_ficha"))
 	randomize()
 
 	var delay_actual: float = 0.0
 	for ficha in todas_fichas:
-		var pos_final := _posicion_mundo(ficha.celda, ficha.capa)
+		var pos_final := _geometria.posicion_mundo(ficha.celda, ficha.capa)
 		var tween: Tween = ficha.create_tween()
 		tween.tween_interval(delay_actual)
 		tween.tween_property(ficha, "position:y", pos_final.y, DURACION_CAIDA) \
@@ -810,7 +506,6 @@ func _animar_entrada_fichas() -> void:
 		_pendientes_entrada += 1
 		delay_actual += ESPACIO_ENTRE_FICHAS
 
-# Ordena fichas por capa descendente (inferiores primero).
 func _ordenar_entrada_ficha(a, b) -> int:
 	if a.capa != b.capa:
 		return b.capa - a.capa
@@ -822,53 +517,7 @@ func _on_entrada_ficha_terminada() -> void:
 		main_audio.play_drop()
 	if _pendientes_entrada <= 0:
 		_animando_entrada = false
-		_actualizar_visibilidad()
-
-# ============================================================================
-#  VISIBILIDAD (OVERLAP CHECK)
-# ============================================================================
-# Recalcula qué fichas están libres. Se llama después de generar el tablero
-# y después de retirar una ficha, porque al eliminar una capa superior las
-# fichas de abajo pueden quedar destapadas.
-func _actualizar_visibilidad() -> void:
-	for ficha in _fichas_tablero:
-		ficha.libre = _esta_libre(ficha)
-		_aplicar_estado_visual(ficha)
-
-# Una ficha está libre si ninguna ficha de una capa superior se superpone
-# a su huella circular en el plano XZ.
-func _esta_libre(ficha: FichaTablero) -> bool:
-	for otra in _fichas_tablero:
-		if otra == ficha:
-			continue
-		# Capa 1 es la más alta. Sólo las capas con número menor tapan.
-		if otra.capa >= ficha.capa:
-			continue
-		if _se_superponen(ficha, otra):
-			return false
-	return true
-
-# Comprueba si dos fichas redondas se superponen. Al ser círculos del mismo
-# diámetro, basta comparar la distancia entre sus centros contra el diámetro.
-func _se_superponen(a: FichaTablero, b: FichaTablero) -> bool:
-	var dx := a.global_position.x - b.global_position.x
-	var dz := a.global_position.z - b.global_position.z
-	const EPSILON: float = 0.0001
-	return sqrt(dx * dx + dz * dz) < DIAMETRO_FICHA - EPSILON
-
-# Feedback visual: las fichas tapadas se muestran oscurecidas.
-func _aplicar_estado_visual(ficha: FichaTablero) -> void:
-	if ficha.material == null:
-		return
-
-	# Las fichas libres conservan su brillo original.
-	var brillo := 1.0
-	if not ficha.libre:
-		# Las bloqueadas se oscurecen según la capa a la que pertenecen.
-		var indice := clampi(ficha.capa - 1, 0, OSCURIDAD_BASE_CAPAS.size() - 1)
-		brillo = 1.0 - OSCURIDAD_BASE_CAPAS[indice]
-
-	ficha.material.set_shader_parameter("brillo", brillo)
+		_visibilidad.actualizar(_fichas_tablero)
 
 # ============================================================================
 #  INPUT Y SELECCIÓN
@@ -886,7 +535,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			_intentar_seleccionar(event.position)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventMouseButton:
-		# En móvil se usan eventos táctiles. En escritorio, el mouse.
 		if event.button_index == MOUSE_BUTTON_LEFT \
 		and event.pressed \
 		and not DisplayServer.is_touchscreen_available():
@@ -901,14 +549,11 @@ func _intentar_seleccionar(pos_2d: Vector2) -> void:
 	if ficha == null:
 		return
 
-	# La ficha debe estar totalmente libre para poder tocarse.
 	if not ficha.libre:
 		return
 
 	_seleccionar_ficha(ficha)
 
-# Lanza un rayo desde la cámara y devuelve la ficha más cercana que golpea.
-# Como la cámara mira hacia abajo, la ficha más cercana es la de capa superior.
 func _ficha_bajo_punto(pos_2d: Vector2) -> FichaTablero:
 	if camara == null:
 		return null
@@ -943,17 +588,12 @@ func _seleccionar_ficha(ficha: FichaTablero) -> void:
 	var tipo := ficha.tipo
 	var es_ultima_ficha: bool = _fichas_tablero.size() == 1
 
-	# Si esa cara ya espera en la barra (combo activo o ficha solitaria),
-	# la ficha viaja a su coincidencia y se (re)abre la ventana de 2 segundos.
 	var slot_match := _buscar_slot_por_tipo(tipo)
 
 	if slot_match != -1:
 		if _combo_activo and _combo_slot == slot_match:
-			# Misma cara del combo activo: solo se suma al mismo slot y se reinicia el timer.
 			_combo_contador += 1
 		else:
-			# Se cambia el foco a este slot: se resuelve el combo activo previo (si lo hay)
-			# y se activa la acumulación en el slot coincidente.
 			if _combo_activo:
 				_romper_combo()
 			_combo_activo = true
@@ -962,7 +602,6 @@ func _seleccionar_ficha(ficha: FichaTablero) -> void:
 			_combo_contador = _barra_conteo[slot_match] + 1
 		_barra_conteo[_combo_slot] = _combo_contador
 	else:
-		# Cara nueva en la barra: se resuelve el combo activo y se ocupa un slot libre.
 		if _combo_activo:
 			_romper_combo()
 		var slot := _primer_slot_libre()
@@ -977,19 +616,13 @@ func _seleccionar_ficha(ficha: FichaTablero) -> void:
 		_barra_conteo[slot] = 1
 		_barra_icono_oculto[slot] = true
 
-	# Marcar la ficha en la barra. Se registra siempre el vuelo para no resolver
-	# el combo mientras una coincidencia está en animación; el icono solo se
-	# oculta para la primera ficha que ocupa el slot.
 	_barra_tipos[_combo_slot] = tipo
 	_slots_en_vuelo.append(_combo_slot)
 
-	# Cada coincidencia acumulada muestra +1, +2, +3... al aterrizar en el slot.
 	var puntos_ganados := 0
 	if _combo_contador >= 2:
 		puntos_ganados = _combo_contador - 1
 
-	# La ficha 3D seleccionada vuela hasta la barra. Se quita del tablero de
-	# inmediato para que no pueda volver a seleccionarse mientras está en el aire.
 	_animar_ficha_a_barra(ficha, _combo_slot, puntos_ganados, es_ultima_ficha)
 
 	if main_audio:
@@ -1001,10 +634,8 @@ func _seleccionar_ficha(ficha: FichaTablero) -> void:
 		ficha.cuerpo.collision_layer = 0
 	_fichas_en_vuelo.append(ficha)
 
-	# Al quitar esta ficha pueden quedar libres fichas de capas inferiores.
-	_actualizar_visibilidad()
+	_visibilidad.actualizar(_fichas_tablero)
 
-# Crea el nodo Timer que gestiona la ventana de 2 segundos del combo.
 func _crear_timer_combo() -> void:
 	_timer_combo = Timer.new()
 	_timer_combo.name = "TimerCombo"
@@ -1013,10 +644,6 @@ func _crear_timer_combo() -> void:
 	_timer_combo.timeout.connect(_on_timer_combo_timeout)
 	add_child(_timer_combo)
 
-# Detiene el timer del combo y resuelve el slot activo.
-# - 2+ acumuladas: desaparecen al cerrarse la ventana de 2s sin nueva coincidencia
-#   o al seleccionar una ficha de otra cara.
-# - 1 sola (solitaria): se queda en su slot.
 func _romper_combo() -> void:
 	if not _combo_activo:
 		return
@@ -1026,7 +653,6 @@ func _romper_combo() -> void:
 	var hay_coincidencias := _combo_contador >= 2
 
 	if hay_coincidencias:
-		# 2+ acumuladas: el slot desaparece (ventana cerrada o ficha distinta).
 		for ficha in _fichas_en_vuelo:
 			if is_instance_valid(ficha):
 				ficha.queue_free()
@@ -1038,8 +664,7 @@ func _romper_combo() -> void:
 		_puntaje_nivel += combo_acumulado
 		if ui_puntaje:
 			ui_puntaje.establecer_puntaje(_puntaje_nivel)
-		# paycombo
-		_mostrar_puntos_flotantes_en_slot(_combo_slot, combo_acumulado, false, str(resultado_combo["etiqueta"]))
+		_efectos.mostrar_puntos_flotantes_en_slot(_combo_slot, combo_acumulado, false, str(resultado_combo["etiqueta"]))
 		if _combo_slot >= 0 and _combo_slot < _slots.size() and camara != null:
 			var slot := _slots[_combo_slot]
 			var rect_slot := slot.get_global_rect()
@@ -1054,15 +679,12 @@ func _romper_combo() -> void:
 				camara.project_ray_normal(centro_slot)
 			)
 			if interseccion != null:
-				_disparar_smoke_puff(interseccion)
-		# Vaciar el slot del combo en la barra.
+				_efectos.disparar_smoke_puff(interseccion)
 		if _combo_slot >= 0 and _combo_slot < _barra_tipos.size():
 			_barra_tipos[_combo_slot] = 0
 			_barra_conteo[_combo_slot] = 0
 			_barra_icono_oculto[_combo_slot] = false
 	else:
-		# Solitaria (1): se queda en su slot. No destruir fichas en vuelo para
-		# que puedan aterrizar y mostrarse.
 		_fichas_en_vuelo.clear()
 
 	_actualizar_barra_ui()
@@ -1071,33 +693,26 @@ func _romper_combo() -> void:
 	_combo_slot = -1
 	_combo_contador = 0
 
-	# Victoria: tablero vacío, aunque queden fichas huérfanas en la barra.
 	if _fichas_tablero.is_empty():
 		_finalizar_partida(true)
 
-# Se dispara cuando se agotan los 2 segundos de ventana del combo.
 func _on_timer_combo_timeout() -> void:
-	# Si aún hay una ficha volando hacia el slot activo, la ventana se abrirá
-	# al aterrizar; no se resuelve todavía.
 	if _combo_activo and _slots_en_vuelo.has(_combo_slot):
 		return
 	_romper_combo()
 
-# Devuelve true si no hay ningún tipo en la barra.
 func _barra_esta_vacia() -> bool:
 	for t in _barra_tipos:
 		if t != 0:
 			return false
 	return true
 
-# Devuelve el índice del primer slot vacío de la barra, o -1 si la barra está llena.
 func _primer_slot_libre() -> int:
 	for i in range(_barra_tipos.size()):
 		if _barra_tipos[i] == 0:
 			return i
 	return -1
 
-# Devuelve el índice del slot de la barra que ya lleva este tipo, o -1 si ninguno lo tiene.
 func _buscar_slot_por_tipo(tipo: int) -> int:
 	if tipo == 0:
 		return -1
@@ -1106,7 +721,6 @@ func _buscar_slot_por_tipo(tipo: int) -> int:
 			return i
 	return -1
 
-# Inicia (o reinicia) la ventana de tiempo del combo.
 func _iniciar_timer_combo() -> void:
 	if _timer_combo:
 		_timer_combo.stop()
@@ -1115,12 +729,7 @@ func _iniciar_timer_combo() -> void:
 # ============================================================================
 #  BARRA INFERIOR ("SCRABBLE BAR")
 # ============================================================================
-# Crea por código la barra de 5 espacios en la parte inferior de la pantalla.
-# Se renderiza en un quad 3D apoyado en el piso para que las fichas queden
-# siempre por encima de ella.
 func _crear_barra_ui() -> void:
-	# Crea la infraestructura 3D de la barra una vez y (re)construye los slots
-	# según la cantidad configurada para el nivel actual.
 	var entorno_ficha := _crear_entorno_ficha()
 	var textura_inicial: Texture2D = null
 	if not _texturas.is_empty():
@@ -1132,7 +741,6 @@ func _crear_barra_ui() -> void:
 		_barra_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_barra_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-		# Fondo semitransparente.
 		var fondo := ColorRect.new()
 		fondo.name = "Fondo"
 		fondo.color = Color(0.02, 0.02, 0.04, 0.62)
@@ -1140,7 +748,6 @@ func _crear_barra_ui() -> void:
 		fondo.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_barra_ui.add_child(fondo)
 
-		# Línea superior decorativa.
 		var linea := ColorRect.new()
 		linea.name = "Linea"
 		linea.color = Color(0.95, 0.78, 0.25, 0.9)
@@ -1152,7 +759,6 @@ func _crear_barra_ui() -> void:
 		linea.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_barra_ui.add_child(linea)
 
-		# Contenedor horizontal centrado para los espacios de la barra.
 		_barra_slots_box = HBoxContainer.new()
 		_barra_slots_box.name = "Slots"
 		_barra_slots_box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1161,8 +767,6 @@ func _crear_barra_ui() -> void:
 		_barra_slots_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_barra_ui.add_child(_barra_slots_box)
 
-		# La barra se dibuja en un quad 3D sobre el piso, alineado con el
-		# rectángulo inferior de la pantalla.
 		_barra_viewport = SubViewport.new()
 		_barra_viewport.name = "BarraViewport"
 		_barra_viewport.transparent_bg = true
@@ -1184,10 +788,8 @@ func _crear_barra_ui() -> void:
 		if not get_viewport().size_changed.is_connected(_actualizar_barra_3d):
 			get_viewport().size_changed.connect(_actualizar_barra_3d)
 	else:
-		# Infraestructura existente: solo se reconstruyen los slots si cambia la cantidad.
 		_barra_slots_box = _barra_ui.get_node_or_null("Slots") as HBoxContainer
 
-	# Reconstruir slots para el nivel actual.
 	for hijo in _barra_slots_box.get_children():
 		_barra_slots_box.remove_child(hijo)
 		hijo.queue_free()
@@ -1224,8 +826,6 @@ func _crear_barra_ui() -> void:
 		icono.visible = false
 		slot.add_child(icono)
 
-		# Vista 3D aislada por slot. Se renderiza solo cuando cambia su
-		# contenido para no gastar un render 3D extra cada frame.
 		var viewport := SubViewport.new()
 		viewport.name = "VistaFicha"
 		viewport.size = Vector2i(192, 192)
@@ -1281,9 +881,6 @@ func _crear_barra_ui() -> void:
 
 	_actualizar_barra_ui()
 
-# Ajusta el quad 3D de la barra al rectángulo inferior de la pantalla. Como
-# la cámara mira hacia abajo, el plano del piso es paralelo al de la imagen:
-# proyectando sus esquinas se obtienen el centro y el tamaño exactos.
 func _actualizar_barra_3d() -> void:
 	if _barra_viewport == null or _barra_sprite == null or camara == null:
 		return
@@ -1341,8 +938,6 @@ func _actualizar_barra_ui() -> void:
 				ficha.visible = false
 			viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
-# Registra la llegada visual de una ficha al slot del combo. Ya no se resuelven
-# parejas aquí: el combo se rompe por tiempo agotado o por ficha distinta.
 func _agregar_a_barra(tipo: int) -> void:
 	if _juego_terminado:
 		return
@@ -1351,100 +946,15 @@ func _agregar_a_barra(tipo: int) -> void:
 		_barra_tipos[_combo_slot] = tipo
 	_actualizar_barra_ui()
 
-	# Victoria: tablero vacío, aunque queden fichas huérfanas en la barra.
 	if _fichas_tablero.is_empty():
 		_finalizar_partida(true)
 
-# ============================================================================
-#  EFECTOS VISUALES
-# ============================================================================
-func _crear_capa_efectos() -> void:
-	var ui := $UI as CanvasLayer
-	if ui == null:
-		return
-
-	_capa_efectos = Control.new()
-	_capa_efectos.name = "CapaEfectos"
-	_capa_efectos.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_capa_efectos.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	ui.add_child(_capa_efectos)
-	# Justo encima de la barra y debajo del resto de la UI.
-	ui.move_child(_capa_efectos, 1)
-
-func _limpiar_efectos() -> void:
-	if _capa_efectos == null:
-		return
-	for hijo in _capa_efectos.get_children():
-		_capa_efectos.remove_child(hijo)
-		hijo.queue_free()
-
-func _disparar_smoke_puff(posicion: Vector3) -> void:
-	if camara == null or _capa_efectos == null:
-		return
-	var fx := SMOKE_PUFF_2D.instantiate() as CrispFx2D
-	if fx == null:
-		return
-	fx.autoplay = false
-	fx.fx_scale = ESCALA_SMOKE_PUFF
-	_capa_efectos.add_child(fx)
-	fx.global_position = camara.unproject_position(posicion)
-	# paycombo
-	fx.play()
-
-# Muestra un texto flotante sobre el slot indicado de la barra.
-# con_signo=true -> "+1, +2..."; con_signo=false -> total acumulado (ej. "3").
-func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int, con_signo: bool = true, texto_etiqueta: String = "") -> void:
-	if _capa_efectos == null or _barra_ui == null or indice_slot < 0 or indice_slot >= _slots.size():
-		return
-	var fx := PUNTOS_FLOTANTES_ESCENA.instantiate() as Control
-	if fx == null:
-		return
-	var etiqueta := fx.get_node_or_null("Label") as Label
-	if etiqueta:
-		var texto := ("+%d" % puntos) if con_signo else str(puntos)
-		if texto_etiqueta != "":
-			texto = "%s\n%s" % [texto_etiqueta, texto]
-		etiqueta.text = texto
-		etiqueta.reset_size()
-	_capa_efectos.add_child(fx)
-
-	# El slot vive dentro del viewport de la barra: se traduce su rectángulo al
-	# área inferior de la pantalla donde se proyecta esa barra.
-	var rect_slot := _slots[indice_slot].get_global_rect()
-	var pantalla := get_viewport().get_visible_rect().size
-	var centro := Vector2(
-		rect_slot.get_center().x,
-		pantalla.y - ALTO_BARRA + rect_slot.position.y
-	)
-	fx.global_position = centro
-	if etiqueta:
-		etiqueta.position = Vector2(-etiqueta.size.x * 0.5, -etiqueta.size.y)
-
-	var tween := fx.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(fx, "position:y", fx.position.y - 90.0, 1.0) \
-		.set_trans(Tween.TRANS_CUBIC) \
-		.set_ease(Tween.EASE_OUT)
-	tween.tween_property(fx, "modulate:a", 0.0, 1.0) \
-		.set_trans(Tween.TRANS_QUAD) \
-		.set_ease(Tween.EASE_IN)
-	tween.set_parallel(false)
-	tween.tween_callback(fx.queue_free)
-
-# Anima la ficha 3D seleccionada desde su posición en el tablero hasta el
-# centro del slot correspondiente de la barra. La ficha se lanza en arco y
-# gira como una moneda al aire mientras se encoge para encajar en el espacio;
-# al terminar el vuelo se libera, se muestra el icono del slot y, si corresponde,
-# se disparan los puntos de la coincidencia.
 func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados: int = 0, es_ultima_ficha: bool = false) -> void:
 	if _slots.is_empty() or camara == null:
 		ficha.queue_free()
 		return
 
 	var slot := _slots[clampi(indice_slot, 0, _slots.size() - 1)]
-	# El slot vive dentro del viewport de la barra: se traslada su centro al
-	# rectángulo que la barra ocupa en la pantalla.
 	var rect_slot := slot.get_global_rect()
 	var pantalla := get_viewport().get_visible_rect().size
 	var centro_slot := Vector2(
@@ -1452,9 +962,6 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 		pantalla.y - ALTO_BARRA + rect_slot.get_center().y
 	)
 
-	# Punto del mundo que, visto por la cámara, coincide con el centro del
-	# slot. Se usa un plano horizontal a la altura de la ficha para conservar
-	# su altura durante el vuelo.
 	var plano := Plane(Vector3.UP, ficha.global_position.y)
 	var interseccion: Variant = plano.intersects_ray(
 		camara.project_ray_origin(centro_slot),
@@ -1466,8 +973,6 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 
 	var destino: Vector3 = interseccion
 
-	# Escala final para que el diámetro de la ficha coincida con el icono 3D
-	# que se muestra dentro del slot.
 	var radio := DIAMETRO_FICHA * 0.5
 	var ancho_token := camara.unproject_position(destino + Vector3(radio, 0.0, 0.0)) \
 		.distance_to(camara.unproject_position(destino - Vector3(radio, 0.0, 0.0)))
@@ -1477,12 +982,10 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 	if ancho_token > 0.001:
 		escala_final = clampf(ancho_icono / ancho_token, 0.3, 1.0)
 
-	# Arco del lanzamiento: la ficha sube mientras viaja y baja al llegar.
 	var origen: Vector3 = ficha.global_position
 	var distancia := origen.distance_to(destino)
 	var altura_arco := clampf(distancia * 0.25, 0.05, 0.18)
 
-	# El vuelo parte desde lo alto del salto inicial.
 	var origen_vuelo := origen + Vector3(0.0, ALTURA_SALTO_SELECCION, 0.0)
 	var mover := func(t: float) -> void:
 		var pos := origen_vuelo.lerp(destino, t)
@@ -1490,17 +993,13 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 		ficha.global_position = pos
 
 	var tween := ficha.create_tween()
-	# 1) Salto vertical en el sitio, como preparación del lanzamiento.
 	tween.tween_property(ficha, "global_position:y", origen_vuelo.y, DURACION_SALTO) \
 		.set_trans(Tween.TRANS_QUAD) \
 		.set_ease(Tween.EASE_OUT)
-	# 2) Vuelo hacia la barra; comienza al terminar el salto.
 	tween.chain().tween_method(mover, 0.0, 1.0, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_CUBIC) \
 		.set_ease(Tween.EASE_IN_OUT)
 	tween.set_parallel(true)
-	# Dos vueltas completas sobre el eje X: termina de nuevo con la cara
-	# hacia arriba, como una moneda que cae de canto y vuelve a su posición.
 	tween.tween_property(ficha, "rotation:x", -TAU * 2.0, DURACION_VUELO) \
 		.set_trans(Tween.TRANS_LINEAR)
 	tween.tween_property(ficha, "scale", Vector3.ONE * escala_final, DURACION_VUELO) \
@@ -1511,16 +1010,14 @@ func _animar_ficha_a_barra(ficha: FichaTablero, indice_slot: int, puntos_ganados
 			ficha.queue_free()
 		if main_audio:
 			main_audio.play_select()
-		# La ficha aterrizó: revelar su icono en el slot.
 		var idx := _slots_en_vuelo.find(indice_slot)
 		if idx != -1:
 			_slots_en_vuelo.remove_at(idx)
 		if indice_slot >= 0 and indice_slot < _barra_icono_oculto.size():
 			_barra_icono_oculto[indice_slot] = false
 		_actualizar_barra_ui()
-		# Los puntos se muestran al llegar la ficha a su destino.
 		if puntos_ganados > 0:
-			_mostrar_puntos_flotantes_en_slot(indice_slot, puntos_ganados)
+			_efectos.mostrar_puntos_flotantes_en_slot(indice_slot, puntos_ganados)
 		if es_ultima_ficha and not _juego_terminado:
 			if _combo_activo and _combo_slot == indice_slot and _combo_contador >= 2:
 				_romper_combo()
@@ -1541,51 +1038,9 @@ func _limpiar_tablero() -> void:
 		contenedor_fichas.remove_child(hijo)
 		hijo.queue_free()
 
-func _preparar_titulo() -> void:
-	if ui_level_title == null:
-		return
-	# El LevelTitle de la escena es un placeholder. Se usa como mensaje
-	# central de victoria/derrota, por eso empieza oculto.
-	ui_level_title.visible = false
-	ui_level_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ui_level_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	ui_level_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-func _actualizar_titulo_nivel() -> void:
-	if ui_level_title == null:
-		return
-	if _tween_titulo != null:
-		_tween_titulo.kill()
-	ui_level_title.modulate.a = 1.0
-	var id_juego: String = save_manager.juego_actual_seleccionado
-	var titulo_str: String = game_manager.obtener_titulo_nivel(str(nivel_actual), id_juego)
-	ui_level_title.text = "Nivel %d\n%s" % [nivel_actual, titulo_str]
-	ui_level_title.add_theme_font_size_override("font_size", 64)
-	ui_level_title.visible = true
-	_tween_titulo = create_tween()
-	_tween_titulo.tween_interval(3.0)
-	_tween_titulo.tween_property(ui_level_title, "modulate:a", 0.0, 1.0)
-	_tween_titulo.tween_callback(_ocultar_titulo_nivel)
-
-func _ocultar_titulo_nivel() -> void:
-	if ui_level_title != null and not _juego_terminado:
-		ui_level_title.visible = false
-
 func _on_idioma_cambiado(_nuevo_idioma: String) -> void:
 	if not _juego_terminado:
-		_actualizar_titulo_nivel()
-
-func _mostrar_mensaje_final(texto: String) -> void:
-	if ui_level_title == null:
-		return
-	if _tween_titulo != null:
-		_tween_titulo.kill()
-	ui_level_title.modulate.a = 1.0
-	ui_level_title.text = texto
-	ui_level_title.add_theme_font_size_override("font_size", 72)
-	ui_level_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ui_level_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	ui_level_title.visible = true
+		_titulo.actualizar_nivel(nivel_actual)
 
 func _finalizar_partida(victoria: bool) -> void:
 	if _juego_terminado:
@@ -1595,19 +1050,17 @@ func _finalizar_partida(victoria: bool) -> void:
 	if victoria:
 		if audio_manager:
 			audio_manager.play_welldone()
-		_mostrar_mensaje_final("¡Nivel completado!")
+		_titulo.mostrar_mensaje("¡Nivel completado!")
 	else:
 		if audio_manager:
 			audio_manager.play_fail()
-		_mostrar_mensaje_final("¡Sin espacio!")
+		_titulo.mostrar_mensaje("¡Sin espacio!")
 
-	# Breve pausa para leer el mensaje antes de abrir el panel de resultados.
 	await get_tree().create_timer(1.2, false).timeout
 	if not is_inside_tree():
 		return
 
-	if ui_level_title:
-		ui_level_title.visible = false
+	_titulo.ocultar()
 	mostrar_panel_resultados(victoria)
 	if ui_puntaje:
 		ui_puntaje.establecer_hi_score(save_manager.obtener_puntaje_nivel(nivel_actual))
