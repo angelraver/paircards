@@ -34,6 +34,9 @@ const TIEMPO_COMBO: float = 2.0           # Ventana de tiempo (segundos) para se
 const RUTA_NIVELES: String = "res://data/niveles.json"
 const RUTA_VALORES: String = "res://data/valores.json"
 const RUTA_CARPETA_FICHAS: String = "res://assets/images/astronomia/"
+const RUTA_TABLERO_DIA: String = "res://assets/images/tablero.webp"
+const RUTA_TABLERO_TARDE: String = "res://assets/images/tablerotarde.webp"
+const RUTA_TABLERO_NOCHE: String = "res://assets/images/tableronoche.webp"
 const CAPAS_POR_DEFECTO: int = 5
 
 # Slots de la barra y render 3D de la ficha que muestran. Las fichas
@@ -184,6 +187,7 @@ class FichaTablero extends Node3D:
 # ============================================================================
 @onready var contenedor_fichas: Node3D = $BoardElements
 @onready var camara: Camera3D = $Camera3D
+@onready var piso_tablero: CSGBox3D = $Piso
 
 @onready var ui_level_number: UILevelNumber = $UI/LevelNumber as UILevelNumber
 @onready var ui_puntaje: UIPuntaje = $UI/Puntaje as UIPuntaje
@@ -272,6 +276,13 @@ var _slots_materiales: Array[ShaderMaterial] = []
 # ============================================================================
 func _ready() -> void:
 	randomize()
+
+	FondoDinamico.aplicar_material(
+		piso_tablero.material,
+		RUTA_TABLERO_DIA,
+		RUTA_TABLERO_TARDE,
+		RUTA_TABLERO_NOCHE
+	)
 
 	nivel_actual = save_manager.nivel_actual_seleccionado
 	_cargar_configuracion()

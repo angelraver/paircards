@@ -16,13 +16,29 @@ const HORA_TARDE_INICIO: int = 17
 const HORA_NOCHE_INICIO: int = 20
 
 
-static func ruta_para_hora(hora: int) -> String:
+static func indice_franja_para_hora(hora: int) -> int:
 	var h: int = normalizar_hora(hora)
 	if h >= HORA_DIA_INICIO and h < HORA_TARDE_INICIO:
-		return RUTA_DIA
+		return 0
 	if h >= HORA_TARDE_INICIO and h < HORA_NOCHE_INICIO:
-		return RUTA_TARDE
-	return RUTA_NOCHE
+		return 1
+	return 2
+
+
+static func ruta_para_franja(indice: int, ruta_dia: String, ruta_tarde: String, ruta_noche: String) -> String:
+	if indice == 0:
+		return ruta_dia
+	if indice == 1:
+		return ruta_tarde
+	return ruta_noche
+
+
+static func ruta_para_hora(hora: int) -> String:
+	return ruta_para_franja(indice_franja_para_hora(hora), RUTA_DIA, RUTA_TARDE, RUTA_NOCHE)
+
+
+static func ruta_actual_entre(ruta_dia: String, ruta_tarde: String, ruta_noche: String) -> String:
+	return ruta_para_franja(indice_franja_para_hora(hora_actual_dispositivo()), ruta_dia, ruta_tarde, ruta_noche)
 
 
 static func normalizar_hora(hora: int) -> int:
@@ -47,6 +63,19 @@ static func ruta_actual() -> String:
 static func aplicar(rect: TextureRect) -> void:
 	if rect == null:
 		return
-	var ruta: String = ruta_actual()
+	var ruta: String = ruta_actual_entre(RUTA_DIA, RUTA_TARDE, RUTA_NOCHE)
 	if ResourceLoader.exists(ruta):
-		rect.texture = load(ruta) as Texture2D
+		var textura: Texture2D = load(ruta) as Texture2D
+		if textura != null:
+			rect.texture = textura
+
+
+static func aplicar_material(material: Material, ruta_dia: String, ruta_tarde: String, ruta_noche: String) -> void:
+	if not (material is StandardMaterial3D):
+		return
+	var ruta: String = ruta_actual_entre(ruta_dia, ruta_tarde, ruta_noche)
+	if not ResourceLoader.exists(ruta):
+		return
+	var textura: Texture2D = load(ruta) as Texture2D
+	if textura != null:
+		(material as StandardMaterial3D).albedo_texture = textura
