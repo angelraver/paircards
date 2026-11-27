@@ -1,6 +1,14 @@
 [gd_scene format=3 uid="uid://blfnudq81val2"]
 
 [ext_resource type="Script" uid="uid://8ysg2u5cf3sj" path="res://scripts/seleccion_niveles.gd" id="1_seleccion"]
+[ext_resource type="Texture2D" uid="uid://caq1gbx3rmq4k" path="res://assets/images/ui/button_home.webp" id="2_76n8m"]
+[ext_resource type="Texture2D" uid="uid://mtlj05ljmuny" path="res://assets/images/fondodia.webp" id="2_l3jjv"]
+[ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="3_ybnht"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hbjh1"]
+shader = ExtResource("3_ybnht")
+shader_parameter/nivel_desenfoque = 2.5
+shader_parameter/oscurecer = Color(0, 0, 0, 0.3)
 
 [node name="SeleccionNiveles" type="Control" unique_id=186749541]
 clip_contents = true
@@ -11,6 +19,43 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_seleccion")
+
+[node name="Fondo" type="TextureRect" parent="." unique_id=335604580]
+layout_mode = 0
+offset_left = -405.0
+offset_top = -34.999996
+offset_right = 619.0
+offset_bottom = 1501.0
+scale = Vector2(1.4634976, 1.4634976)
+texture = ExtResource("2_l3jjv")
+
+[node name="FondoDesenfoque" type="ColorRect" parent="Fondo" unique_id=1256777760]
+material = SubResource("ShaderMaterial_hbjh1")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -2.3348694
+offset_top = 0.77826405
+offset_right = -2.3348389
+offset_bottom = 0.77819824
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BotonHome" type="TextureButton" parent="." unique_id=1709029832]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -314.0
+offset_top = 503.0
+offset_right = -214.0
+offset_bottom = 602.0
+grow_horizontal = 2
+grow_vertical = 2
+texture_normal = ExtResource("2_76n8m")
 
 [node name="ContentContainer" type="Control" parent="." unique_id=1067428972]
 anchors_preset = 0

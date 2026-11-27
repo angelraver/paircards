@@ -28,8 +28,12 @@ var _niveles_visibles: Array[int] = []
 @export var velocity_smoothing: float = 0.45
 @export var top_margin: float = 24.0
 @export var bottom_margin: float = 24.0
+@export var animar_entrada: bool = true
+@export var duracion_entrada: float = 5.0
 
+@onready var fondo: TextureRect = $Fondo
 @onready var content_container: Control = $ContentContainer
+@onready var boton_home: TextureButton = $BotonHome
 
 var _chunks: Array[LevelSequenceChunk] = []
 var _scale_factor: float = 1.0
@@ -44,19 +48,25 @@ var _ultimo_movimiento_ms: int = 0
 var _distancia_arrastre: float = 0.0
 var _tap_bloqueado: bool = false
 var _layout_inicializado: bool = false
+var _entrada_en_curso: bool = false
+var _tween_entrada: Tween
 
 
 func _ready() -> void:
+	if not boton_home.pressed.is_connected(_on_boton_home_pressed):
+		boton_home.pressed.connect(_on_boton_home_pressed)
+	FondoDinamico.aplicar(fondo)
 	_recalcular_layout()
 
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and content_container != null:
+		_detener_animacion_entrada()
 		_recalcular_layout()
 
 
 func _process(delta: float) -> void:
-	if content_container == null:
+	if content_container == null or _entrada_en_curso:
 		return
 
 	if _puntero_activo != PUNTERO_NINGUNO:
@@ -88,6 +98,16 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if content_container == null:
 		return
+
+	if _puntero_activo == PUNTERO_NINGUNO and boton_home != null:
+		if event is InputEventScreenTouch:
+			var toc_home: InputEventScreenTouch = event as InputEventScreenTouch
+			if toc_home.pressed and boton_home.get_global_rect().has_point(toc_home.position):
+				return
+		if event is InputEventMouseButton:
+			var boton_home_evento: InputEventMouseButton = event as InputEventMouseButton
+			if boton_home_evento.pressed and boton_home.get_global_rect().has_point(boton_home_evento.position):
+				return
 
 	if event is InputEventScreenTouch:
 		var toc: InputEventScreenTouch = event as InputEventScreenTouch
@@ -123,6 +143,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _iniciar_arrastre(id_puntero: int, y_puntero: float) -> void:
+	_detener_animacion_entrada()
 	_puntero_activo = id_puntero
 	_ultima_y_puntero = y_puntero
 	_ultimo_movimiento_ms = Time.get_ticks_msec()
@@ -250,10 +271,42 @@ func _recalcular_layout() -> void:
 	_calcular_limites(cantidad, tam_viewport.y)
 
 	if not _layout_inicializado:
-		content_container.position.y = clampf(_posicion_inicial(initial_sequence_index, cantidad), _limite_inferior, _limite_superior)
+		var destino: float = clampf(_posicion_inicial(initial_sequence_index, cantidad), _limite_inferior, _limite_superior)
+		content_container.position.y = destino
 		_layout_inicializado = true
+		if animar_entrada:
+			var altura_arbol: float = _altura_total_arbol(cantidad)
+			_iniciar_animacion_entrada(destino, maxf(tam_viewport.y, altura_arbol))
 	else:
 		content_container.position.y = clampf(content_container.position.y, _limite_inferior, _limite_superior)
+
+
+func _altura_total_arbol(cantidad: int) -> float:
+	return _chunk_height + float(maxi(cantidad - 1, 0)) * _step_y
+
+
+func _iniciar_animacion_entrada(destino: float, desplazamiento: float) -> void:
+	if duracion_entrada <= 0.0:
+		return
+	_detener_animacion_entrada()
+	_velocidad_y = 0.0
+	content_container.position.y = destino + desplazamiento
+	_entrada_en_curso = true
+	_tween_entrada = create_tween()
+	_tween_entrada.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_tween_entrada.tween_property(content_container, "position:y", destino, duracion_entrada)
+	_tween_entrada.finished.connect(_on_animacion_entrada_finished)
+
+
+func _on_animacion_entrada_finished() -> void:
+	_entrada_en_curso = false
+	_velocidad_y = 0.0
+
+
+func _detener_animacion_entrada() -> void:
+	if _tween_entrada != null and _tween_entrada.is_valid():
+		_tween_entrada.kill()
+	_entrada_en_curso = false
 
 
 func _asegurar_chunks(cantidad: int) -> void:
@@ -331,3 +384,8 @@ func _on_nivel_seleccionado(numero_nivel: int) -> void:
 	var escena_destino: String = str(config.get("escena_juego", ""))
 	if escena_destino != "" and ResourceLoader.exists(escena_destino):
 		get_tree().change_scene_to_file(escena_destino)
+
+
+func _on_boton_home_pressed() -> void:
+	audio_manager.play_ok1()
+	get_tree().change_scene_to_file("res://scenes/title.tscn")
