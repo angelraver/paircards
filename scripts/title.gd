@@ -7,12 +7,13 @@ static var _intro_logo_realizada := false
 
 @onready var logo: TextureRect = $Logo
 @onready var fondo: TextureRect = $Fondo
-@onready var imagen_juegos: TextureButton = $ImagenJuegos
+@onready var start: TextureButton = $Start
 @onready var boton_prizes: TextureButton = $Prizes
 @onready var boton_options: TextureButton = $Options
 
 
 func _ready() -> void:
+	_conectar_botones()
 	FondoDinamico.aplicar(fondo)
 	# Música de fondo de title/options: vive en el autoload audio_manager
 	# para que continúe sin cortes al ir y volver de options.
@@ -21,6 +22,13 @@ func _ready() -> void:
 	_animar_intro_logo()
 	if era_primera_vez:
 		_animar_intro_botones()
+
+
+func _conectar_botones() -> void:
+	if not start.pressed.is_connected(_on_start_pressed):
+		start.pressed.connect(_on_start_pressed)
+	if not boton_options.pressed.is_connected(_on_boton_options_pressed):
+		boton_options.pressed.connect(_on_boton_options_pressed)
 
 
 ## El logo aparece en la mitad vertical y sube hasta su posición.
@@ -68,9 +76,9 @@ func _animar_intro_botones() -> void:
 		tween.tween_property(boton, "position:x", destino_x, DURACION_INTRO_LOGO)
 
 
-func _on_imagen_juegos_pressed() -> void:
+func _on_start_pressed() -> void:
 	_press_feedback(
-		$ImagenJuegos,
+		start,
 		func():
 			save_manager.juego_actual_seleccionado = "juego"
 			get_tree().change_scene_to_file("res://scenes/seleccion_niveles.tscn")
@@ -88,7 +96,7 @@ func _on_boton_prizes_pressed() -> void:
 
 func _on_boton_options_pressed() -> void:
 	_press_feedback(
-		$Options,
+		boton_options,
 		func():
 			audio_manager.play_ok1()
 			get_tree().change_scene_to_file("res://scenes/options.tscn")
