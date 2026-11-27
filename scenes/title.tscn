@@ -12,6 +12,101 @@ shader = ExtResource("3_2xeeo")
 shader_parameter/nivel_desenfoque = 2.5
 shader_parameter/oscurecer = Color(0, 0, 0, 0.3)
 
+[sub_resource type="Animation" id="Animation_intro"]
+resource_name = "Intro"
+length = 7.5
+loop_mode = 0
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Fondo:scale")
+tracks/0/interp = 1
+tracks/0/loop_wrap = false
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 3.0),
+"transitions": PackedFloat32Array(1, 0.5),
+"update": 0,
+"values": [Vector2(10, 10), Vector2(1, 1)]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Fondo:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = false
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 3.0),
+"transitions": PackedFloat32Array(1, 0.5),
+"update": 0,
+"values": [Vector2(0, 4000), Vector2(0, 0)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("Logo:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = false
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 3.0, 6.0),
+"transitions": PackedFloat32Array(1, 1, 0.5),
+"update": 0,
+"values": [Vector2(0, 2400), Vector2(0, 2400), Vector2(0, 166)]
+}
+tracks/3/type = "value"
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/path = NodePath("Start:scale")
+tracks/3/interp = 1
+tracks/3/loop_wrap = false
+tracks/3/keys = {
+"times": PackedFloat32Array(0, 6.0, 7.1),
+"transitions": PackedFloat32Array(1, 1, 0.5),
+"update": 0,
+"values": [Vector2(2.4, 2.4), Vector2(2.4, 2.4), Vector2(1, 1)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Start:modulate")
+tracks/4/interp = 1
+tracks/4/loop_wrap = false
+tracks/4/keys = {
+"times": PackedFloat32Array(0, 6.0, 7.1),
+"transitions": PackedFloat32Array(1, 1, 0.5),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Options:scale")
+tracks/5/interp = 1
+tracks/5/loop_wrap = false
+tracks/5/keys = {
+"times": PackedFloat32Array(0, 6.4, 7.5),
+"transitions": PackedFloat32Array(1, 1, 0.5),
+"update": 0,
+"values": [Vector2(2.4, 2.4), Vector2(2.4, 2.4), Vector2(1, 1)]
+}
+tracks/6/type = "value"
+tracks/6/imported = false
+tracks/6/enabled = true
+tracks/6/path = NodePath("Options:modulate")
+tracks/6/interp = 1
+tracks/6/loop_wrap = false
+tracks/6/keys = {
+"times": PackedFloat32Array(0, 6.4, 7.5),
+"transitions": PackedFloat32Array(1, 1, 0.5),
+"update": 0,
+"values": [Color(1, 1, 1, 0), Color(1, 1, 1, 0), Color(1, 1, 1, 1)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_intro"]
+_data = {
+"Intro": SubResource("Animation_intro")
+}
+
 [node name="Title" type="Control" unique_id=2096106481]
 layout_mode = 3
 anchors_preset = 15
@@ -31,6 +126,7 @@ grow_vertical = 2
 texture = ExtResource("2_4e4sy")
 expand_mode = 1
 stretch_mode = 6
+pivot_offset = Vector2(360, 640)
 
 [node name="FondoDesenfoque" type="ColorRect" parent="Fondo" unique_id=641397611]
 material = SubResource("ShaderMaterial_tydxx")
@@ -51,6 +147,8 @@ grow_horizontal = 2
 texture = ExtResource("4_4e4sy")
 expand_mode = 1
 stretch_mode = 5
+pivot_offset = Vector2(360, 222)
+scale = Vector2(0.95, 0.95)
 
 [node name="Start" type="TextureButton" parent="." unique_id=133689711]
 layout_mode = 1
@@ -64,6 +162,7 @@ offset_bottom = -450.0
 grow_horizontal = 2
 grow_vertical = 2
 texture_normal = ExtResource("5_4rr2b")
+pivot_offset = Vector2(75, 75)
 
 [node name="Options" type="TextureButton" parent="." unique_id=935073818]
 layout_mode = 1
@@ -77,6 +176,12 @@ offset_bottom = -111.0
 grow_vertical = 0
 tooltip_text = "Opciones"
 texture_normal = ExtResource("7_uj4fn")
+pivot_offset = Vector2(116, 75)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_intro")
+}
 
 [connection signal="pressed" from="Start" to="." method="_on_start_pressed"]
 [connection signal="pressed" from="Options" to="." method="_on_boton_options_pressed"]
