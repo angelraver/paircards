@@ -13,15 +13,15 @@ signal level_selected(level_number: int)
 @export var slot_size: float = 40.0
 @export var slot_scale: float = 0.65
 @export var node_normalized_positions: Array[Vector2] = [
-	Vector2(0.465, 0.86),
+	Vector2(0.463, 0.86),
 	Vector2(0.26, 0.66),
-	Vector2(0.67, 0.66),
+	Vector2(0.666, 0.66),
 	Vector2(0.105, 0.455),
-	Vector2(0.465, 0.455),
-	Vector2(0.83, 0.455),
+	Vector2(0.463, 0.455),
+	Vector2(0.825, 0.455),
 	Vector2(0.26, 0.245),
 	Vector2(0.67, 0.245),
-	Vector2(0.465, 0.05),
+	Vector2(0.463, 0.05),
 ]
 @export var col_center_x: float = -1.0
 @export var col_inner_offset_x: float = -1.0
