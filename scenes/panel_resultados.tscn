@@ -2,9 +2,9 @@
 
 [ext_resource type="Shader" uid="uid://8qepyr3ykt3f" path="res://shaders/desenfoque.gdshader" id="1_diad0"]
 [ext_resource type="Script" uid="uid://u6rxejfub056" path="res://scripts/panel_resultados.gd" id="1_pqqu8"]
-[ext_resource type="Texture2D" uid="uid://b1nd223v2oh78" path="res://assets/images/ui/panel_level.webp" id="2_pqqu8"]
-[ext_resource type="Texture2D" uid="uid://cusn3egnh88b4" path="res://assets/images/ui/button_ok.webp" id="3_shjp8"]
-[ext_resource type="Texture2D" uid="uid://dch1821c0hon" path="res://assets/images/ui/button_restart.webp" id="4_3qrhc"]
+[ext_resource type="Texture2D" uid="uid://bm7mol6ykjf20" path="res://assets/images/ui/panel_level.webp" id="2_pqqu8"]
+[ext_resource type="Texture2D" uid="uid://jhj0a7w0037q" path="res://assets/images/ui/button_ok.webp" id="3_shjp8"]
+[ext_resource type="Texture2D" uid="uid://b2yo20fj28882" path="res://assets/images/ui/button_restart.webp" id="4_3qrhc"]
 [ext_resource type="Texture2D" uid="uid://dwu0csmyvqm0t" path="res://assets/images/ui/moneda.webp" id="7_sg6qk"]
 [ext_resource type="FontFile" uid="uid://u2hb0k6844dv" path="res://assets/fonts/Title Wave Regular.ttf" id="8_at4u4"]
 
@@ -84,7 +84,7 @@ grow_vertical = 2
 scale = Vector2(1.0061463, 1)
 theme_override_colors/font_color = Color(0.2, 0, 0, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/line_spacing = -17
+theme_override_constants/line_spacing = 2
 theme_override_constants/shadow_offset_x = 0
 theme_override_constants/shadow_offset_y = 0
 theme_override_fonts/font = ExtResource("8_at4u4")

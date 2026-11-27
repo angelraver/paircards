@@ -68,7 +68,7 @@ Convenciones: código y comentarios en español, `snake_case` para funciones/var
   "juego": {
     "escena_juego": "res://scenes/main.tscn",
     "ruta_niveles_json": "res://data/niveles.json",
-    "textos_json": "res://data/juego_textos.json",
+    "textos_json": "res://data/niveles_texto.json",
     "textura_logo": "res://assets/images/juego_logo.webp",
     "prefijo_texto": "juego_"
   }
@@ -110,7 +110,7 @@ Textura final: `res://assets/images/astronomia/<nombre>.png`.
 
 ### Textos
 - `data/textos.json`: textos globales/localizados del proyecto.
-- `data/juego_textos.json`: textos del juego (p.ej. títulos de nivel) cargados con `prefijo_texto` (`juego_`).
+- `data/niveles_texto.json`: textos del juego (p.ej. títulos de nivel) cargados con `prefijo_texto` (`juego_`).
 
 ## 6. Sistema de niveles y armado del tablero (`scripts/main.gd`)
 
@@ -218,7 +218,7 @@ donde `_axial_a_plano(q,r) = (q + r*0.5, r*sqrt(3)/2)` y `SEPARACION_FICHAS == D
 │   ├── niveles.json      ← definición de niveles y patrones
 │   ├── valores.json      ← mapeo tipo → nombre de textura
 │   ├── textos.json       ← textos globales es/en/pt
-│   └── juego_textos.json ← textos del juego (prefijo juego_)
+│   └── niveles_texto.json ← textos del juego (prefijo juego_)
 ├── scripts/
 │   ├── main.gd                    # lógica principal: generación de tablero, patrones, combo, barra
 │   ├── main_audio.gd

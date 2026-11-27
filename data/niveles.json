@@ -1,6 +1,5 @@
 {
   "1": {
-    "nombre": "El Primer Cielo",
     "score": 1400,
     "capas": 1,
     "slots": 2,
@@ -14,7 +13,6 @@
     }
   },
   "2": {
-    "nombre": "Velo de Luna",
     "score": 2300,
     "capas": 2,
     "slots": 2,
@@ -28,7 +26,6 @@
     }
   },
   "3": {
-    "nombre": "Delta del Alba",
     "score": 3400,
     "capas": 2,
     "slots": 3,
@@ -43,7 +40,6 @@
     }
   },
   "4": {
-    "nombre": "Anillo Errante",
     "score": 4500,
     "capas": 3,
     "slots": 3,
@@ -57,7 +53,6 @@
     }
   },
   "5": {
-    "nombre": "Cenit Invertido",
     "score": 5800,
     "capas": 3,
     "slots": 3,
@@ -72,7 +67,6 @@
     }
   },
   "6": {
-    "nombre": "Órbita de Latón",
     "score": 7500,
     "capas": 4,
     "slots": 4,
@@ -86,7 +80,6 @@
     }
   },
   "7": {
-    "nombre": "Pirámide Astral",
     "score": 9000,
     "capas": 4,
     "slots": 4,
@@ -101,7 +94,6 @@
     }
   },
   "8": {
-    "nombre": "Eclipse Profundo",
     "score": 11200,
     "capas": 5,
     "slots": 4,
@@ -115,7 +107,6 @@
     }
   },
   "9": {
-    "nombre": "Umbral del Astrolabio",
     "score": 14400,
     "capas": 5,
     "slots": 5,
@@ -130,7 +121,6 @@
     }
   },
   "10": {
-    "nombre": "Esfera de Bronce",
     "score": 16200,
     "capas": 5,
     "slots": 5,
@@ -144,7 +134,6 @@
     }
   },
   "11": {
-    "nombre": "Constelación del Vigía",
     "score": 18500,
     "capas": 5,
     "slots": 5,
@@ -159,7 +148,6 @@
     }
   },
   "12": {
-    "nombre": "Danza de los Errantes",
     "score": 21000,
     "capas": 6,
     "slots": 5,
@@ -173,7 +161,6 @@
     }
   },
   "13": {
-    "nombre": "Cénit de Cobre",
     "score": 23600,
     "capas": 6,
     "slots": 5,
@@ -188,7 +175,6 @@
     }
   },
   "14": {
-    "nombre": "Marea de Pléyades",
     "score": 26200,
     "capas": 6,
     "slots": 5,
@@ -202,7 +188,6 @@
     }
   },
   "15": {
-    "nombre": "Reloj del Horizonte",
     "score": 28800,
     "capas": 6,
     "slots": 5,
@@ -217,7 +202,6 @@
     }
   },
   "16": {
-    "nombre": "Sello del Solsticio",
     "score": 31200,
     "capas": 6,
     "slots": 5,
@@ -231,7 +215,6 @@
     }
   },
   "17": {
-    "nombre": "Torre del Meridiano",
     "score": 38500,
     "capas": 7,
     "slots": 5,
@@ -246,7 +229,6 @@
     }
   },
   "18": {
-    "nombre": "Brisa de Equinoccio",
     "score": 33000,
     "capas": 6,
     "slots": 5,
@@ -260,7 +242,6 @@
     }
   },
   "19": {
-    "nombre": "Caminos de Orión",
     "score": 35800,
     "capas": 6,
     "slots": 5,
@@ -275,7 +256,6 @@
     }
   },
   "20": {
-    "nombre": "Corona de Éter",
     "score": 38800,
     "capas": 6,
     "slots": 5,
@@ -289,7 +269,6 @@
     }
   },
   "21": {
-    "nombre": "Prisma de Estío",
     "score": 41800,
     "capas": 7,
     "slots": 5,
@@ -304,7 +283,6 @@
     }
   },
   "22": {
-    "nombre": "Rueda de la Noche",
     "score": 45000,
     "capas": 7,
     "slots": 5,
@@ -318,7 +296,6 @@
     }
   },
   "23": {
-    "nombre": "Altar del Cometa",
     "score": 48200,
     "capas": 7,
     "slots": 5,
@@ -333,7 +310,6 @@
     }
   },
   "24": {
-    "nombre": "Ojo del Firmamento",
     "score": 51600,
     "capas": 7,
     "slots": 5,
@@ -347,7 +323,6 @@
     }
   },
   "25": {
-    "nombre": "Bóveda del Gran Eclipse",
     "score": 61500,
     "capas": 8,
     "slots": 5,
@@ -362,7 +337,6 @@
     }
   },
   "26": {
-    "nombre": "Ronda de Nebulosa",
     "score": 55000,
     "capas": 7,
     "slots": 5,
@@ -376,7 +350,6 @@
     }
   },
   "27": {
-    "nombre": "Escalinata de Ceniza",
     "score": 58500,
     "capas": 7,
     "slots": 5,
@@ -391,7 +364,6 @@
     }
   },
   "28": {
-    "nombre": "Vórtice de Zafiro",
     "score": 62200,
     "capas": 7,
     "slots": 5,
@@ -405,7 +377,6 @@
     }
   },
   "29": {
-    "nombre": "Pirámide del Ocaso",
     "score": 66000,
     "capas": 8,
     "slots": 5,
@@ -420,7 +391,6 @@
     }
   },
   "30": {
-    "nombre": "Círculo de Marfil",
     "score": 70000,
     "capas": 8,
     "slots": 5,
@@ -434,7 +404,6 @@
     }
   },
   "31": {
-    "nombre": "Fauces del Astrónomo",
     "score": 74000,
     "capas": 8,
     "slots": 5,
@@ -449,7 +418,6 @@
     }
   },
   "32": {
-    "nombre": "Halo de Cuatro Vientos",
     "score": 78200,
     "capas": 8,
     "slots": 5,
@@ -463,7 +431,6 @@
     }
   },
   "33": {
-    "nombre": "Laberinto de la Esfera Armilar",
     "score": 92500,
     "capas": 9,
     "slots": 5,
@@ -478,7 +445,6 @@
     }
   },
   "34": {
-    "nombre": "Brisa de Ocaso",
     "score": 80500,
     "capas": 8,
     "slots": 5,
@@ -492,7 +458,6 @@
     }
   },
   "35": {
-    "nombre": "Faro del Crepúsculo",
     "score": 85000,
     "capas": 8,
     "slots": 5,
@@ -507,7 +472,6 @@
     }
   },
   "36": {
-    "nombre": "Anillo de las Sombras",
     "score": 89600,
     "capas": 8,
     "slots": 5,
@@ -521,7 +485,6 @@
     }
   },
   "37": {
-    "nombre": "Vértice de Cuadrante",
     "score": 94400,
     "capas": 9,
     "slots": 5,
@@ -536,7 +499,6 @@
     }
   },
   "38": {
-    "nombre": "Corona de Cenit",
     "score": 99400,
     "capas": 9,
     "slots": 5,
@@ -550,7 +512,6 @@
     }
   },
   "39": {
-    "nombre": "Abismo de Paralaje",
     "score": 104600,
     "capas": 9,
     "slots": 5,
@@ -565,7 +526,6 @@
     }
   },
   "40": {
-    "nombre": "Giro de la Eclíptica",
     "score": 110000,
     "capas": 9,
     "slots": 5,
@@ -579,7 +539,6 @@
     }
   },
   "41": {
-    "nombre": "Ciudadela de Hierro y Éter",
     "score": 132000,
     "capas": 10,
     "slots": 5,
@@ -594,7 +553,6 @@
     }
   },
   "42": {
-    "nombre": "Refugio de Aurora",
     "score": 116000,
     "capas": 9,
     "slots": 5,
@@ -608,7 +566,6 @@
     }
   },
   "43": {
-    "nombre": "Cúpula de Alabastro",
     "score": 122000,
     "capas": 9,
     "slots": 5,
@@ -623,7 +580,6 @@
     }
   },
   "44": {
-    "nombre": "Espirales del Cenit",
     "score": 128500,
     "capas": 9,
     "slots": 5,
@@ -637,7 +593,6 @@
     }
   },
   "45": {
-    "nombre": "Pilares de Medianoche",
     "score": 135000,
     "capas": 10,
     "slots": 5,
@@ -652,7 +607,6 @@
     }
   },
   "46": {
-    "nombre": "Órbita del Relojero",
     "score": 142000,
     "capas": 10,
     "slots": 5,
@@ -666,7 +620,6 @@
     }
   },
   "47": {
-    "nombre": "Trono del Solsticio",
     "score": 149000,
     "capas": 10,
     "slots": 5,
@@ -681,7 +634,6 @@
     }
   },
   "48": {
-    "nombre": "Bóveda de Estrellas Fugaces",
     "score": 156500,
     "capas": 10,
     "slots": 5,
@@ -695,7 +647,6 @@
     }
   },
   "49": {
-    "nombre": "Observatorio del Gran Abismo",
     "score": 186000,
     "capas": 11,
     "slots": 5,
@@ -710,7 +661,6 @@
     }
   },
   "50": {
-    "nombre": "Brisa del Amanecer",
     "score": 160000,
     "capas": 10,
     "slots": 5,
@@ -724,7 +674,6 @@
     }
   },
   "51": {
-    "nombre": "Pórtico de Astrolabio",
     "score": 168000,
     "capas": 10,
     "slots": 5,
@@ -739,7 +688,6 @@
     }
   },
   "52": {
-    "nombre": "Círculo de los Errantes",
     "score": 176000,
     "capas": 10,
     "slots": 5,
@@ -753,7 +701,6 @@
     }
   },
   "53": {
-    "nombre": "Muro de la Eclíptica",
     "score": 184500,
     "capas": 11,
     "slots": 5,
@@ -768,7 +715,6 @@
     }
   },
   "54": {
-    "nombre": "Corona de Zafiro",
     "score": 193000,
     "capas": 11,
     "slots": 5,
@@ -782,7 +728,6 @@
     }
   },
   "55": {
-    "nombre": "Vértice del Horizonte",
     "score": 202000,
     "capas": 11,
     "slots": 5,
@@ -797,7 +742,6 @@
     }
   },
   "56": {
-    "nombre": "Órbita de Ceniza",
     "score": 211000,
     "capas": 11,
     "slots": 5,
@@ -811,7 +755,6 @@
     }
   },
   "57": {
-    "nombre": "Trono de la Singularidad",
     "score": 252000,
     "capas": 12,
     "slots": 5,
@@ -826,7 +769,6 @@
     }
   },
   "58": {
-    "nombre": "Alba de Latón",
     "score": 218000,
     "capas": 11,
     "slots": 5,
@@ -840,7 +782,6 @@
     }
   },
   "59": {
-    "nombre": "Faro de Medianoche",
     "score": 227000,
     "capas": 11,
     "slots": 5,
@@ -855,7 +796,6 @@
     }
   },
   "60": {
-    "nombre": "Anillo de Solsticio",
     "score": 236500,
     "capas": 11,
     "slots": 5,
@@ -869,7 +809,6 @@
     }
   },
   "61": {
-    "nombre": "Vértice del Firmamento",
     "score": 246000,
     "capas": 12,
     "slots": 5,
@@ -884,7 +823,6 @@
     }
   },
   "62": {
-    "nombre": "Rueda de la Aurora",
     "score": 256000,
     "capas": 12,
     "slots": 5,
@@ -898,7 +836,6 @@
     }
   },
   "63": {
-    "nombre": "Escudo de Paralaje",
     "score": 266500,
     "capas": 12,
     "slots": 5,
@@ -913,7 +850,6 @@
     }
   },
   "64": {
-    "nombre": "Corona del Meridiano",
     "score": 277000,
     "capas": 12,
     "slots": 5,
@@ -927,7 +863,6 @@
     }
   },
   "65": {
-    "nombre": "Cúpula del Gran Vórtice",
     "score": 328000,
     "capas": 13,
     "slots": 5,
@@ -942,7 +877,6 @@
     }
   },
   "66": {
-    "nombre": "Brisa de Astrolabio",
     "score": 284000,
     "capas": 12,
     "slots": 5,
@@ -956,7 +890,6 @@
     }
   },
   "67": {
-    "nombre": "Senda del Cometa",
     "score": 295000,
     "capas": 12,
     "slots": 5,
@@ -971,7 +904,6 @@
     }
   },
   "68": {
-    "nombre": "Halo de Obsidiana",
     "score": 306500,
     "capas": 12,
     "slots": 5,
@@ -985,7 +917,6 @@
     }
   },
   "69": {
-    "nombre": "Vértice de Cobre",
     "score": 318000,
     "capas": 13,
     "slots": 5,
@@ -1000,7 +931,6 @@
     }
   },
   "70": {
-    "nombre": "Órbita del Firmamento",
     "score": 330000,
     "capas": 13,
     "slots": 5,
@@ -1014,7 +944,6 @@
     }
   },
   "71": {
-    "nombre": "Bastión de Pléyades",
     "score": 342500,
     "capas": 13,
     "slots": 5,
@@ -1029,7 +958,6 @@
     }
   },
   "72": {
-    "nombre": "Corona del Equinoccio",
     "score": 355000,
     "capas": 13,
     "slots": 5,
@@ -1043,7 +971,6 @@
     }
   },
   "73": {
-    "nombre": "Observatorio de la Eternidad",
     "score": 420000,
     "capas": 14,
     "slots": 5,
@@ -1058,7 +985,6 @@
     }
   },
   "74": {
-    "nombre": "Vigilia del Alba",
     "score": 362000,
     "capas": 13,
     "slots": 5,
@@ -1072,7 +998,6 @@
     }
   },
   "75": {
-    "nombre": "Mirador de Orión",
     "score": 375000,
     "capas": 13,
     "slots": 5,
@@ -1087,7 +1012,6 @@
     }
   },
   "76": {
-    "nombre": "Anillo de Paralaje",
     "score": 388500,
     "capas": 13,
     "slots": 5,
@@ -1101,7 +1025,6 @@
     }
   },
   "77": {
-    "nombre": "Pirámide de Éter",
     "score": 402000,
     "capas": 14,
     "slots": 5,
@@ -1116,7 +1039,6 @@
     }
   },
   "78": {
-    "nombre": "Círculo del Reloj Astral",
     "score": 416000,
     "capas": 14,
     "slots": 5,
@@ -1130,7 +1052,6 @@
     }
   },
   "79": {
-    "nombre": "Baluarte del Solsticio",
     "score": 430000,
     "capas": 14,
     "slots": 5,
@@ -1145,7 +1066,6 @@
     }
   },
   "80": {
-    "nombre": "Rueda de la Eclíptica",
     "score": 445000,
     "capas": 14,
     "slots": 5,
@@ -1159,7 +1079,6 @@
     }
   },
   "81": {
-    "nombre": "Santuario de la Gran Órbita",
     "score": 518000,
     "capas": 15,
     "slots": 5,
@@ -1174,7 +1093,6 @@
     }
   },
   "82": {
-    "nombre": "Brisa del Cénit",
     "score": 455000,
     "capas": 14,
     "slots": 5,
@@ -1188,7 +1106,6 @@
     }
   },
   "83": {
-    "nombre": "Portal del Equinoccio",
     "score": 470000,
     "capas": 14,
     "slots": 5,
@@ -1203,7 +1120,6 @@
     }
   },
   "84": {
-    "nombre": "Círculo de Medianoche",
     "score": 486000,
     "capas": 14,
     "slots": 5,
@@ -1217,7 +1133,6 @@
     }
   },
   "85": {
-    "nombre": "Torre de las Pléyades",
     "score": 502000,
     "capas": 15,
     "slots": 5,
@@ -1232,7 +1147,6 @@
     }
   },
   "86": {
-    "nombre": "Halo del Cometa",
     "score": 519000,
     "capas": 15,
     "slots": 5,
@@ -1246,7 +1160,6 @@
     }
   },
   "87": {
-    "nombre": "Bastión de Obsidiana",
     "score": 536000,
     "capas": 15,
     "slots": 5,
@@ -1261,7 +1174,6 @@
     }
   },
   "88": {
-    "nombre": "Corona del Firmamento",
     "score": 554000,
     "capas": 15,
     "slots": 5,
@@ -1275,7 +1187,6 @@
     }
   },
   "90": {
-    "nombre": "Brisa de Medianoche",
     "score": 565000,
     "capas": 15,
     "slots": 5,
@@ -1289,7 +1200,6 @@
     }
   },
   "91": {
-    "nombre": "Senda del Solsticio",
     "score": 584000,
     "capas": 15,
     "slots": 5,
@@ -1304,7 +1214,6 @@
     }
   },
   "92": {
-    "nombre": "Anillo de la Eclíptica",
     "score": 604000,
     "capas": 15,
     "slots": 5,
@@ -1318,7 +1227,6 @@
     }
   },
   "93": {
-    "nombre": "Vértice de la Aurora",
     "score": 625000,
     "capas": 16,
     "slots": 5,
@@ -1333,7 +1241,6 @@
     }
   },
   "94": {
-    "nombre": "Corona de los Errantes",
     "score": 647000,
     "capas": 16,
     "slots": 5,
@@ -1347,7 +1254,6 @@
     }
   },
   "95": {
-    "nombre": "Bastión del Firmamento",
     "score": 670000,
     "capas": 16,
     "slots": 5,
@@ -1362,7 +1268,6 @@
     }
   },
   "96": {
-    "nombre": "Órbita del Crepúsculo",
     "score": 694000,
     "capas": 16,
     "slots": 5,
@@ -1376,7 +1281,6 @@
     }
   },
   "97": {
-    "nombre": "Cúpula del Gran Horizonte",
     "score": 815000,
     "capas": 17,
     "slots": 5,

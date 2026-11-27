@@ -202,6 +202,7 @@ class FichaTablero extends Node3D:
 # ============================================================================
 var nivel_actual: int = 1
 var _puntaje_nivel: int = 0
+var _tween_titulo: Tween
 var ctrl_resultados: ControladorResultados
 
 # Configuración cargada desde data/niveles.json y data/valores.json.
@@ -309,6 +310,9 @@ func _ready() -> void:
 	# Conexión defensiva por si la escena ya trae la señal conectada.
 	if boton_pausa and not boton_pausa.is_connected("pressed", _on_boton_pausa_pressed):
 		boton_pausa.pressed.connect(_on_boton_pausa_pressed)
+
+	if not game_manager.is_connected("idioma_cambiado", _on_idioma_cambiado):
+		game_manager.idioma_cambiado.connect(_on_idioma_cambiado)
 
 	_cargar_nivel(nivel_actual)
 
@@ -563,8 +567,7 @@ func _cargar_nivel(n: int) -> void:
 	_limpiar_tablero()
 	_limpiar_efectos()
 
-	if ui_level_title:
-		ui_level_title.visible = false
+	_actualizar_titulo_nivel()
 	if ctrl_resultados:
 		ctrl_resultados.reset()
 	if ui_level_number:
@@ -1542,9 +1545,36 @@ func _preparar_titulo() -> void:
 	ui_level_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	ui_level_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
+func _actualizar_titulo_nivel() -> void:
+	if ui_level_title == null:
+		return
+	if _tween_titulo != null:
+		_tween_titulo.kill()
+	ui_level_title.modulate.a = 1.0
+	var id_juego: String = save_manager.juego_actual_seleccionado
+	var titulo_str: String = game_manager.obtener_titulo_nivel(str(nivel_actual), id_juego)
+	ui_level_title.text = "Nivel %d\n%s" % [nivel_actual, titulo_str]
+	ui_level_title.add_theme_font_size_override("font_size", 64)
+	ui_level_title.visible = true
+	_tween_titulo = create_tween()
+	_tween_titulo.tween_interval(3.0)
+	_tween_titulo.tween_property(ui_level_title, "modulate:a", 0.0, 1.0)
+	_tween_titulo.tween_callback(_ocultar_titulo_nivel)
+
+func _ocultar_titulo_nivel() -> void:
+	if ui_level_title != null and not _juego_terminado:
+		ui_level_title.visible = false
+
+func _on_idioma_cambiado(_nuevo_idioma: String) -> void:
+	if not _juego_terminado:
+		_actualizar_titulo_nivel()
+
 func _mostrar_mensaje_final(texto: String) -> void:
 	if ui_level_title == null:
 		return
+	if _tween_titulo != null:
+		_tween_titulo.kill()
+	ui_level_title.modulate.a = 1.0
 	ui_level_title.text = texto
 	ui_level_title.add_theme_font_size_override("font_size", 72)
 	ui_level_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

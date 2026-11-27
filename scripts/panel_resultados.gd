@@ -13,6 +13,8 @@ signal reiniciar_solicitado
 @onready var moneda3: TextureRect = $FondoPanel/moneda3
 @onready var label_puntaje_final: Label = $FondoPanel/LabelPuntajeFinal
 
+var _nivel_id_actual: int = 0
+
 func _ready() -> void:
 	visible = false
 	_ocultar_monedas()
@@ -23,20 +25,34 @@ func _ready() -> void:
 	if boton_reiniciar:
 		boton_reiniciar.pressed.connect(_on_boton_reiniciar_pressed)
 
+	if not game_manager.is_connected("idioma_cambiado", _on_idioma_cambiado):
+		game_manager.idioma_cambiado.connect(_on_idioma_cambiado)
+
 func mostrar(nivel_id: int, puntaje: int = 0, nivel_superado: bool = false, score_objetivo: int = 0) -> void:
 	if visible:
 		return
 	visible = true
 	_ocultar_monedas()
 
-	if level_title:
-		level_title.text = "Nivel %d" % [nivel_id]
+	_nivel_id_actual = nivel_id
+	_actualizar_titulo_nivel()
 	if label_puntaje_final:
 		label_puntaje_final.text = "%d / %d" % [maxi(puntaje, 0), maxi(score_objetivo, 0)]
 
 	if nivel_superado:
 		save_manager.registrar_puntaje_nivel(nivel_id, puntaje)
 		_actualizar_monedas(puntaje, score_objetivo)
+
+func _actualizar_titulo_nivel() -> void:
+	if level_title == null or _nivel_id_actual <= 0:
+		return
+	var id_juego: String = save_manager.juego_actual_seleccionado
+	var titulo_str: String = game_manager.obtener_titulo_nivel(str(_nivel_id_actual), id_juego)
+	level_title.text = "%d\n%s" % [_nivel_id_actual, titulo_str]
+
+func _on_idioma_cambiado(_nuevo_idioma: String) -> void:
+	if visible:
+		_actualizar_titulo_nivel()
 
 func _ocultar_monedas() -> void:
 	if moneda1:
