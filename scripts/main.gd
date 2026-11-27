@@ -28,7 +28,7 @@ extends Node3D
 # la red hexagonal con este radio produce una grilla circular.
 const RADIO_MAX_CAPA: float = 2.1
 const CAPACIDAD_BARRA: int = 5            # Espacios de la barra inferior.
-const TIEMPO_COMBO: float = 2.0           # Ventana de tiempo (segundos) para seguir el combo.
+const TIEMPO_COMBO: float = ComboPuntos.VENTANA_COMBO_SEG  # Ventana de tiempo (segundos) para seguir el combo.
 
 # Rutas de configuración de niveles y tipos de fichas.
 const RUTA_NIVELES: String = "res://data/niveles.json"
@@ -277,6 +277,8 @@ var _slots_materiales: Array[ShaderMaterial] = []
 # ============================================================================
 func _ready() -> void:
 	randomize()
+	if OS.is_debug_build():
+		ComboPuntos.verificar_reglas()
 
 	FondoDinamico.aplicar_material(
 		piso_tablero.material,
@@ -1031,12 +1033,13 @@ func _romper_combo() -> void:
 		_fichas_en_vuelo.clear()
 		while _slots_en_vuelo.has(_combo_slot):
 			_slots_en_vuelo.erase(_combo_slot)
-		var combo_acumulado: int = int(_combo_contador * (_combo_contador - 1) / 2)
+		var resultado_combo: Dictionary = ComboPuntos.calcular_puntos_combo(_combo_contador)
+		var combo_acumulado: int = int(resultado_combo["puntos"])
 		_puntaje_nivel += combo_acumulado
 		if ui_puntaje:
 			ui_puntaje.establecer_puntaje(_puntaje_nivel)
 		# paycombo
-		_mostrar_puntos_flotantes_en_slot(_combo_slot, combo_acumulado, false)
+		_mostrar_puntos_flotantes_en_slot(_combo_slot, combo_acumulado, false, str(resultado_combo["etiqueta"]))
 		if _combo_slot >= 0 and _combo_slot < _slots.size() and camara != null:
 			var slot := _slots[_combo_slot]
 			var rect_slot := slot.get_global_rect()
@@ -1391,7 +1394,7 @@ func _disparar_smoke_puff(posicion: Vector3) -> void:
 
 # Muestra un texto flotante sobre el slot indicado de la barra.
 # con_signo=true -> "+1, +2..."; con_signo=false -> total acumulado (ej. "3").
-func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int, con_signo: bool = true) -> void:
+func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int, con_signo: bool = true, texto_etiqueta: String = "") -> void:
 	if _capa_efectos == null or _barra_ui == null or indice_slot < 0 or indice_slot >= _slots.size():
 		return
 	var fx := PUNTOS_FLOTANTES_ESCENA.instantiate() as Control
@@ -1399,7 +1402,10 @@ func _mostrar_puntos_flotantes_en_slot(indice_slot: int, puntos: int, con_signo:
 		return
 	var etiqueta := fx.get_node_or_null("Label") as Label
 	if etiqueta:
-		etiqueta.text = ("+%d" % puntos) if con_signo else str(puntos)
+		var texto := ("+%d" % puntos) if con_signo else str(puntos)
+		if texto_etiqueta != "":
+			texto = "%s\n%s" % [texto_etiqueta, texto]
+		etiqueta.text = texto
 		etiqueta.reset_size()
 	_capa_efectos.add_child(fx)
 
